@@ -44,6 +44,13 @@ interface GameState {
     handleBossDefeated: (boss: Boss) => { type: 'item' | 'material', id: string, amount?: number, itemData?: Item }[];
     isProcessingReward: boolean; // เพิ่มตัวนี้
     setProcessingReward: (status: boolean) => void;
+    salvageItem: (uid: string) => { success: boolean; materialsGained: { id: string; amount: number }[]; message: string };
+    epicPity: number;
+    legendPity: number;
+    addEpicPity: () => void;
+    resetEpicPity: () => void;
+    addLegendPity: () => void;
+    resetLegendPity: () => void;
 
     achievements: Record<string, { isUnlocked: boolean; progress?: number }>;
     unlockAchievement: (id: string) => void;
@@ -91,14 +98,40 @@ export const useGameStore = create<GameState>()(
                 equippedItems: {
                     weapon: null, armor: null, shield: null, cloak: null,
                     helmet: null, necklace: null, ring: null, boots: null,
-                    skill: null
+                    skill1: null,
+                    skill2: null
                 },
+                totalRolls: 0,
+                epicPity: 0,     // ✅ ค่าเริ่มต้นพิตี้ Epic ในตัว player
+                legendPity: 0,
             },
             totalOpens: 0,
+            epicPity: 0,         // ✅ ค่าเริ่มต้นระดับ Store หลัก (ถ้าจำเป็นต้องใช้เรียกนอก player)
+            legendPity: 0,
+
 
             isProcessingReward: false,
             setProcessingReward: (status) => set({ isProcessingReward: status }),
 
+
+
+            addEpicPity: () => set((state) => ({
+                epicPity: state.epicPity + 1,
+                player: { ...state.player, epicPity: state.player.epicPity + 1 }
+            })),
+            resetEpicPity: () => set((state) => ({
+                epicPity: 0,
+                player: { ...state.player, epicPity: 0 }
+            })),
+
+            addLegendPity: () => set((state) => ({
+                legendPity: state.legendPity + 1,
+                player: { ...state.player, legendPity: state.player.legendPity + 1 }
+            })),
+            resetLegendPity: () => set((state) => ({
+                legendPity: 0,
+                player: { ...state.player, legendPity: 0 }
+            })),
 
 
             addOpen: () => set((state) => ({ totalOpens: state.totalOpens + 1 })),
@@ -156,33 +189,57 @@ export const useGameStore = create<GameState>()(
                 const { player } = state;
                 let newInventory = player.inventory.filter(i => i.uid !== item.uid);
                 let newEquipped = { ...player.equippedItems };
-                const slot = item.slot as keyof typeof newEquipped;
 
-                const twoHandedTypes = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
-                const rangedTypes = ['bow', 'crossbow', 'sling', 'throwing'];
+                // Handle skill items specially - fill skill1 first, then skill2
+                if (item.type === 'skill') {
+                    // เช็กก่อนว่าสกิลนี้ใส่อยู่ในช่องไหน 1 หรือ 2 แล้วหรือไม่
+                    const isAlreadyInSkill1 = player.equippedItems.skill1?.uid === item.uid;
+                    const isAlreadyInSkill2 = player.equippedItems.skill2?.uid === item.uid;
 
-                const isItemTwoHanded = item.weaponType ? twoHandedTypes.includes(item.weaponType) : false;
-                const isItemRanged = item.weaponType ? rangedTypes.includes(item.weaponType) : false;
-                const isItemHeavyOrRanged = isItemTwoHanded || isItemRanged;
+                    if (isAlreadyInSkill1 || isAlreadyInSkill2) {
+                        // ถ้าเป็นสกิลอันเดิมที่ใส่อยู่แล้ว จะให้ข้ามหรือคืนค่า state เดิมก็ได้
+                        return state;
+                    }
 
-                const equippedWeapon = player.equippedItems['weapon'];
-                const isEquippedTwoHanded = equippedWeapon?.weaponType ? twoHandedTypes.includes(equippedWeapon.weaponType) : false;
-                const isEquippedRanged = equippedWeapon?.weaponType ? rangedTypes.includes(equippedWeapon.weaponType) : false;
-                const isEquippedHeavyOrRanged = isEquippedTwoHanded || isEquippedRanged;
+                    if (!player.equippedItems.skill1) {
+                        newEquipped.skill1 = item;
+                    } else if (!player.equippedItems.skill2) {
+                        newEquipped.skill2 = item;
+                    } else {
+                        // ถ้าเต็มทั้ง 2 ช่องแล้ว อยากให้ไปทับช่องไหน? 
+                        // เปลี่ยนจากทับ skill1 เป็นทับ skill2 หรือสลับตามต้องการได้ครับ
+                        newInventory.push(player.equippedItems.skill2!); // สมมติว่าอยากให้ไปทับช่อง 2 แทน
+                        newEquipped.skill2 = item;
+                    }
+                } else {
+                    const slot = item.slot as keyof typeof newEquipped;
 
-                if (item.slot === 'weapon' && isItemHeavyOrRanged && player.equippedItems['shield']) {
-                    newInventory.push(player.equippedItems['shield']!);
-                    newEquipped['shield'] = null;
+                    const twoHandedTypes = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
+                    const rangedTypes = ['bow', 'crossbow', 'sling', 'throwing'];
+
+                    const isItemTwoHanded = item.weaponType ? twoHandedTypes.includes(item.weaponType) : false;
+                    const isItemRanged = item.weaponType ? rangedTypes.includes(item.weaponType) : false;
+                    const isItemHeavyOrRanged = isItemTwoHanded || isItemRanged;
+
+                    const equippedWeapon = player.equippedItems['weapon'];
+                    const isEquippedTwoHanded = equippedWeapon?.weaponType ? twoHandedTypes.includes(equippedWeapon.weaponType) : false;
+                    const isEquippedRanged = equippedWeapon?.weaponType ? rangedTypes.includes(equippedWeapon.weaponType) : false;
+                    const isEquippedHeavyOrRanged = isEquippedTwoHanded || isEquippedRanged;
+
+                    if (item.slot === 'weapon' && isItemHeavyOrRanged && player.equippedItems['shield']) {
+                        newInventory.push(player.equippedItems['shield']!);
+                        newEquipped['shield'] = null;
+                    }
+
+                    // 3. ถ้าใส่โล่ แล้วช่องอาวุธหลักใส่อาวุธสองมือหรือระยะไกลอยู่ -> ถอดอาวุธเก็บเข้ากระเป๋า
+                    if (item.slot === 'shield' && equippedWeapon && isEquippedHeavyOrRanged) {
+                        newInventory.push(equippedWeapon);
+                        newEquipped['weapon'] = null;
+                    }
+
+                    if (player.equippedItems[slot]) newInventory.push(player.equippedItems[slot]!);
+                    newEquipped[slot] = item;
                 }
-
-                // 3. ถ้าใส่โล่ แล้วช่องอาวุธหลักใส่อาวุธสองมือหรือระยะไกลอยู่ -> ถอดอาวุธเก็บเข้ากระเป๋า
-                if (item.slot === 'shield' && equippedWeapon && isEquippedHeavyOrRanged) {
-                    newInventory.push(equippedWeapon);
-                    newEquipped['weapon'] = null;
-                }
-
-                if (player.equippedItems[slot]) newInventory.push(player.equippedItems[slot]!);
-                newEquipped[slot] = item;
 
                 const nextPlayer = { ...player, inventory: newInventory, equippedItems: newEquipped };
 
@@ -201,6 +258,30 @@ export const useGameStore = create<GameState>()(
             }),
 
             unequipItem: (item: Item) => set((state) => {
+                // Handle skill items specially
+                if (item.type === 'skill') {
+                    if (state.player.equippedItems.skill1?.uid === item.uid) {
+                        return {
+                            player: {
+                                ...state.player,
+                                inventory: [...state.player.inventory, item],
+                                equippedItems: { ...state.player.equippedItems, skill1: null }
+                            }
+                        };
+                    }
+                    if (state.player.equippedItems.skill2?.uid === item.uid) {
+                        return {
+                            player: {
+                                ...state.player,
+                                inventory: [...state.player.inventory, item],
+                                equippedItems: { ...state.player.equippedItems, skill2: null }
+                            }
+                        };
+                    }
+                    return state;
+                }
+
+                // Handle regular equipment
                 if (state.player.equippedItems[item.slot]?.uid !== item.uid) return state;
                 return {
                     player: {
@@ -210,6 +291,103 @@ export const useGameStore = create<GameState>()(
                     }
                 };
             }),
+
+            salvageItem: (uid: string) => {
+                const state = get();
+                // 1. เช็กว่าไอเทมกำลังสวมใส่อยู่หรือไม่
+                if (Object.values(state.player.equippedItems).some(i => i?.uid === uid)) {
+                    return { success: false, materialsGained: [], message: "Cannot salvage equipped items!" };
+                }
+
+                const itemToSalvage = state.player.inventory.find(i => i.uid === uid);
+                if (!itemToSalvage) {
+                    return { success: false, materialsGained: [], message: "Item not found in inventory!" };
+                }
+
+                let materialsGained: { id: string; amount: number }[] = [];
+                const rarity = itemToSalvage.rarity?.toLowerCase() || 'common';
+
+                // 🎲 กำหนดอัตราความสำเร็จแยกตามระดับ Rarity
+                let successRate = 0.85; // Default (Common)
+                switch (rarity) {
+                    case 'common':
+                        successRate = 0.90; // 90% สำเร็จ (ย่อยง่าย ของโหล)
+                        break;
+                    case 'rare':
+                        successRate = 0.75; // 75% สำเร็จ
+                        break;
+                    case 'epic':
+                        successRate = 0.55; // 55% สำเร็จ (เริ่มมีความเสี่ยงสูง)
+                        break;
+                    case 'legendary':
+                        successRate = 0.35; // 35% สำเร็จ (วัดดวงสุดๆ ของหายาก)
+                        break;
+                    default:
+                        successRate = 0.80;
+                        break;
+                }
+
+                const isSuccess = Math.random() < successRate;
+
+                if (isSuccess) {
+                    // --- กรณีสำเร็จ: ได้รับวัตถุดิบตามปกติ (เรตเต็ม) ---
+                    switch (rarity) {
+                        case 'common':
+                            materialsGained = [
+                                { id: 'iron_ore', amount: Math.floor(Math.random() * 3) + 1 },
+                                { id: 'leather', amount: Math.floor(Math.random() * 2) + 1 }
+                            ];
+                            break;
+                        case 'rare':
+                            materialsGained = [
+                                { id: 'magic_dust', amount: Math.floor(Math.random() * 3) + 2 },
+                                { id: 'mithril', amount: Math.floor(Math.random() * 2) + 1 },
+                                { id: 'steel_ingot', amount: 2 }
+                            ];
+                            break;
+                        case 'epic':
+                            materialsGained = [
+                                { id: 'dark_crystal', amount: Math.floor(Math.random() * 2) + 1 },
+                                { id: 'dragon_scale', amount: 1 },
+                                { id: 'gold_ore', amount: Math.floor(Math.random() * 3) + 2 }
+                            ];
+                            break;
+                        case 'legendary':
+                            materialsGained = [
+                                { id: 'void_essence', amount: 1 },
+                                { id: 'celestial_shard', amount: Math.floor(Math.random() * 2) + 1 },
+                                { id: 'ancient_rune', amount: 1 },
+                                { id: 'primordial_essence', amount: 1 }
+                            ];
+                            break;
+                        default:
+                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
+                            break;
+                    }
+                } else {
+                    // --- กรณีไม่สำเร็จ: ย่อยพลาด ได้แร่น้อยลง (ได้เศษเหล็กพื้นฐาน 1 ชิ้น) ---
+                    materialsGained = [
+                        { id: 'iron_ore', amount: 1 }
+                    ];
+                }
+
+                // 3. ลบไอเทมออกจาก Inventory
+                get().removeItem(uid);
+
+                // 4. เพิ่มวัตถุดิบเข้าตัวผู้เล่น
+                materialsGained.forEach(mat => {
+                    get().addMaterial(mat.id, mat.amount);
+                });
+
+                // 5. ส่งผลลัพธ์กลับไปแสดงผลที่ UI
+                return {
+                    success: isSuccess,
+                    materialsGained,
+                    message: isSuccess
+                        ? `Successfully salvaged ${itemToSalvage.name}!`
+                        : `Salvage unstable! ${itemToSalvage.name} yielded only minor scraps.`
+                };
+            },
 
             removeItem: (uid: string) => set((state) => {
                 if (Object.values(state.player.equippedItems).some(i => i?.uid === uid)) return state;
@@ -243,15 +421,27 @@ export const useGameStore = create<GameState>()(
                     return { success: false, message: "Invalid rarity configuration" };
                 }
 
-                const cost = costA.amount >= costB.amount ? costA : costB;
+                // เลือกเรตวัตถุดิบตัวที่ใช้จำนวนรวมชิ้นแรกเยอะกว่า (หรือจะเลือกจากไอเทมที่มีเกรดสูงกว่าก็ได้)
+                const selectedCost = (costA.materials[0]?.amount || 0) >= (costB.materials[0]?.amount || 0) ? costA : costB;
                 const finalSuccessRate = Math.min(costA.successRate, costB.successRate);
 
                 const currentMaterials = get().player.materials || {};
-                if ((currentMaterials[cost.materialId] || 0) < cost.amount) {
-                    return { success: false, message: `ต้องการ ${cost.materialId} เพิ่มอีก ${cost.amount - (currentMaterials[cost.materialId] || 0)} ชิ้น` };
+
+                // 1. ตรวจสอบว่าวัตถุดิบแต่ละชนิดพอไหม
+                for (const mat of selectedCost.materials) {
+                    const playerHas = currentMaterials[mat.id] || 0;
+                    if (playerHas < mat.amount) {
+                        return {
+                            success: false,
+                            message: `ต้องการ ${mat.id} เพิ่มอีก ${mat.amount - playerHas} ชิ้น (มีอยู่ ${playerHas})`
+                        };
+                    }
                 }
 
-                get().removeMaterial(cost.materialId, cost.amount);
+                // 2. หักวัตถุดิบทั้งหมดออกจากตัวผู้เล่น
+                for (const mat of selectedCost.materials) {
+                    get().removeMaterial(mat.id, mat.amount);
+                }
 
                 const isSuccess = Math.random() * 100 <= finalSuccessRate;
                 const valA = itemA.stats[statA] || 0;
@@ -273,10 +463,8 @@ export const useGameStore = create<GameState>()(
                         success: true,
                         itemAName: itemA.name,
                         itemBName: itemB.name,
-                        // ฝั่ง A: เสีย statA (valA) ได้ statB (valB) มาแทน
                         removedStatA: statA, removedValA: valA,
                         gainedStatA: statB, gainedValA: valB,
-                        // ฝั่ง B: เสีย statB (valB) ได้ statA (valA) มาแทน
                         removedStatB: statB, removedValB: valB,
                         gainedStatB: statA, gainedValB: valA,
                         message: "Transfer successful!"

@@ -38,7 +38,8 @@ export const AchievementPopup: React.FC = () => {
     if (!popupData) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-emerald-500/50 shadow-2xl shadow-emerald-950/50 rounded-xl p-4 flex items-center gap-4 transition-all animate-bounce">
+        // 👇 เปลี่ยนจาก right-6 เป็น left-6 ตรงนี้ครับ
+        <div className="fixed bottom-6 left-6 z-50 bg-slate-900 border border-emerald-500/50 shadow-2xl shadow-emerald-950/50 rounded-xl p-4 flex items-center gap-4 transition-all animate-bounce">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0">
                 🏆
             </div>

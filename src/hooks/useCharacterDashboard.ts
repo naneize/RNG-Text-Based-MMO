@@ -6,9 +6,10 @@ import { getSynergyInfo } from '../utils/synergy';
 import { getEffectiveStatsInfo } from '../utils/combat';
 import { getTotalStatsWithBreakdown } from '../utils/combat';
 import { useAchievementStore } from '../store/achievementStore';
+import { PITY_CONFIG } from '../types/game';
 
 export const useCharacterDashboard = () => {
-    const { player, addItem, equipItem, unequipItem } = useGameStore();
+    const { player, addItem, equipItem, unequipItem, epicPity, legendPity } = useGameStore();
 
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
     const [selectedMaterial, setSelectedMaterial] = useState<{ name: string, amount: number } | null>(null);
@@ -82,12 +83,68 @@ export const useCharacterDashboard = () => {
         return item ? ((item.weight / totalWeight) * 100).toFixed(1) : "0.0";
     };
 
-    const handleLoot = () => {
-        if (isLooting) return;
-
-        // ดึงสถานะปัจจุบันจาก Store
+    const executeSingleRoll = () => {
+        // ดึงสถานะและฟังก์ชันทั้งหมดจาก Store (รวมถึงระบบ Pity)
         const store = useGameStore.getState();
-        const { addOpen, totalOpens } = store;
+        const {
+            addOpen,
+            totalOpens,
+            addEpicPity,
+            resetEpicPity,
+            addLegendPity,
+            resetLegendPity,
+            addItem
+        } = store;
+
+        // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
+        const maxLevel = totalOpens < 1000
+            ? 1 + Math.floor(totalOpens / 10) * 5
+            : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
+        const randomLevel = Math.floor(Math.pow(Math.random(), 2) * maxLevel) + 1;
+
+        // เพิ่มสถิติจำนวนครั้งที่เปิดเข้าไปใน Store
+        addOpen();
+
+        let newItem;
+        const currentEpicPity = useGameStore.getState().epicPity;
+        const currentLegendPity = useGameStore.getState().legendPity;
+
+        // 3. ตรวจสอบเงื่อนไข Pity
+        if (currentEpicPity >= PITY_CONFIG.EPIC) {
+            newItem = generateRandomItem('epic', randomLevel);
+            resetEpicPity();
+            addLegendPity();
+        } else if (currentLegendPity >= PITY_CONFIG.LEGEND) {
+            newItem = generateRandomItem('legendary', randomLevel);
+            resetLegendPity();
+            resetEpicPity();
+        } else {
+            newItem = generateRandomItem(undefined, randomLevel);
+            if (newItem.rarity === 'Legendary') {
+                resetLegendPity();
+                resetEpicPity();
+                addEpicPity();
+            } else if (newItem.rarity === 'Epic') {
+                resetEpicPity();
+                addLegendPity();
+            } else {
+                addEpicPity();
+                addLegendPity();
+            }
+        }
+
+        if (newItem.type === 'material') {
+            useGameStore.getState().addMaterial(newItem.name, 1);
+        } else {
+            addItem(newItem);
+            useAchievementStore.getState().checkCondition('FIRST_EQUIP');
+        }
+
+        return newItem;
+    };
+
+    const handleLoot = (isAuto = false) => {
+        if (isLooting) return;
 
         setIsLooting(true);
         setProgress(0);
@@ -104,31 +161,17 @@ export const useCharacterDashboard = () => {
             if (currentStep >= steps) {
                 clearInterval(timer);
 
-                // คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
-                // เพดานสูงสุด 50, เพิ่มเพดานทีละ 5 เลเวล ทุกๆ 10 ครั้งที่เปิด
-                const maxLevel = totalOpens < 1000
-                    ? 1 + Math.floor(totalOpens / 10) * 5
-                    : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
-                const randomLevel = Math.floor(Math.pow(Math.random(), 2) * maxLevel) + 1;
+                // สุ่ม 1 รอบ
+                const newItem = executeSingleRoll();
 
-                // เพิ่มสถิติจำนวนครั้งที่เปิดเข้าไปใน Store
-                addOpen();
-
-                // สร้างไอเทมโดยส่ง randomLevel เข้าไป
-                const newItem = generateRandomItem(undefined, randomLevel);
-
-                if (newItem.type === 'material') {
-                    useGameStore.getState().addMaterial(newItem.name, 1);
-                } else {
-                    addItem(newItem);
-
-                    // 🏆 สั่งปลดล็อก achievement ทันทีเมื่อสุ่มได้อุปกรณ์
-                    useAchievementStore.getState().checkCondition('FIRST_EQUIP');
-                }
-
-                setLootedItem(newItem);
+                // ปิดสถานะกำลังโหลด
                 setIsLooting(false);
-                setTimeout(() => setLootedItem(null), 1500);
+
+                // 👈 เช็กตรงนี้: ถ้าไม่ใช่โหมดออโต้ (แปลว่ากดมือ) ให้เด้ง Modal โชว์ของตามปกติ
+                if (!isAuto) {
+                    setLootedItem(newItem);
+                }
+                // แต่ถ้าเป็นโหมดออโต้ (isAuto = true) จะปล่อยผ่าน ไม่เด้ง Modal เพื่อให้ useEffect วนลูปต่อได้เงียบๆ
             }
         }, interval);
     };
@@ -156,7 +199,7 @@ export const useCharacterDashboard = () => {
 
     return {
         player, finalStats, selectedItem, setSelectedItem, selectedMaterial, setSelectedMaterial, statBreakdown,
-        lootedItem, setLootedItem, filter, setFilter, showCombine, setShowCombine,
+        lootedItem, epicPity, legendPity, setLootedItem, filter, setFilter, showCombine, setShowCombine,
         showBonusModal, setShowBonusModal, isLooting, progress, synergyBonusList,
         getCombinedBonuses, getDropChance, handleLoot, slots, filterOptions,
         filteredInventory, getRarityColor, equippedItem: equippedInSlot, equipItem, unequipItem,

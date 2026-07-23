@@ -128,17 +128,85 @@ export const LootModal = ({
                             )}
 
                             {(lootedItem as any).type === 'skill' && (
-                                <div className="col-span-2 flex justify-center items-center bg-slate-800 p-2 rounded-lg border border-slate-700 mt-2 gap-6">
-                                    <div className="text-center">
-                                        <div className="text-[9px] text-slate-400 uppercase">Chance</div>
-                                        <div className="text-yellow-400 font-bold text-xs">{(lootedItem as any).effectChance}%</div>
+                                <>
+                                    {/* 🟢 เพิ่มส่วนแสดง Description ของสกิลที่ดรอป */}
+                                    {(lootedItem as any).description && (
+                                        <div className="col-span-2 text-xs text-slate-300 bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/60 mt-2">
+                                            {(lootedItem as any).description}
+                                        </div>
+                                    )}
+
+                                    <div className="col-span-2 flex justify-center items-center bg-slate-800 p-2 rounded-lg border border-slate-700 mt-2 gap-6">
+                                        <div className="text-center">
+                                            <div className="text-[9px] text-slate-400 uppercase">Chance</div>
+                                            <div className="text-yellow-400 font-bold text-xs">{(lootedItem as any).effectChance}%</div>
+                                        </div>
+                                        <div className="w-px h-8 bg-slate-700"></div>
+                                        <div className="text-center">
+                                            <div className="text-[9px] text-slate-400 uppercase">Power</div>
+                                            <div className="text-red-400 font-bold text-xs">{(lootedItem as any).effectPower}</div>
+                                        </div>
                                     </div>
-                                    <div className="w-px h-8 bg-slate-700"></div>
-                                    <div className="text-center">
-                                        <div className="text-[9px] text-slate-400 uppercase">Power</div>
-                                        <div className="text-red-400 font-bold text-xs">{(lootedItem as any).effectPower}</div>
-                                    </div>
-                                </div>
+
+                                    {/* Skill Conditions Display */}
+                                    {(lootedItem as any).skillCondition && (
+                                        <div className="col-span-2 bg-slate-800/50 p-3 rounded-lg border border-slate-700 space-y-2 mt-2">
+                                            <div className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider border-b border-slate-700 pb-1">Skill Conditions</div>
+
+                                            {/* Damage Type */}
+                                            {(lootedItem as any).skillCondition.damageType && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[9px] text-slate-400 uppercase">Damage Type</span>
+                                                    <span className={`text-[10px] font-bold uppercase ${(lootedItem as any).skillCondition.damageType === 'magic' ? 'text-purple-400' : 'text-orange-400'}`}>
+                                                        {(lootedItem as any).skillCondition.damageType}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Element Bonus */}
+                                            {(lootedItem as any).skillCondition.elementBonusAgainst && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[9px] text-slate-400 uppercase">Vs Element</span>
+                                                    <span className="text-[10px] text-blue-400 font-bold">
+                                                        {(lootedItem as any).skillCondition.elementBonusAgainst} +{(lootedItem as any).skillCondition.elementBonusPercent}%
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Race Bonus */}
+                                            {(lootedItem as any).skillCondition.raceBonusAgainst && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[9px] text-slate-400 uppercase">Vs Race</span>
+                                                    <span className="text-[10px] text-amber-400 font-bold">
+                                                        {(lootedItem as any).skillCondition.raceBonusAgainst} +{(lootedItem as any).skillCondition.raceBonusPercent}%
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Stat Scaling */}
+                                            {(lootedItem as any).skillCondition.scalingStat && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[9px] text-slate-400 uppercase">Scales With</span>
+                                                    <span className="text-[10px] text-emerald-400 font-bold">
+                                                        {(lootedItem as any).skillCondition.scalingStat.toUpperCase()} ×{(lootedItem as any).skillCondition.scalingMultiplier?.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* HP Conditions */}
+                                            {((lootedItem as any).skillCondition.requiresLowHp || (lootedItem as any).skillCondition.requiresHighHp) && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[9px] text-slate-400 uppercase">
+                                                        Bonus <span className="text-emerald-400 font-semibold">+25%</span> {(lootedItem as any).skillCondition.requiresLowHp ? 'When HP <' : 'When HP Below'}
+                                                    </span>
+                                                    <span className="text-[10px] text-red-400 font-bold">
+                                                        {(lootedItem as any).skillCondition.hpThreshold}%
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

@@ -1,17 +1,14 @@
 import { generateRandomItem } from './itemGenerator';
 
 /**
- * จำลองการสุ่มไอเทมจำนวนมาก แล้วสรุปค่า stat แต่ละตัวแยกตาม rarity
- * ใช้เช็คว่าหลังแก้ baseStatsSet แล้ว ไม่มี stat ไหนบวมผิดปกติ (max หลุดกรอบ)
- *
+ * จำลองการสุ่มไอเทมจำนวนมาก แล้วสรุปค่า stat และเลเวลแต่ละตัวแยกตาม rarity
+ * 
  * วิธีเรียกใช้ใน console:
- *   simulateItemStats(2000)                       // สุ่มทุก slot, ทุก rarity
+ *   simulateItemStats(2000)                        // สุ่มทุก slot, ทุก rarity
  *   simulateItemStats(2000, 'weapon')              // เจาะเฉพาะ slot 'weapon'
  *   simulateItemStats(2000, 'weapon', 'Rare')      // เจาะเฉพาะ slot + rarity
  *   simulateItemStats(2000, undefined, undefined, 20) // กำหนด itemLevel เอง (default 1)
  */
-
-
 
 (window as any).simulateItemStats = (
     iterations: number,
@@ -24,6 +21,8 @@ import { generateRandomItem } from './itemGenerator';
     const statTotals: Record<string, Record<string, Agg>> = {};
     // rarity -> จำนวนชิ้นที่เจอ (ไว้เทียบ % การกระจาย)
     const rarityCount: Record<string, number> = {};
+    // เพิ่มตัวแปรเก็บข้อมูลเช็คเลเวลไอเทมที่ได้รับจริง
+    const rarityLevelInfo: Record<string, { minLevel: number; maxLevel: number; sampleItemLevels: number[] }> = {};
 
     let matched = 0;
     let skipped = 0; // skill / material / slot ไม่ตรง filter
@@ -44,6 +43,17 @@ import { generateRandomItem } from './itemGenerator';
         matched++;
         const rarity = item.rarity as string;
         rarityCount[rarity] = (rarityCount[rarity] || 0) + 1;
+
+        // บันทึกข้อมูลเลเวลของไอเทมชิ้นนี้
+        const currentItemLevel = item.level ?? itemLevel; // ปรับให้ตรงกับ key เลเวลในโครงสร้าง Item ของคุณ (เช่น item.level หรือ item.itemLevel)
+        if (!rarityLevelInfo[rarity]) {
+            rarityLevelInfo[rarity] = { minLevel: currentItemLevel, maxLevel: currentItemLevel, sampleItemLevels: [] };
+        }
+        rarityLevelInfo[rarity].minLevel = Math.min(rarityLevelInfo[rarity].minLevel, currentItemLevel);
+        rarityLevelInfo[rarity].maxLevel = Math.max(rarityLevelInfo[rarity].maxLevel, currentItemLevel);
+        if (rarityLevelInfo[rarity].sampleItemLevels.length < 5) {
+            rarityLevelInfo[rarity].sampleItemLevels.push(currentItemLevel); // เก็บตัวอย่างเลเวลไว้ดูเล่นๆ สัก 5 ค่า
+        }
 
         if (!statTotals[rarity]) statTotals[rarity] = {};
 
@@ -67,7 +77,7 @@ import { generateRandomItem } from './itemGenerator';
         `\nตรงเงื่อนไข: ${matched} ชิ้น | ข้าม (skill/material/slot ไม่ตรง): ${skipped} ชิ้น`,
         filterSlot ? `\nfilter slot = "${filterSlot}"` : '',
         filterRarity ? `\nfilter rarity = "${filterRarity}"` : '',
-        `\nitemLevel = ${itemLevel}`
+        `\ninput itemLevel = ${itemLevel}`
     );
 
     console.log('--- การกระจายตัวของ Rarity ในกลุ่มที่สุ่มได้ ---');
@@ -80,7 +90,8 @@ import { generateRandomItem } from './itemGenerator';
     );
 
     for (const rarity of sortedRarities) {
-        console.log(`--- Stats สำหรับ Rarity: ${rarity} ---`);
+        console.log(`--- Stats สำหรับ Rarity: ${rarity} (ช่วง Item Level ที่สุ่มได้: ${rarityLevelInfo[rarity].minLevel} - ${rarityLevelInfo[rarity].maxLevel}) ---`);
+
         const tableData: Record<string, { avg: string; min: number; max: number; sampleCount: number }> = {};
 
         for (const [statKey, agg] of Object.entries(statTotals[rarity])) {
@@ -95,7 +106,7 @@ import { generateRandomItem } from './itemGenerator';
     }
 
     console.log(
-        '%cเช็คด่วน: ดูคอลัมน์ max เทียบกับ avg ถ้า max สูงกว่า avg หลายเท่าตัวแบบผิดสังเกต (โดยเฉพาะ atk/def/hit/str ของ weapon) ให้สงสัยว่ายังมี double-dip หลงเหลืออยู่',
+        '%cเช็คด่วน: ดูคอลัมน์ max เทียบกับ avg ถ้า max สูงกว่า avg หลายเท่าตัวแบบผิดสังเกต (โดยเฉพาะ atk/def/hit/str ของ weapon) ให้สงสัยว่ายังมี double-dip หลุดเหลืออยู่',
         'color: orange; font-weight: bold;'
     );
 };

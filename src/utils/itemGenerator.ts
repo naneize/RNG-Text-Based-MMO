@@ -2,18 +2,21 @@ import type { Item, Stats, WeaponType } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { SKILL_POOL } from '../data/skills';
 
+
 export const rarityConfig = [
-    { name: 'Common', count: [1, 2], mult: 1, weight: 83 }, // 75
-    { name: 'Rare', count: [2, 3], mult: 2, weight: 15 }, // 15
-    { name: 'Epic', count: [3, 4], mult: 3, weight: 1.9 }, // 1.9
-    { name: 'Legendary', count: [5, 7], mult: 5, weight: 0.1 }, // 0.1
+    { name: 'Common', count: [1, 2], mult: 1, weight: 83 },
+    { name: 'Rare', count: [2, 3], mult: 2, weight: 15 },
+    { name: 'Epic', count: [3, 4], mult: 3, weight: 1.9 },
+    { name: 'Legendary', count: [5, 7], mult: 5, weight: 0.1 },
 ];
 
 const ELEMENT_POOL = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'];
 const RACE_POOL = ['DemiHuman', 'Plant', 'Brute', 'Undead', 'Demon', 'Angel'];
 
 const getRandomRarity = (forcedRarity?: string) => {
-    if (forcedRarity) return rarityConfig.find(r => r.name === forcedRarity) || rarityConfig[0];
+    if (forcedRarity) {
+        return rarityConfig.find(r => r.name.toLowerCase() === forcedRarity.toLowerCase()) || rarityConfig[0];
+    }
 
     const totalWeight = rarityConfig.reduce((sum, r) => sum + r.weight, 0);
     let random = Math.random() * totalWeight;
@@ -25,10 +28,64 @@ const getRandomRarity = (forcedRarity?: string) => {
 
 export const generateRandomSkill = (): Item => {
     const template = SKILL_POOL[Math.floor(Math.random() * SKILL_POOL.length)];
-    const config = getRandomRarity();
+    const config = getRandomRarity(); // ได้สุ่มเรนิตี้ (Common, Rare, Epic, Legendary)
+
+    let skillCondition: any = undefined;
+
+    // 🟢 กฎข้อที่ 1: ถ้าเป็น Common จะไม่มี skillCondition เลย (สะอาดและสมดุล)
+    // จะเริ่มสุ่มออฟชันเสริมเฉพาะ Rare ขึ้นไปเท่านั้น
+    if (['Rare', 'Epic', 'Legendary'].includes(config.name)) {
+        const elementPool = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'] as const;
+        const racePool = ['DemiHuman', 'Plant', 'Brute', 'Undead', 'Demon', 'Angel', 'Dragon'] as const;
+        const statPool = ['str', 'agi', 'vit', 'int', 'dex', 'luk'] as const;
+        const damageTypes = ['physical', 'magic'] as const;
+
+        const enhancedCondition: any = {};
+        enhancedCondition.damageType = damageTypes[Math.floor(Math.random() * damageTypes.length)];
+
+        // กำหนดจำนวนออฟชันเสริมขั้นต่ำตาม Rarity
+        let minAffixes = 1;
+        if (config.name === 'Rare') minAffixes = 1;
+        if (config.name === 'Epic') minAffixes = 2;
+        if (config.name === 'Legendary') minAffixes = 3;
+
+        // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
+        const possibleAffixes = [
+            () => {
+                enhancedCondition.elementBonusAgainst = elementPool[Math.floor(Math.random() * elementPool.length)];
+                enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 5;
+            },
+            () => {
+                enhancedCondition.raceBonusAgainst = racePool[Math.floor(Math.random() * racePool.length)];
+                enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 5;
+            },
+            () => {
+                enhancedCondition.scalingStat = statPool[Math.floor(Math.random() * statPool.length)];
+                enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
+            },
+            () => {
+                enhancedCondition.requiresLowHp = Math.random() < 0.5;
+                enhancedCondition.requiresHighHp = !enhancedCondition.requiresLowHp;
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 30) + 20;
+            }
+        ];
+
+        // สุ่มหยิบออฟชันมาใส่ให้ครบตามจำนวนขั้นต่ำ (และมีโอกาสสุ่มเพิ่มได้อีกตามดวง)
+        // สลับตำแหน่งอาเรย์เพื่อความสุ่ม
+        const shuffled = possibleAffixes.sort(() => 0.5 - Math.random());
+
+        shuffled.forEach((affixFunc, index) => {
+            // ถ้ายังไม่ครบจำนวนขั้นต่ำ หรือ ดวงดีสุ่มติดเพิ่ม
+            if (index < minAffixes || Math.random() < 0.3) {
+                affixFunc();
+            }
+        });
+
+        skillCondition = enhancedCondition;
+    }
 
     return {
-        id: (template as any).id,
+        id: template.id,
         uid: Math.random().toString(36).substr(2, 9),
         name: `${config.name} ${template.name}`,
         slot: 'skill',
@@ -37,10 +94,106 @@ export const generateRandomSkill = (): Item => {
         rarity: config.name as any,
         stats: {},
         statsLog: [],
+        // เอฟเฟกต์พาวเวอร์คูณตามเรนิตี้ config.mult ปกติ
         effectPower: template.effectPower ? Math.floor(template.effectPower * config.mult) : undefined,
-        effectChance: template.effectChance || 0
+        effectChance: template.effectChance || 0,
+        skillCondition
     };
 };
+
+
+// Generate skill with specific stats (for boss drops)
+export const generateRandomSkillSpecific = (
+    skillId: string,
+    forcedRarity?: string,
+    statRanges?: Partial<Record<keyof Stats, { min: number; max: number }>>
+): Item | null => {
+    const template = SKILL_POOL.find(s => s.id === skillId);
+    if (!template) return null;
+
+    const config = getRandomRarity(forcedRarity);
+
+    // Generate stats from ranges if provided
+    const stats: Partial<Stats> = {};
+    const statsLog: { statKey: keyof Stats; value: number }[] = [];
+
+    if (statRanges) {
+        for (const [key, range] of Object.entries(statRanges)) {
+            const value = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+            stats[key as keyof Stats] = value;
+            statsLog.push({ statKey: key as keyof Stats, value });
+        }
+    }
+
+    // 🟢 ปรับใหม่: ให้สุ่มสร้าง skillCondition ตามเรนิตี้ แทนการก๊อปปี้ตรงๆ จาก Template
+    let skillCondition: any = undefined;
+
+    if (['Rare', 'Epic', 'Legendary'].includes(config.name)) {
+        const elementPool = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'] as const;
+        const racePool = ['DemiHuman', 'Plant', 'Brute', 'Undead', 'Demon', 'Angel', 'Dragon'] as const;
+        const statPool = ['str', 'agi', 'vit', 'int', 'dex', 'luk'] as const;
+        const damageTypes = ['physical', 'magic'] as const;
+
+        const enhancedCondition: any = {};
+        enhancedCondition.damageType = damageTypes[Math.floor(Math.random() * damageTypes.length)];
+
+        // กำหนดจำนวนออฟชันเสริมขั้นต่ำตาม Rarity
+        let minAffixes = 1;
+        if (config.name === 'Rare') minAffixes = 1;
+        if (config.name === 'Epic') minAffixes = 2;
+        if (config.name === 'Legendary') minAffixes = 3;
+
+        // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
+        const possibleAffixes = [
+            () => {
+                enhancedCondition.elementBonusAgainst = elementPool[Math.floor(Math.random() * elementPool.length)];
+                enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 5;
+            },
+            () => {
+                enhancedCondition.raceBonusAgainst = racePool[Math.floor(Math.random() * racePool.length)];
+                enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 5;
+            },
+            () => {
+                enhancedCondition.scalingStat = statPool[Math.floor(Math.random() * statPool.length)];
+                enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
+            },
+            () => {
+                enhancedCondition.requiresLowHp = Math.random() < 0.5;
+                enhancedCondition.requiresHighHp = !enhancedCondition.requiresLowHp;
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 30) + 20;
+            }
+        ];
+
+        // สุ่มหยิบออฟชันมาใส่ให้ครบตามจำนวนขั้นต่ำ (และมีโอกาสสุ่มเพิ่มได้อีกตามดวง)
+        // สลับตำแหน่งอาเรย์เพื่อความสุ่ม
+        const shuffled = possibleAffixes.sort(() => 0.5 - Math.random());
+
+        shuffled.forEach((affixFunc, index) => {
+            // ถ้ายังไม่ครบจำนวนขั้นต่ำ หรือ ดวงดีสุ่มติดเพิ่ม
+            if (index < minAffixes || Math.random() < 0.3) {
+                affixFunc();
+            }
+        });
+
+        skillCondition = enhancedCondition;
+    }
+
+    return {
+        id: template.id,
+        uid: Math.random().toString(36).substr(2, 9),
+        name: `${config.name} ${template.name}`,
+        slot: 'skill',
+        type: 'skill',
+        icon: template.icon,
+        rarity: config.name as any,
+        stats,
+        statsLog,
+        effectPower: template.effectPower ? Math.floor(template.effectPower * config.mult) : undefined,
+        effectChance: template.effectChance || 0,
+        skillCondition
+    };
+};
+
 
 export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1): Item => {
     const roll = Math.random();
@@ -98,7 +251,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         const isHeavyOrRanged = isTwoHanded || isRanged;
 
         // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
-        const baseAtk = getStat(isHeavyOrRanged ? 38 : 25, baseMult, itemLevel, 5);
+        const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
         const randomVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
         stats.atk = Math.max(1, baseAtk + randomVariation);
         baseStatsSet.add('atk'); // FIX: lock atk ไว้ ไม่ให้โดนสุ่มซ้ำ
@@ -110,7 +263,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
         // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(7, baseMult, itemLevel, 3); // ใช้ base เป็น 5, scale เป็น 3 (หรือปรับตามต้องการ)
+            const baseStr = getStat(3, baseMult, itemLevel, 1); // ใช้ base เป็น 3, scale เป็น 3 (หรือปรับตามต้องการ)
             const strVariation = Math.floor(Math.random() * 11) - 5; // สุ่มแกว่ง -5 ถึง +5
             stats.str = Math.max(1, baseStr + strVariation);
             baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
@@ -150,7 +303,13 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     }
 
     // DEBUG: ดูว่า stat ไหนถูก lock เป็นค่าเบสไปแล้วบ้างสำหรับไอเทมชิ้นนี้
-    console.log(`[generateRandomItem] slot=${template.slot} rarity=${config.name} baseStatsSet=`, [...baseStatsSet]);
+    const baseStatsValues = Array.from(baseStatsSet).reduce((acc, statKey) => {
+        acc[statKey] = stats[statKey];
+        return acc;
+    }, {} as Record<string, number>);
+
+    console.log(`[generateRandomItem] slot=${template.slot} rarity=${config.name} baseStatsValues=`, baseStatsValues);
+
 
     const ALL_STATS: (keyof Stats)[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk', 'maxHp',
         'hit', 'flee', 'critRate', 'critDmg', 'res', 'mRes', 'def', 'atk'];
@@ -251,6 +410,15 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
     // ... ส่วนที่เหลือ (elementBonus/raceBonus + return) เหมือนเดิมทุกประการ ไม่ต้องแก้อะไรเพิ่ม
 
+    const getMinMaxByTier = (tier: string) => {
+        switch (tier) {
+            case 'Legendary': return { min: 20, max: 35 };
+            case 'Epic': return { min: 12, max: 22 };
+            case 'Rare': return { min: 6, max: 12 };
+            default: return { min: 3, max: 8 };
+        }
+    };
+
 
     // 6. สุ่ม Bonus พิเศษ (Element/Race)
     let elementBonus, raceBonus;
@@ -258,25 +426,24 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         const isWeapon = template.slot === 'weapon';
         const isArmor = ['helm', 'armor', 'shield', 'boots', 'cloak'].includes(template.slot);
 
-        // โอกาสติดในแต่ละช่อง
         const elementChance = isWeapon ? 0.4 : 0.2;
         const raceChance = isArmor ? 0.4 : 0.2;
 
-        // สุ่ม Element
+        // เรียกใช้งานตรงนี้ได้เลยครับ
+        const tierRange = getMinMaxByTier(config.name);
+        const generateVal = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
         if (Math.random() < elementChance) {
-            const generateVal = (m: number) => Math.floor(Math.random() * (Math.round(2 * m * 1.5) - Math.round(2 * m * 0.5) + 1)) + Math.round(2 * m * 0.5);
             elementBonus = {
                 type: ELEMENT_POOL[Math.floor(Math.random() * ELEMENT_POOL.length)],
-                value: generateVal(config.mult * (isWeapon ? 1.2 : 1))
+                value: generateVal(tierRange.min, tierRange.max)
             };
         }
 
-        // สุ่ม Race
         if (Math.random() < raceChance) {
-            const generateVal = (m: number) => Math.floor(Math.random() * (Math.round(2 * m * 1.5) - Math.round(2 * m * 0.5) + 1)) + Math.round(2 * m * 0.5);
             raceBonus = {
                 type: RACE_POOL[Math.floor(Math.random() * RACE_POOL.length)],
-                value: generateVal(config.mult * (isArmor ? 1.2 : 1))
+                value: generateVal(tierRange.min, tierRange.max)
             };
         }
     }
@@ -294,10 +461,6 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         raceBonus,
         type: 'equipment'
     };
-
-
-
-
 }; // generateRandomItemSpecific
 
 export const generateRandomItemSpecific = (template: any, forcedRarity?: string, itemLevel: number = 1): Item => {
@@ -322,25 +485,28 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
     if (template.slot === 'weapon') {
+        // เช็คว่าใช่อาวุธสองมือ หรือ ระยะไกลไหม
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
         const isRanged = template.weaponType ? rangedTypes.includes(template.weaponType) : false;
         const isHeavyOrRanged = isTwoHanded || isRanged;
 
-        const baseAtk = getStat(isHeavyOrRanged ? 38 : 25, baseMult, itemLevel, 5);
-        const randomVariation = Math.floor(Math.random() * 11) - 5;
+        // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
+        const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
+        const randomVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
         stats.atk = Math.max(1, baseAtk + randomVariation);
-        baseStatsSet.add('atk'); // FIX
+        baseStatsSet.add('atk'); // FIX: lock atk ไว้ ไม่ให้โดนสุ่มซ้ำ
 
-        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1);
-        const hitVariation = Math.floor(Math.random() * 11) - 5;
+        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1); // สมมติให้ scale เลเวลเพิ่มขึ้นทีละ 1 ต่อเลเวล
+        const hitVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
         stats.hit = Math.max(1, baseHit + hitVariation);
-        baseStatsSet.add('hit'); // FIX
+        baseStatsSet.add('hit'); // FIX: lock hit ไว้ ไม่ให้โดนสุ่มซ้ำ
 
+        // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(5, baseMult, itemLevel, 3);
-            const strVariation = Math.floor(Math.random() * 11) - 5;
+            const baseStr = getStat(3, baseMult, itemLevel, 1); // ใช้ base เป็น 3, scale เป็น 3 (หรือปรับตามต้องการ)
+            const strVariation = Math.floor(Math.random() * 11) - 5; // สุ่มแกว่ง -5 ถึง +5
             stats.str = Math.max(1, baseStr + strVariation);
-            baseStatsSet.add('str'); // FIX
+            baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
@@ -456,14 +622,41 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         statsLog
     });
 
+    const getMinMaxByTier = (tier: string) => {
+        switch (tier) {
+            case 'Legendary': return { min: 20, max: 35 };
+            case 'Epic': return { min: 12, max: 22 };
+            case 'Rare': return { min: 6, max: 12 };
+            default: return { min: 3, max: 8 };
+        }
+    };
+
+
+    // 6. สุ่ม Bonus พิเศษ (Element/Race)
     let elementBonus, raceBonus;
     if (['Rare', 'Epic', 'Legendary'].includes(config.name)) {
+        const isWeapon = template.slot === 'weapon';
         const isArmor = ['helm', 'armor', 'shield', 'boots', 'cloak'].includes(template.slot);
-        if (Math.random() < (isWeapon ? 0.4 : 0.2)) {
-            elementBonus = { type: ELEMENT_POOL[Math.floor(Math.random() * ELEMENT_POOL.length)], value: Math.floor(Math.random() * (Math.round(2 * config.mult * (isWeapon ? 1.2 : 1) * 1.5) - Math.round(2 * config.mult * (isWeapon ? 1.2 : 1) * 0.5) + 1)) + Math.round(2 * config.mult * (isWeapon ? 1.2 : 1) * 0.5) };
+
+        const elementChance = isWeapon ? 0.4 : 0.2;
+        const raceChance = isArmor ? 0.4 : 0.2;
+
+        // เรียกใช้งานตรงนี้ได้เลยครับ
+        const tierRange = getMinMaxByTier(config.name);
+        const generateVal = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        if (Math.random() < elementChance) {
+            elementBonus = {
+                type: ELEMENT_POOL[Math.floor(Math.random() * ELEMENT_POOL.length)],
+                value: generateVal(tierRange.min, tierRange.max)
+            };
         }
-        if (Math.random() < (isArmor ? 0.4 : 0.2)) {
-            raceBonus = { type: RACE_POOL[Math.floor(Math.random() * RACE_POOL.length)], value: Math.floor(Math.random() * (Math.round(2 * config.mult * (isArmor ? 1.2 : 1) * 1.5) - Math.round(2 * config.mult * (isArmor ? 1.2 : 1) * 0.5) + 1)) + Math.round(2 * config.mult * (isArmor ? 1.2 : 1) * 0.5) };
+
+        if (Math.random() < raceChance) {
+            raceBonus = {
+                type: RACE_POOL[Math.floor(Math.random() * RACE_POOL.length)],
+                value: generateVal(tierRange.min, tierRange.max)
+            };
         }
     }
 

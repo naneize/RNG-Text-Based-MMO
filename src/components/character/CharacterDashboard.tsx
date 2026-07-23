@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCharacterDashboard } from '../../hooks/useCharacterDashboard';
 import { CombineSection } from '../Modals/CombineSection';
 import { CharacterStats } from './CharacterStats';
@@ -9,7 +9,9 @@ import { ItemDetailModal } from '../../components/Modals/ItemDetailModal';
 import { MaterialModal } from '../../components/Modals/MaterialModal';
 import { BonusDetailModal } from '../../components/Modals/BonusDetailModal';
 import { TransferModal } from '../../components/Modals/TransferModal';
+import { SalvageModal } from '../../components/Modals/SalvageModal';
 import type { Item } from '../../types/game';
+
 
 
 export const CharacterDashboard = () => {
@@ -18,11 +20,28 @@ export const CharacterDashboard = () => {
         lootedItem, setLootedItem, filter, setFilter, showCombine, setShowCombine,
         showBonusModal, setShowBonusModal, isLooting, progress, synergyBonusList,
         getCombinedBonuses, getDropChance, handleLoot, slots, filterOptions,
-        filteredInventory, getRarityColor, equippedItem, equipItem, unequipItem, transferItemStat
+        filteredInventory, getRarityColor, equippedItem, equipItem, unequipItem, transferItemStat,
+        epicPity, legendPity
     } = useCharacterDashboard();
 
     const [itemA, setItemA] = useState<Item | null>(null);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [itemToSalvage, setItemToSalvage] = useState<Item | null>(null);
+    const [isAutoActive, setIsAutoActive] = useState(false);
+
+
+    useEffect(() => {
+        let autoTimer: number; // 👈 เปลี่ยนจาก NodeJS.Timeout เป็น number
+
+        if (isAutoActive && !isLooting) {
+            autoTimer = window.setTimeout(() => {
+                handleLoot(true);
+            }, 100);
+        }
+
+        return () => window.clearTimeout(autoTimer);
+    }, [isAutoActive, isLooting, handleLoot]);
+
 
     return (
         <div className="flex flex-col gap-4">
@@ -54,7 +73,12 @@ export const CharacterDashboard = () => {
                     isLooting={isLooting}
                     progress={progress}
                     handleLoot={handleLoot}
+                    epicPity={epicPity}       // 👈 ส่งค่าตัวนี้ลงไปเพิ่ม
+                    legendPity={legendPity}
+                    isAutoActive={isAutoActive}       // 👈 เพิ่มตัวนี้
+                    setIsAutoActive={setIsAutoActive} // 👈 และตัวนี้
                 />
+
             </div>
 
             {showCombine && <CombineSection onClose={() => setShowCombine(false)} />}
@@ -77,6 +101,10 @@ export const CharacterDashboard = () => {
                         setItemA(selectedItem);       // จำไว้ว่าชิ้นนี้คือชิ้นต้นทาง
                         setIsTransferModalOpen(true);  // เปิด Modal เลือกชิ้นที่ 2
                         setSelectedItem(null);        // ปิด Modal รายละเอียด
+                    }}
+                    onSalvageClick={(item) => {
+                        setItemToSalvage(item);
+                        setSelectedItem(null);
                     }}
                 />
             )}
@@ -108,6 +136,14 @@ export const CharacterDashboard = () => {
                     setShowBonusModal={setShowBonusModal}
                     getCombinedBonuses={getCombinedBonuses}
                     equippedItems={player.equippedItems}
+                />
+            )}
+
+            {itemToSalvage && (
+                <SalvageModal
+                    item={itemToSalvage}
+                    onClose={() => setItemToSalvage(null)}
+                    getRarityColor={getRarityColor}
                 />
             )}
         </div>

@@ -1,21 +1,43 @@
 import React, { useEffect } from 'react';
-import type { RewardResult } from '../../utils/dropLogic'; // ดึง Type มาจากไฟล์ logic เลย
+import type { RewardResult } from '../../utils/dropLogic';
 import { materialLibrary } from '../../data/materialLibrary';
 
 interface RewardModalProps {
-    rewards: RewardResult[]; // ใช้ Type ที่เราประกาศไว้ใน dropLogic.ts
+    rewards: RewardResult[];
     onClose: () => void;
 }
 
 export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
 
-    // เพิ่ม useEffect สำหรับตั้งเวลาปิดอัตโนมัติ
+    // กำหนดน้ำหนักความหายาก (ใช้ string ทั่วไปเพื่อเลี่ยง Type Collision)
+    const rarityWeight: Record<string, number> = {
+        'Legendary': 1,
+        'Epic': 2,
+        'Rare': 3,
+        'Common': 4,
+        'material': 5
+    };
+
+    const sortedRewards = [...rewards].sort((a, b) => {
+        const getPriorityKey = (reward: any) => {
+            const typeStr = reward.type as string;
+            if (typeStr === 'material') return 'material';
+
+            // ดึงเรนิตี้จาก itemData โดยตรง
+            return reward.itemData?.rarity || 'Common';
+        };
+
+        const weightA = rarityWeight[getPriorityKey(a)] ?? 99;
+        const weightB = rarityWeight[getPriorityKey(b)] ?? 99;
+
+        return weightA - weightB;
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             onClose();
         }, 1500);
 
-        // ล้าง timer เมื่อ Component ถูกทำลาย เพื่อป้องกัน Memory Leak
         return () => clearTimeout(timer);
     }, [onClose]);
 
@@ -25,35 +47,44 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
                 <h2 className="text-xl font-bold text-emerald-400 mb-4 text-center">Victory</h2>
 
                 <div className="space-y-2 mb-6">
-                    {rewards.map((reward, index) => {
-                        // 1. หาข้อมูล Material จาก Library ให้ชัวร์ก่อนนำไปใช้
-                        const materialData = reward.type === 'material'
-                            ? materialLibrary.find(m => m.id === reward.id)
-                            : null;
+                    {sortedRewards.map((reward, index) => {
+                        const typeStr = (reward.type || '').toLowerCase();
+
+                        // 🟢 ค้นหาจาก materialLibrary โดยเช็คทั้ง id และ itemId เผื่อชื่อฟิลด์ไม่ตรงกัน
+                        const targetId = reward.id || (reward as any).itemId;
+                        const materialData = materialLibrary.find(m => m.id === targetId);
+
+                        // 🟢 ถ้าเจอใน materialLibrary ให้ดึง icon จากนั้นได้เลยทันที (ไม่ต้องสนว่า type จะตรงไหม)
+                        const iconSrc = materialData?.icon
+                            || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.icon : null)
+                            || (reward as any).icon
+                            || `/Icons/Materials/${targetId}.svg`;
+
+                        const displayName = materialData?.name
+                            || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.name : null)
+                            || (reward as any).name
+                            || targetId;
 
                         return (
                             <div key={index} className="flex items-center justify-between bg-slate-800 p-2 px-3 rounded text-sm">
                                 <div className="flex items-center gap-3">
-                                    {/* แก้ไขส่วนแสดงรูปภาพ: ใช้ materialData ที่หาเจอ */}
                                     <img
-                                        src={reward.type === 'item'
-                                            ? reward.itemData?.icon
-                                            : (materialData?.icon || reward.icon || '/placeholder.png')}
+                                        src={iconSrc}
                                         alt="reward-icon"
                                         className="w-8 h-8 object-contain bg-slate-900 rounded p-1"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = '/placeholder.png';
+                                        }}
                                     />
                                     <span className="text-white">
-                                        {reward.type === 'item'
-                                            ? reward.itemData?.name
-                                            : (materialData?.name || reward.id)}
+                                        {displayName}
                                     </span>
                                 </div>
 
-                                {/* แก้ไขส่วนแสดงจำนวน: ให้โชว์ค่า amount ถ้ามี */}
                                 <span className="text-emerald-400 font-bold">
-                                    {reward.type === 'material'
+                                    {typeStr === 'material'
                                         ? `x${reward.amount || 1}`
-                                        : (reward.itemData?.rarity || 'Item')}
+                                        : ((reward as any).itemData?.rarity || (reward as any).fixedRarity || (reward as any).rarity || typeStr || 'Item')}
                                 </span>
                             </div>
                         );

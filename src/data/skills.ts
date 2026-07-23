@@ -1,19 +1,18 @@
 // src/data/skills.ts
 import type { Item } from '../types/game';
 
-// เพิ่ม ID เพื่อให้จัดการระบบคอลเลกชันได้ง่ายขึ้น
 export const SKILL_POOL: Item[] = [
     {
         id: 'lightning_strike',
         name: 'Lightning Strike',
         type: 'skill',
         slot: 'skill',
-        rarity: 'Rare',
+        rarity: 'Common',
         icon: '/Icons/Skills/skill-lightning.svg',
         stats: {},
         statsLog: [],
-        uid: '', // จะถูกสร้างใหม่ตอนสุ่ม
-        description: 'Strikes enemies with a powerful lightning bolt.',
+        uid: '',
+        description: 'Strikes enemies with lightning.',
         effectChance: 25,
         effectPower: 30
     },
@@ -22,12 +21,12 @@ export const SKILL_POOL: Item[] = [
         name: 'Poison Slash',
         type: 'skill',
         slot: 'skill',
-        rarity: 'Rare',
+        rarity: 'Common',
         icon: '/Icons/Skills/skill-poison.svg',
         stats: {},
         statsLog: [],
         uid: '',
-        description: 'Deals damage and poisons the target for continuous damage.',
+        description: 'Deals damage and poisons the target.',
         effectChance: 30,
         effectPower: 40
     },
@@ -36,13 +35,83 @@ export const SKILL_POOL: Item[] = [
         name: 'Dodge and Counter',
         type: 'skill',
         slot: 'skill',
-        rarity: 'Epic',
+        rarity: 'Common',
         icon: '/Icons/Skills/skill-dodge.svg',
         stats: {},
         statsLog: [],
         uid: '',
-        description: 'Dodge an attack and immediately counter-attack.',
+        description: 'Dodge an attack and counter-attack.',
         effectChance: 40,
-        effectPower: 30
+        effectPower: 50
+    },
+    {
+        id: 'fire_burst',
+        name: 'Fire Burst',
+        type: 'skill',
+        slot: 'skill',
+        rarity: 'Common',
+        icon: '/Icons/Skills/skill-fire.svg',
+        stats: {},
+        statsLog: [],
+        uid: '',
+        description: 'Unleashes a burst of flames.',
+        effectChance: 25,
+        effectPower: 35
+    },
+    {
+        id: 'holy_smite',
+        name: 'Holy Smite',
+        type: 'skill',
+        slot: 'skill',
+        rarity: 'Common',
+        icon: '/Icons/Skills/skill-holy.svg',
+        stats: {},
+        statsLog: [],
+        uid: '',
+        description: 'Holy attack that damages enemies.',
+        effectChance: 30,
+        effectPower: 45
+    },
+    {
+        id: 'berserk_rage',
+        name: 'Berserk Rage',
+        type: 'skill',
+        slot: 'skill',
+        rarity: 'Common',
+        icon: '/Icons/Skills/skill-berserk.svg',
+        stats: {},
+        statsLog: [],
+        uid: '',
+        description: 'Unleash fury in battle.',
+        effectChance: 35,
+        effectPower: 50
+    },
+    {
+        id: 'wind_blade',
+        name: 'Wind Blade',
+        type: 'skill',
+        slot: 'skill',
+        rarity: 'Common',
+        icon: '/Icons/Skills/skill-wind.svg',
+        stats: {},
+        statsLog: [],
+        uid: '',
+        description: 'Swift wind attack.',
+        effectChance: 28,
+        effectPower: 32
+    },
+    {
+        id: 'ice_shard',
+        name: 'Ice Shard',
+        type: 'skill',
+        slot: 'skill',
+        rarity: 'Common',
+        icon: '/Icons/Skills/skill-ice.svg',
+        stats: {},
+        statsLog: [],
+        uid: '',
+        description: 'Piercing ice attack.',
+        effectChance: 26,
+        effectPower: 38
     }
 ];

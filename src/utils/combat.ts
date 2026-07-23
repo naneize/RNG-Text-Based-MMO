@@ -230,14 +230,49 @@ export const calculateDamage = (
         effectChance: number;
         effectPower: number;
         name?: string;
-    }
+        skillCondition?: {
+            elementBonusAgainst?: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
+            elementBonusPercent?: number;
+            raceBonusAgainst?: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon';
+            raceBonusPercent?: number;
+            scalingStat?: keyof Stats;
+            scalingMultiplier?: number;
+            damageType?: 'physical' | 'magic';
+            requiresLowHp?: boolean;
+            requiresHighHp?: boolean;
+            hpThreshold?: number;
+        };
+    },
+    // เพิ่มพารามิเตอร์สำหรับเช็คเงื่อนไข HP ของผู้โจมตี
+    attackerCurrentHp?: number,
+    attackerMaxHp?: number,
+    // เพิ่มพารามิเตอร์สำหรับเช็คธาตุและเผ่าของศัตรู
+    defenderElement?: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral',
+    defenderRace?: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon'
 ) => {
     // --- กำหนดค่าเริ่มต้นสำหรับ optional chaining เพื่อป้องกัน error ---
     const flatBonus = bonusDamage.flatBonus || 0;
     const elementPercent = bonusDamage.elementPercent || 0;
     const racePercent = bonusDamage.racePercent || 0;
-    const weaponWeaknessPercent = bonusDamage.weaponWeaknessPercent || 0; // <--- ดึงค่ามาใช้
+    const weaponWeaknessPercent = bonusDamage.weaponWeaknessPercent || 0;
 
+    // --- เช็คเงื่อนไขสกิล (ให้ canUseSkill เป็น true เสมอ เพื่อให้สกิลออกปกติ ไม่โดนบล็อกการออกผล) ---
+    let canUseSkill = true;
+    if (skill?.skillCondition) {
+        const cond = skill.skillCondition;
+
+        // เช็คเงื่อนไข High HP เท่านั้นที่ยังอาจบล็อกได้ (ถ้ามี) ส่วน Low HP ปล่อยให้ออกปกติแล้วไปคูณโบนสดาเมจด้านล่างแทน
+        if (
+            cond.requiresHighHp &&
+            attackerCurrentHp !== undefined &&
+            attackerMaxHp !== undefined
+        ) {
+            const hpPercent = (attackerCurrentHp / attackerMaxHp) * 100;
+            if (hpPercent < (cond.hpThreshold || 50)) {
+                canUseSkill = false;
+            }
+        }
+    }
 
     // 2. คำนวณ Hit/Miss (มีการคุมขอบเขต 5% - 95%)
     let hitChance = 80 + (attacker.hit - defender.flee);
@@ -248,24 +283,58 @@ export const calculateDamage = (
     }
 
     // 3. คำนวณ Base Damage (พลังโจมตีฐาน + โบนัสคงที่)
-    const rawBase = isMagic ? attacker.skillPower : attacker.atk;
+    const damageType = skill?.skillCondition?.damageType || (isMagic ? 'magic' : 'physical');
+    const rawBase = damageType === 'magic' ? attacker.skillPower : attacker.atk;
 
     // --- เพิ่มเติม: คำนวณการทำงานของสกิลและโบนัสดาเมจจาก Skill Power ---
     let isSkillActive = false;
     let skillDamageBonus = 0;
-    if (skill && Math.random() * 100 < skill.effectChance) {
+    if (skill && canUseSkill && Math.random() * 100 < skill.effectChance) {
         isSkillActive = true;
-        // สูตร: พลังเวท (skillPower) * (เปอร์เซ็นต์ความแรงสกิล / 100)
-        skillDamageBonus = attacker.skillPower * (skill.effectPower / 100);
+
+        // 📌 เปลี่ยนฐานคำนวณตาม damageType ของสกิล (ถ้าเป็น physical ใช้ atk, ถ้าเป็น magic ใช้ skillPower)
+        const baseForSkill = damageType === 'magic' ? attacker.skillPower : attacker.atk;
+        skillDamageBonus = baseForSkill * (skill.effectPower / 100);
+
+        // เพิ่ม stat scaling จาก skillCondition
+        if (skill.skillCondition?.scalingStat && skill.skillCondition?.scalingMultiplier) {
+            const scalingValue = attacker[skill.skillCondition.scalingStat] || 0;
+            skillDamageBonus += scalingValue * skill.skillCondition.scalingMultiplier;
+        }
+
+        // โบนัส HP ต่ำกว่า 50% (เช็คเงื่อนไขและค่าเลือดปัจจุบันก่อนคูณ 1.25 เพื่อให้โบนัสทำงานเฉพาะตอนเลือดต่ำกว่า Threshold จริงๆ)
+        if (skill.skillCondition?.requiresLowHp && attackerCurrentHp !== undefined && attackerMaxHp !== undefined) {
+            const hpPercent = (attackerCurrentHp / attackerMaxHp) * 100;
+            if (hpPercent < (skill.skillCondition.hpThreshold || 50)) {
+                skillDamageBonus *= 1.25;
+            }
+        }
     }
 
-    // --- แก้ไข: นำค่าโบนัสเปอร์เซ็นต์มาคูณกับดาเมจฐาน + ดาเมจสกิล ---
-    // สูตรใหม่: (ดาเมจฐาน + โบนัสคงที่ + โบนัสสกิล) * (1 + โบนัสธาตุ% + โบนัสเผ่า%)
-    const totalMultiplier = 1 + elementPercent + racePercent + weaponWeaknessPercent;
+    // --- คำนวณโบนัสธาตุและเผ่าจากสกิล ---
+    let skillElementBonus = 0;
+    let skillRaceBonus = 0;
+
+    if (skill?.skillCondition && isSkillActive) {
+        const cond = skill.skillCondition;
+
+        // เช็คธาตุ
+        if (cond.elementBonusAgainst && defenderElement === cond.elementBonusAgainst) {
+            skillElementBonus = (cond.elementBonusPercent || 0) / 100;
+        }
+
+        // เช็คเผ่า
+        if (cond.raceBonusAgainst && defenderRace === cond.raceBonusAgainst) {
+            skillRaceBonus = (cond.raceBonusPercent || 0) / 100;
+        }
+    }
+
+    // --- คำนวณดาเมจรวม ---
+    const totalMultiplier = 1 + elementPercent + racePercent + weaponWeaknessPercent + skillElementBonus + skillRaceBonus;
     let baseDamage = (rawBase + flatBonus + skillDamageBonus) * totalMultiplier;
 
     // 4. คำนวณ Mitigation จาก DEF หรือ mRes (แบบเศษส่วน)
-    const mitigation = isMagic ? defender.mRes : defender.def;
+    const mitigation = damageType === 'magic' ? defender.mRes : defender.def;
     const damageReductionFactor = 100 / (100 + mitigation);
     let damage = baseDamage * damageReductionFactor;
 
@@ -273,7 +342,6 @@ export const calculateDamage = (
     const isCrit = Math.random() * 100 < attacker.critRate;
     if (isCrit) {
         let critMultiplier = (1.5 + (attacker.critDmg / 200));
-        // เปลี่ยนจาก defender.res เป็น defender.mRes
         const critResistance = Math.min(defender.mRes / 5000, 0.4);
         critMultiplier -= critResistance;
         damage *= critMultiplier;

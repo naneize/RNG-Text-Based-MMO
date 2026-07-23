@@ -8,6 +8,7 @@ interface ItemDetailModalProps {
     equippedInSlot: Item | null;
     equipItem: (item: Item) => void;
     onTransferClick: () => void;
+    onSalvageClick: (item: Item) => void;
 }
 
 
@@ -19,7 +20,8 @@ export const ItemDetailModal = ({
     getDropChance,
     equippedInSlot,
     equipItem,
-    onTransferClick
+    onTransferClick,
+    onSalvageClick
 }: ItemDetailModalProps) => {
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedItem(null)}>
@@ -89,85 +91,152 @@ export const ItemDetailModal = ({
                     )}
 
                     {selectedItem.type === 'skill' && (
-                        <div className="flex justify-around bg-slate-800 p-2 rounded-lg border border-slate-700 mb-4">
-                            <div className="text-center">
-                                <div className="text-[9px] text-slate-400 uppercase">Chance</div>
-                                <div className="text-yellow-400 font-bold text-xs">{selectedItem.effectChance}%</div>
+                        <div className="space-y-3 mb-4">
+                            {/* 🟢 แสดง Description เสมอ (ถ้ามีข้อมูลในไอเท็ม) */}
+                            {selectedItem.description && (
+                                <div className="text-xs text-slate-300 bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/60">
+                                    {selectedItem.description}
+                                </div>
+                            )}
+
+                            <div className="flex justify-around bg-slate-800 p-2 rounded-lg border border-slate-700">
+                                <div className="text-center">
+                                    <div className="text-[9px] text-slate-400 uppercase">Chance</div>
+                                    <div className="text-yellow-400 font-bold text-xs">{selectedItem.effectChance}%</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-[9px] text-slate-400 uppercase">Power</div>
+                                    <div className="text-red-400 font-bold text-xs">{selectedItem.effectPower}</div>
+                                </div>
                             </div>
-                            <div className="text-center">
-                                <div className="text-[9px] text-slate-400 uppercase">Power</div>
-                                <div className="text-red-400 font-bold text-xs">{selectedItem.effectPower}</div>
-                            </div>
+
+                            {/* Skill Conditions Display (จะแสดงเฉพาะตอนที่มีออฟชันเสริม เช่น Rare ขึ้นไป) */}
+                            {selectedItem.skillCondition && (
+                                <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700 space-y-2">
+                                    <div className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider border-b border-slate-700 pb-1">Skill Conditions</div>
+
+                                    {/* Damage Type */}
+                                    {selectedItem.skillCondition.damageType && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase">Damage Type</span>
+                                            <span className={`text-[10px] font-bold uppercase ${selectedItem.skillCondition.damageType === 'magic' ? 'text-purple-400' : 'text-orange-400'}`}>
+                                                {selectedItem.skillCondition.damageType}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Element Bonus */}
+                                    {selectedItem.skillCondition.elementBonusAgainst && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase">Vs Element</span>
+                                            <span className="text-[10px] text-blue-400 font-bold">
+                                                {selectedItem.skillCondition.elementBonusAgainst} +{selectedItem.skillCondition.elementBonusPercent}%
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Race Bonus */}
+                                    {selectedItem.skillCondition.raceBonusAgainst && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase">Vs Race</span>
+                                            <span className="text-[10px] text-amber-400 font-bold">
+                                                {selectedItem.skillCondition.raceBonusAgainst} +{selectedItem.skillCondition.raceBonusPercent}%
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Stat Scaling */}
+                                    {selectedItem.skillCondition.scalingStat && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase">Scales With</span>
+                                            <span className="text-[10px] text-emerald-400 font-bold">
+                                                {selectedItem.skillCondition.scalingStat.toUpperCase()} ×{selectedItem.skillCondition.scalingMultiplier?.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* HP Conditions */}
+                                    {(selectedItem.skillCondition.requiresLowHp || selectedItem.skillCondition.requiresHighHp) && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase">
+                                                Bonus <span className="text-emerald-400 font-semibold">+25%</span> {selectedItem.skillCondition.requiresLowHp ? 'When HP <' : 'When HP Below'}
+                                            </span>
+                                            <span className="text-[10px] text-red-400 font-bold">
+                                                {selectedItem.skillCondition.hpThreshold}%
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {/* ส่วน Stats Gained + เปรียบเทียบ */}
-                    {(selectedItem.stats && Object.keys(selectedItem.stats).length > 0) && (
-                        <div className="space-y-4 flex-grow">
-                            <div>
-                                <div className="text-[9px] text-emerald-500 font-bold mb-1 uppercase tracking-wider">
-                                    {equippedInSlot ? "Stats Comparison" : "Stats Gained"}
-                                </div>
+                    {(selectedItem.type !== 'skill' && selectedItem.slot !== 'skill' && selectedItem.stats && Object.keys(selectedItem.stats).length > 0) && (<div className="space-y-4 flex-grow">
+                        <div>
+                            <div className="text-[9px] text-emerald-500 font-bold mb-1 uppercase tracking-wider">
+                                {equippedInSlot ? "Stats Comparison" : "Stats Gained"}
+                            </div>
 
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(selectedItem.elementBonus || equippedInSlot?.elementBonus) && (
-                                        <div className="col-span-2 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex justify-between items-center">
-                                            <span className="text-[9px] text-blue-400 font-bold uppercase">
-                                                Element: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
+                            <div className="grid grid-cols-2 gap-2">
+                                {(selectedItem.elementBonus || equippedInSlot?.elementBonus) && (
+                                    <div className="col-span-2 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex justify-between items-center">
+                                        <span className="text-[9px] text-blue-400 font-bold uppercase">
+                                            Element: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {equippedInSlot?.elementBonus && (
+                                                <span className="text-[10px] text-slate-500">{equippedInSlot.elementBonus.value}%</span>
+                                            )}
+                                            {equippedInSlot?.elementBonus && <span className="text-[10px] text-slate-600">→</span>}
+                                            <span className="text-emerald-400 font-bold text-[11px]">
+                                                + {selectedItem.elementBonus?.value || 0}%
                                             </span>
-                                            <div className="flex items-center gap-2">
-                                                {equippedInSlot?.elementBonus && (
-                                                    <span className="text-[10px] text-slate-500">{equippedInSlot.elementBonus.value}%</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(selectedItem.raceBonus || equippedInSlot?.raceBonus) && (
+                                    <div className="col-span-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex justify-between items-center">
+                                        <span className="text-[9px] text-amber-400 font-bold uppercase">
+                                            Race: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {equippedInSlot?.raceBonus && (
+                                                <span className="text-[10px] text-slate-500">{equippedInSlot.raceBonus.value}%</span>
+                                            )}
+                                            {equippedInSlot?.raceBonus && <span className="text-[10px] text-slate-500">→</span>}
+                                            <span className="text-emerald-400 font-bold text-[11px]">
+                                                + {selectedItem.raceBonus?.value || 0}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {Array.from(new Set([...Object.keys(selectedItem.stats), ...Object.keys(equippedInSlot?.stats || {})])).map((stat) => {
+                                    const newVal = (selectedItem.stats as any)[stat] || 0;
+                                    const oldVal = equippedInSlot ? (equippedInSlot.stats as any)?.[stat] || 0 : 0;
+                                    const diff = newVal - oldVal;
+
+                                    if (newVal === 0 && oldVal === 0) return null;
+
+                                    return (
+                                        <div key={stat} className="bg-slate-800 p-2 rounded text-center">
+                                            <div className="text-[9px] text-slate-400 uppercase">{stat}</div>
+                                            <div className="font-bold text-sm text-slate-200">
+                                                {newVal > 0 ? newVal : 0}
+                                                {equippedInSlot && diff !== 0 && (
+                                                    <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                        ({diff > 0 ? '+' : ''}{diff})
+                                                    </span>
                                                 )}
-                                                {equippedInSlot?.elementBonus && <span className="text-[10px] text-slate-600">→</span>}
-                                                <span className="text-emerald-400 font-bold text-[11px]">
-                                                    + {selectedItem.elementBonus?.value || 0}%
-                                                </span>
                                             </div>
                                         </div>
-                                    )}
-
-                                    {(selectedItem.raceBonus || equippedInSlot?.raceBonus) && (
-                                        <div className="col-span-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex justify-between items-center">
-                                            <span className="text-[9px] text-amber-400 font-bold uppercase">
-                                                Race: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                {equippedInSlot?.raceBonus && (
-                                                    <span className="text-[10px] text-slate-500">{equippedInSlot.raceBonus.value}%</span>
-                                                )}
-                                                {equippedInSlot?.raceBonus && <span className="text-[10px] text-slate-500">→</span>}
-                                                <span className="text-emerald-400 font-bold text-[11px]">
-                                                    + {selectedItem.raceBonus?.value || 0}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {Array.from(new Set([...Object.keys(selectedItem.stats), ...Object.keys(equippedInSlot?.stats || {})])).map((stat) => {
-                                        const newVal = (selectedItem.stats as any)[stat] || 0;
-                                        const oldVal = equippedInSlot ? (equippedInSlot.stats as any)?.[stat] || 0 : 0;
-                                        const diff = newVal - oldVal;
-
-                                        if (newVal === 0 && oldVal === 0) return null;
-
-                                        return (
-                                            <div key={stat} className="bg-slate-800 p-2 rounded text-center">
-                                                <div className="text-[9px] text-slate-400 uppercase">{stat}</div>
-                                                <div className="font-bold text-sm text-slate-200">
-                                                    {newVal > 0 ? newVal : 0}
-                                                    {equippedInSlot && diff !== 0 && (
-                                                        <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                            ({diff > 0 ? '+' : ''}{diff})
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                    );
+                                })}
                             </div>
                         </div>
+                    </div>
                     )}
 
                     <div className="flex gap-2 mt-6">
@@ -185,6 +254,20 @@ export const ItemDetailModal = ({
                                 className="flex-1 bg-violet-700 hover:bg-violet-600 py-2 rounded font-bold text-white transition-all"
                             >
                                 STATS TRANSFER
+                            </button>
+                        )}
+
+
+                        {/* อนุญาตให้ย่อยได้ทุกอย่างยกเว้น Material  */}
+                        {selectedItem.type !== 'material' && (
+                            <button
+                                onClick={() => {
+                                    onSalvageClick(selectedItem);
+                                    setSelectedItem(null);
+                                }}
+                                className="flex-1 bg-amber-600 hover:bg-amber-500 py-2 rounded font-bold text-white transition-all"
+                            >
+                                SALVAGE
                             </button>
                         )}
 

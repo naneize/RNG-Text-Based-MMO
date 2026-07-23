@@ -14,7 +14,7 @@ export const itemLibrary: ItemTemplate[] = [
     { id: 'short_sword', name: 'Short Sword', slot: 'weapon', weaponType: 'sword', icon: '/Icons/Equipments/short_sword.svg', type: 'equipment' },
     { id: 'gladius', name: 'Gladius', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/gladius.svg', type: 'equipment' },
     { id: 'morning_star', name: 'Morning Star', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/morning_star.svg', type: 'equipment' },
-    { id: 'hand_axe', name: 'Hand Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/hand_axe.svg', type: 'equipment' },
+    { id: 'two_hand_axe', name: 'Two Hand Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/two_hand_axe.svg', type: 'equipment' },
 
     // --- TWO-HAND WEAPONS ---
     { id: 'war_hammer', name: 'War Hammer', slot: 'weapon', weaponType: 'hammer', icon: '/Icons/Equipments/war_hammer.svg', type: 'equipment' },
@@ -128,5 +128,12 @@ export const itemLibrary: ItemTemplate[] = [
     { id: 'leather', name: 'Leather', slot: 'material', icon: '/Icons/Materials/leather.svg', type: 'material' },
     { id: 'magic_dust', name: 'Magic Dust', slot: 'material', icon: '/Icons/Materials/magic_dust.svg', type: 'material' },
     { id: 'dragon_scale', name: 'Dragon Scale', slot: 'material', icon: '/Icons/Materials/dragon_scale.svg', type: 'material' },
+    { id: 'mithril', name: 'Mithril', slot: 'material', icon: '/Icons/Materials/mithril.svg', type: 'material' },
+    { id: 'gold_ore', name: 'Gold Ore', slot: 'material', icon: '/Icons/Materials/gold_ore.svg', type: 'material' },
+    { id: 'dark_crystal', name: 'Dark Crystal', slot: 'material', icon: '/Icons/Materials/dark_crystal.svg', type: 'material' },
+    { id: 'void_essence', name: 'Void Essence', slot: 'material', icon: '/Icons/Materials/void_essence.svg', type: 'material' },
+    { id: 'celestial_shard', name: 'Celestial Shard', slot: 'material', icon: '/Icons/Materials/celestial_shard.svg', type: 'material' },
+    { id: 'ancient_rune', name: 'Ancient Rune', slot: 'material', icon: '/Icons/Materials/ancient_rune.svg', type: 'material' },
+    { id: 'primordial_essence', name: 'Primordial Essence', slot: 'material', icon: '/Icons/Materials/primordial_essence.svg', type: 'material' },
 ] as const;
 

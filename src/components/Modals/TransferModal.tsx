@@ -29,6 +29,15 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
     const costB = targetItemB ? TRANSFER_COSTS[targetItemB.rarity.toLowerCase()] : null;
     const actualSuccessRate = (costA && costB) ? Math.min(costA.successRate, costB.successRate) : 0;
 
+    const activeMaterialsConfig = (costA && costB)
+        ? (costA.successRate <= costB.successRate ? costA : costB) // ยิ่ง Success Rate น้อย ยิ่งแพง/ของสูง
+        : (costA || costB);
+
+    const hasEnough = activeMaterialsConfig ? activeMaterialsConfig.materials.every(req => {
+        const playerHas = materials[req.id] || 0;
+        return playerHas >= req.amount;
+    }) : false;
+
 
     const [resultModal, setResultModal] = useState<{
         isOpen: boolean;
@@ -45,12 +54,6 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
         gainedValB?: number;
         message: string;
     } | null>(null);
-
-    const cost = (costA && costB)
-        ? (costA.amount >= costB.amount ? costA : costB)
-        : (costA || costB);
-
-    const hasEnough = cost ? (materials[cost.materialId] || 0) >= cost.amount : false;
 
     if (!itemA) return null;
 
@@ -209,20 +212,30 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                 {step === 'SELECT_STAT_B' && targetItemB && (
                     <div className="space-y-4">
 
-
-                        {/* ส่วนแสดงค่าสถานะ (Success Rate & Cost) */}
-                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 flex justify-between text-xs">
-                            <div className="flex gap-2">
+                        {/* ส่วนแสดงค่าสถานะ (Success Rate & Materials Cost List) */}
+                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 space-y-2 text-xs">
+                            <div className="flex justify-between">
                                 <span className="text-slate-400">Success Rate:</span>
                                 <span className={`font-bold ${actualSuccessRate < 20 ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
                                     {actualSuccessRate}%
                                 </span>
                             </div>
-                            <div className="flex gap-2">
-                                <span className="text-slate-400">Required:</span>
-                                <span className={`font-bold ${hasEnough ? 'text-yellow-500' : 'text-red-500'}`}>
-                                    {materials[cost?.materialId || ''] || 0} / {cost?.amount || 0}x {cost?.materialId?.toUpperCase().replace('_', ' ') || 'NONE'}
-                                </span>
+                            <div>
+                                <span className="text-slate-400 block mb-1">Required Materials:</span>
+                                <div className="grid grid-cols-1 gap-1">
+                                    {activeMaterialsConfig?.materials.map(req => {
+                                        const currentAmount = materials[req.id] || 0;
+                                        const isEnoughMat = currentAmount >= req.amount;
+                                        return (
+                                            <div key={req.id} className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
+                                                <span className="text-slate-300 uppercase">{req.id.replace('_', ' ')}</span>
+                                                <span className={`font-bold ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
+                                                    {currentAmount} / {req.amount}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 

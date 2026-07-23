@@ -37,6 +37,26 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
                         value: item.raceBonus.value
                     });
                 }
+
+                // เช็กจาก skillCondition สำหรับสกิล (skill1 และ skill2)
+                if (item.skillCondition) {
+                    if (item.skillCondition.elementBonusAgainst && item.skillCondition.elementBonusPercent) {
+                        elementsList.push({
+                            itemName: item.name,
+                            slot,
+                            type: item.skillCondition.elementBonusAgainst,
+                            value: item.skillCondition.elementBonusPercent
+                        });
+                    }
+                    if (item.skillCondition.raceBonusAgainst && item.skillCondition.raceBonusPercent) {
+                        racesList.push({
+                            itemName: item.name,
+                            slot,
+                            type: item.skillCondition.raceBonusAgainst,
+                            value: item.skillCondition.raceBonusPercent
+                        });
+                    }
+                }
             }
         });
 

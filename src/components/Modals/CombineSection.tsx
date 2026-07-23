@@ -44,8 +44,8 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                 return {
                     requirements: [
                         { material: 'iron_ore', amount: 10 },
-                        { material: 'steel_ingot', amount: 5 },
-                        { material: 'leather', amount: 20 }
+                        { material: 'steel_ingot', amount: 10 },
+                        { material: 'leather', amount: 10 }
                     ],
                     chance: 35
                 };

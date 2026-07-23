@@ -57,6 +57,28 @@ export interface ItemTemplate {
 }
 
 // Item คือไอเทมที่เกิดขึ้นจริง (Instance) ซึ่งขยายมาจาก Template
+export interface SkillCondition {
+    // ธาตุที่สกิลโจมตีแรงขึ้น (เช่น Water = +20% damage vs Water)
+    elementBonusAgainst?: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
+    elementBonusPercent?: number; // เปอร์เซ็นต์โบนัส (เช่น 20 = 20%)
+
+    // เผ่าพันธุ์ที่สกิลโจมตีแรงขึ้น
+    raceBonusAgainst?: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel';
+    raceBonusPercent?: number;
+
+    // Stat ที่ใช้คำนวณความแรงสกิล (เช่น INT จะเพิ่ม damage)
+    scalingStat?: keyof Stats;
+    scalingMultiplier?: number; // คูณกับ stat (เช่น 0.5 = 50% ของ INT)
+
+    // ประเภทดาเมจของสกิล
+    damageType?: 'physical' | 'magic';
+
+    // เงื่อนไขพิเศษอื่นๆ
+    requiresLowHp?: boolean; // ทำงานเมื่อ HP ต่ำ
+    requiresHighHp?: boolean; // ทำงานเมื่อ HP สูง
+    hpThreshold?: number; // เปอร์เซ็นต์ HP (เช่น 30 = 30%)
+}
+
 export interface Item extends ItemTemplate {
     uid: string;
     rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
@@ -68,12 +90,15 @@ export interface Item extends ItemTemplate {
     effectChance?: number;
     effectPower?: number;
 
+    // เงื่อนไขพิเศษสำหรับสกิล
+    skillCondition?: SkillCondition;
+
     elementBonus?: {
         type: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
         value: number
     };
     raceBonus?: {
-        type: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel';
+        type: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon';
         value: number
     };
 }
@@ -88,6 +113,9 @@ export interface Player {
     maxHp?: number;
     inventory: Item[];
     materials: Record<string, number>;
+    totalRolls: number;
+    epicPity: number;     // ✅ เพิ่มเข้ามาใหม่
+    legendPity: number;
     equippedItems: {
         weapon: Item | null;
         armor: Item | null;
@@ -97,9 +125,15 @@ export interface Player {
         necklace: Item | null;
         ring: Item | null;
         boots: Item | null;
-        skill: Item | null;
+        skill1: Item | null;
+        skill2: Item | null;
     };
 }
+
+export const PITY_CONFIG = {
+    EPIC: 30,     // 👈 เปลี่ยนตรงนี้ที่เดียวจบ
+    LEGEND: 70   // 👈 เปลี่ยนตรงนี้ที่เดียวจบ
+};
 
 export const WEAKNESS_BONUS_RATE = 0.2;
 
@@ -116,7 +150,7 @@ export interface Boss {
 
     // ข้อมูลจำเพาะของบอส
     element: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
-    race: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel';
+    race: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon';
     zone: string;
     weakness?: 'sword' | 'two-hand sword' | 'bow' | 'crossbow'
     | 'dagger' | 'staff' | 'mace' | 'spear' | 'axe' | 'sling' | 'throwing' | 'hammer' | 'fist';
@@ -147,12 +181,12 @@ export interface MaterialTemplate {
 export interface DropItem {
     itemId: string;
     dropChance: number;
-    type: 'item' | 'material';
+    type: 'item' | 'material' | 'skill';
 
     // สำหรับแร่
     amountRange?: { min: number; max: number };
 
-    // สำหรับไอเทม
+    // สำหรับไอเทมและสกิล
     statRanges?: Partial<Record<keyof Stats, { min: number; max: number }>>;
     fixedRarity?: 'Common' | 'Rare' | 'Epic' | 'Legendary';
 }
