@@ -13,7 +13,12 @@ export const AchievementPage: React.FC = () => {
     const { achievements, claimReward } = useAchievementStore();
     const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
-    const filteredAchievements = Object.values(achievements).filter((ach) => {
+    const achievementList = Object.values(achievements);
+
+    const totalCount = achievementList.length;
+    const unlockedCount = achievementList.filter((ach) => ach.isUnlocked).length;
+
+    const filteredAchievements = achievementList.filter((ach) => {
         if (selectedFilter === 'all') return true;
         return ach.category === selectedFilter;
     });
@@ -21,10 +26,25 @@ export const AchievementPage: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+
                 <div>
-                    <h2 className="text-2xl font-bold text-emerald-400">Achievements</h2>
-                    <p className="text-slate-400 text-sm">Complete special conditions to earn rewards and glory!</p>
+                    {/* เพิ่ม Badge/Text แสดงความคืบหน้า (Unlocked / Total) */}
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-emerald-400">Achievements</h2>
+
+                    </div>
+                    <p className="text-slate-400 text-sm mt-1">Complete special conditions to earn rewards and glory!</p>
                 </div>
+
+
+
+                {/* ใส่ ml-auto เพิ่มตรงนี้ */}
+                <span className="ml-auto text-xs px-3 py-1 rounded-full bg-slate-800 text-emerald-400 border border-slate-700 font-semibold">
+                    {unlockedCount} / {totalCount} Completed
+                </span>
+
+
 
                 {/* ปุ่ม Filter หมวดหมู่ */}
                 <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800 w-fit">
@@ -46,6 +66,16 @@ export const AchievementPage: React.FC = () => {
                     >
                         Collection
                     </button>
+                    {/* 🟢 เพิ่มปุ่ม Filter หมวด Combat ตรงนี้ */}
+                    <button
+                        onClick={() => setSelectedFilter('combat')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFilter === 'combat'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'text-slate-400 hover:text-white'
+                            }`}
+                    >
+                        Combat
+                    </button>
                     <button
                         onClick={() => setSelectedFilter('challenge')}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFilter === 'challenge'
@@ -56,7 +86,10 @@ export const AchievementPage: React.FC = () => {
                         Challenge
                     </button>
                 </div>
+
             </div>
+
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredAchievements.map((ach) => {
@@ -91,24 +124,25 @@ export const AchievementPage: React.FC = () => {
 
                                 {/* ส่วนแสดงรางวัลและปุ่มกดรับ */}
                                 <div className="mt-3 flex items-center justify-between gap-2">
-                                    {ach.reward && (
+                                    {/* 📌 แปลงข้อความทั้งหมดให้เป็นตัวพิมพ์ใหญ่ด้วย .toUpperCase() */}
+                                    {ach.reward && Array.isArray(ach.reward) && ach.reward.length > 0 && (
                                         <div className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                                            🎁 Reward : {ach.reward.amount} {getItemDisplayName(ach.reward.itemId) || ach.reward.type?.toUpperCase()}
+                                            🎁 REWARD : {ach.reward.map((rew) => `${rew.amount} ${(getItemDisplayName(rew.itemId) || rew.type).toUpperCase()}`).join(' , ')}
                                         </div>
                                     )}
 
                                     {/* เงื่อนไขแสดงปุ่ม Claim */}
                                     {isUnlocked && (
                                         ach.isClaimed ? (
-                                            <span className="text-xs px-3 py-1 rounded-lg bg-slate-800 text-slate-500 font-medium">
-                                                Claimed
+                                            <span className="text-xs px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 font-bold flex items-center gap-1">
+                                                ✓ CLAIMED
                                             </span>
                                         ) : (
                                             <button
                                                 onClick={() => claimReward(ach.id)}
                                                 className="text-xs px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-lg shadow-emerald-500/20 animate-pulse"
                                             >
-                                                Claim Reward
+                                                CLAIM REWARD
                                             </button>
                                         )
                                     )}

@@ -7,6 +7,40 @@ import { TRANSFER_COSTS } from '../data/transferConfig';
 import { calculateBossDrops } from '../utils/dropLogic';
 import { useAchievementStore } from './achievementStore';
 
+export interface SalvageRateConfig {
+    rate: number;         // เช่น 0.9 (ใช้คำนวณ)
+    displayRate: number;  // เช่น 90 (ใช้แสดงผล UI %)
+    label: string;
+    color: string;
+}
+
+export const SALVAGE_RATES: Record<string, SalvageRateConfig> = {
+    common: {
+        rate: 0.90,
+        displayRate: 90,
+        label: 'Common',
+        color: 'text-slate-300 border-slate-600 bg-slate-800'
+    },
+    rare: {
+        rate: 0.75,
+        displayRate: 75,
+        label: 'Rare',
+        color: 'text-blue-300 border-blue-600/60 bg-blue-950/40'
+    },
+    epic: {
+        rate: 0.45,
+        displayRate: 45,
+        label: 'Epic',
+        color: 'text-purple-300 border-purple-600/60 bg-purple-950/40'
+    },
+    legendary: {
+        rate: 0.35,
+        displayRate: 35,
+        label: 'Legendary',
+        color: 'text-amber-300 border-amber-600/60 bg-amber-950/40'
+    }
+};
+
 
 let isProcessing = false;
 interface TransferResult {
@@ -45,6 +79,20 @@ interface GameState {
     isProcessingReward: boolean; // เพิ่มตัวนี้
     setProcessingReward: (status: boolean) => void;
     salvageItem: (uid: string) => { success: boolean; materialsGained: { id: string; amount: number }[]; message: string };
+    salvageAllByRarity: (rarityToSalvage: string) => {
+        success: boolean;
+        totalSalvaged: number;
+        successCount: number;
+        summaryMaterials: { id: string; amount: number }[];
+        // 🟢 เพิ่มบรรทัดนี้เข้าไปครับ
+        detailedResults?: {
+            itemName: string;
+            itemIcon?: string;
+            isSuccess: boolean;
+            materials: { id: string; amount: number }[];
+        }[];
+        message: string;
+    };
     epicPity: number;
     legendPity: number;
     addEpicPity: () => void;
@@ -294,7 +342,7 @@ export const useGameStore = create<GameState>()(
 
             salvageItem: (uid: string) => {
                 const state = get();
-                // 1. เช็กว่าไอเทมกำลังสวมใส่อยู่หรือไม่
+
                 if (Object.values(state.player.equippedItems).some(i => i?.uid === uid)) {
                     return { success: false, materialsGained: [], message: "Cannot salvage equipped items!" };
                 }
@@ -307,42 +355,26 @@ export const useGameStore = create<GameState>()(
                 let materialsGained: { id: string; amount: number }[] = [];
                 const rarity = itemToSalvage.rarity?.toLowerCase() || 'common';
 
-                // 🎲 กำหนดอัตราความสำเร็จแยกตามระดับ Rarity
-                let successRate = 0.85; // Default (Common)
-                switch (rarity) {
-                    case 'common':
-                        successRate = 0.90; // 90% สำเร็จ (ย่อยง่าย ของโหล)
-                        break;
-                    case 'rare':
-                        successRate = 0.75; // 75% สำเร็จ
-                        break;
-                    case 'epic':
-                        successRate = 0.55; // 55% สำเร็จ (เริ่มมีความเสี่ยงสูง)
-                        break;
-                    case 'legendary':
-                        successRate = 0.35; // 35% สำเร็จ (วัดดวงสุดๆ ของหายาก)
-                        break;
-                    default:
-                        successRate = 0.80;
-                        break;
-                }
+                // 🎲 ดึงอัตราความสำเร็จจาก Config กลาง (ถ้าไม่เจอให้ใช้ default 0.80)
+                const rateConfig = SALVAGE_RATES[rarity];
+                const successRate = rateConfig ? rateConfig.rate : 0.80;
 
                 const isSuccess = Math.random() < successRate;
 
                 if (isSuccess) {
-                    // --- กรณีสำเร็จ: ได้รับวัตถุดิบตามปกติ (เรตเต็ม) ---
+                    // --- กรณีสำเร็จ ---
                     switch (rarity) {
                         case 'common':
                             materialsGained = [
                                 { id: 'iron_ore', amount: Math.floor(Math.random() * 3) + 1 },
-                                { id: 'leather', amount: Math.floor(Math.random() * 2) + 1 }
+                                { id: 'steel_ingot', amount: Math.floor(Math.random() * 2) + 1 }
                             ];
                             break;
                         case 'rare':
                             materialsGained = [
                                 { id: 'magic_dust', amount: Math.floor(Math.random() * 3) + 2 },
                                 { id: 'mithril', amount: Math.floor(Math.random() * 2) + 1 },
-                                { id: 'steel_ingot', amount: 2 }
+                                { id: 'leather', amount: Math.floor(Math.random() * 2) + 1 }
                             ];
                             break;
                         case 'epic':
@@ -365,27 +397,117 @@ export const useGameStore = create<GameState>()(
                             break;
                     }
                 } else {
-                    // --- กรณีไม่สำเร็จ: ย่อยพลาด ได้แร่น้อยลง (ได้เศษเหล็กพื้นฐาน 1 ชิ้น) ---
-                    materialsGained = [
-                        { id: 'iron_ore', amount: 1 }
-                    ];
+                    // --- กรณีไม่สำเร็จ ---
+                    switch (rarity) {
+                        case 'common':
+                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
+                            break;
+                        case 'rare':
+                            materialsGained = [
+                                { id: 'magic_dust', amount: 1 },
+                                { id: 'leather', amount: 1 }
+                            ];
+                            break;
+                        case 'epic':
+                            materialsGained = [
+                                { id: 'dark_crystal', amount: 1 },
+                                { id: 'gold_ore', amount: 1 }
+                            ];
+                            break;
+                        case 'legendary':
+                            materialsGained = [{ id: 'celestial_shard', amount: 1 }];
+                            break;
+                        default:
+                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
+                            break;
+                    }
                 }
 
-                // 3. ลบไอเทมออกจาก Inventory
                 get().removeItem(uid);
 
-                // 4. เพิ่มวัตถุดิบเข้าตัวผู้เล่น
                 materialsGained.forEach(mat => {
                     get().addMaterial(mat.id, mat.amount);
                 });
 
-                // 5. ส่งผลลัพธ์กลับไปแสดงผลที่ UI
                 return {
                     success: isSuccess,
                     materialsGained,
                     message: isSuccess
                         ? `Successfully salvaged ${itemToSalvage.name}!`
                         : `Salvage unstable! ${itemToSalvage.name} yielded only minor scraps.`
+                };
+            },
+
+            salvageAllByRarity: (rarityToSalvage: string) => {
+                const state = get();
+                const targetRarity = rarityToSalvage.toLowerCase();
+
+                const equippedUids = new Set(
+                    Object.values(state.player.equippedItems)
+                        .filter((item): item is Item => item !== null && item !== undefined)
+                        .map(item => item.uid)
+                );
+
+                const itemsToSalvage = state.player.inventory.filter(item => {
+                    const itemRarity = (item.rarity || 'common').toLowerCase();
+                    return itemRarity === targetRarity && !equippedUids.has(item.uid);
+                });
+
+                if (itemsToSalvage.length === 0) {
+                    return {
+                        success: false,
+                        totalSalvaged: 0,
+                        successCount: 0,
+                        summaryMaterials: [],
+                        detailedResults: [], // 🟢 เพิ่มลิสต์รายละเอียด
+                        message: `No unequipped ${targetRarity} items found to salvage!`
+                    };
+                }
+
+                const summaryMap = new Map<string, number>();
+                let successCount = 0;
+
+                // 🟢 เก็บรายละเอียดของไอเทมแต่ละชิ้น
+                const detailedResults: {
+                    itemName: string;
+                    itemIcon?: string;
+                    isSuccess: boolean;
+                    materials: { id: string; amount: number }[];
+                }[] = [];
+
+                itemsToSalvage.forEach(item => {
+                    const result = get().salvageItem(item.uid);
+                    if (result.success) {
+                        successCount++;
+                    }
+
+                    // บันทึกลิสต์แยกตามไอเทม
+                    detailedResults.push({
+                        itemName: item.name,
+                        itemIcon: item.icon,
+                        isSuccess: result.success,
+                        materials: result.materialsGained
+                    });
+
+                    // รวมยอดเพื่อแสดงผลสรุประดับภาพรวม
+                    result.materialsGained.forEach(mat => {
+                        const currentAmount = summaryMap.get(mat.id) || 0;
+                        summaryMap.set(mat.id, currentAmount + mat.amount);
+                    });
+                });
+
+                const summaryMaterials = Array.from(summaryMap.entries()).map(([id, amount]) => ({
+                    id,
+                    amount
+                }));
+
+                return {
+                    success: true,
+                    totalSalvaged: itemsToSalvage.length,
+                    successCount,
+                    summaryMaterials,
+                    detailedResults, // 🟢 ส่งรายละเอียดกลับไปด้วย
+                    message: `Salvaged ${itemsToSalvage.length} ${targetRarity} items (${successCount} successful)!`
                 };
             },
 

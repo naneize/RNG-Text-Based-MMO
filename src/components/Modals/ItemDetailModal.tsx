@@ -159,8 +159,7 @@ export const ItemDetailModal = ({
                                     {(selectedItem.skillCondition.requiresLowHp || selectedItem.skillCondition.requiresHighHp) && (
                                         <div className="flex justify-between items-center">
                                             <span className="text-[9px] text-slate-400 uppercase">
-                                                Bonus <span className="text-emerald-400 font-semibold">+25%</span> {selectedItem.skillCondition.requiresLowHp ? 'When HP <' : 'When HP Below'}
-                                            </span>
+                                                Bonus <span className="text-emerald-400 font-semibold">+25%</span> {selectedItem.skillCondition.requiresLowHp ? 'When HP Below' : 'When HP Above'}                                            </span>
                                             <span className="text-[10px] text-red-400 font-bold">
                                                 {selectedItem.skillCondition.hpThreshold}%
                                             </span>

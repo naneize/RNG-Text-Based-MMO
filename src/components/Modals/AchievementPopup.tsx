@@ -5,32 +5,42 @@ export const AchievementPopup: React.FC = () => {
     const { achievements } = useAchievementStore();
     const [popupData, setPopupData] = useState<{ title: string; description: string } | null>(null);
 
-    // ใช้ Ref เพื่อเก็บสถานะ unlocked ของแต่ละ achievement ไว้เทียบในรอบก่อนหน้า
     const prevUnlockedRef = useRef<Record<string, boolean>>({});
+    // 1. เพิ่ม Ref สำหรับเช็กว่าเป็นการ Render ครั้งแรกหรือไม่
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
         const currentUnlockedStates = prevUnlockedRef.current;
 
-        // วนลูปเช็กว่ามีตัวไหนเพิ่งเปลี่ยนสถานะจาก locked -> unlocked บ้าง
+        // 2. ถ้าเป็นการ Render ครั้งแรก (โหลดหน้าเว็บ / Refresh)
+        if (isFirstRender.current) {
+            // บันทึกสถานะปัจจุบันเก็บไว้ก่อน โดย "ไม่ต้องสั่งโชว์ Popup"
+            Object.values(achievements).forEach((ach) => {
+                currentUnlockedStates[ach.id] = ach.isUnlocked;
+            });
+            // เปลี่ยนสถานะเพื่อบอกว่าผ่านการ render ครั้งแรกไปแล้ว
+            isFirstRender.current = false;
+            return;
+        }
+
+        // 3. หลังจากครั้งแรกไปแล้ว หากมี achievement เปลี่ยนสถานะ ค่อยเช็กเพื่อเด้ง Popup
         Object.values(achievements).forEach((ach) => {
             const wasUnlocked = currentUnlockedStates[ach.id] || false;
 
-            // ถ้าตอนนี้ปลดล็อกแล้ว แต่รอบก่อนหน้ายังไม่ปลดล็อก (หมายถึงเพิ่งปลดล็อกสดๆ ร้อนๆ)
             if (ach.isUnlocked && !wasUnlocked) {
                 setPopupData({ title: ach.title, description: ach.description });
             }
 
-            // อัปเดตสถานะปัจจุบันเก็บไว้เทียบในรอบถัดไป
             currentUnlockedStates[ach.id] = ach.isUnlocked;
         });
     }, [achievements]);
 
-    // จัดการเรื่องเวลาแสดงผล Popup 4 วินาที
+    // จัดการเรื่องเวลาแสดงผล Popup 3 วินาที
     useEffect(() => {
         if (popupData) {
             const timer = setTimeout(() => {
                 setPopupData(null);
-            }, 4000);
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }, [popupData]);
@@ -38,7 +48,6 @@ export const AchievementPopup: React.FC = () => {
     if (!popupData) return null;
 
     return (
-        // 👇 เปลี่ยนจาก right-6 เป็น left-6 ตรงนี้ครับ
         <div className="fixed bottom-6 left-6 z-50 bg-slate-900 border border-emerald-500/50 shadow-2xl shadow-emerald-950/50 rounded-xl p-4 flex items-center gap-4 transition-all animate-bounce">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0">
                 🏆

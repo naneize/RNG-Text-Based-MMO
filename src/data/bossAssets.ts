@@ -101,12 +101,12 @@ export const bossImages: Record<string, string> = {
 export const DEFAULT_IMAGE = '/Icons/Monsters/EvilBook.svg';
 
 export const baseStats = {
-    str: 40, agi: 30, vit: 40, int: 30, dex: 40, luk: 40,
+    str: 50, agi: 50, vit: 50, int: 50, dex: 50, luk: 50,
     critRate: 20, critDmg: 100,
-    atk: 150,     // 🟢 จากเดิม 60 ดันขึ้นมา
-    def: 80,      // 🟢 จากเดิม 60
-    maxHp: 5000,  // 🟢 จากเดิม 1,200 ดันขึ้นมาให้เลือดหนาๆ
-    hit: 80, flee: 40, res: 40, mRes: 35
+    atk: 150,
+    def: 100,
+    maxHp: 5000,
+    hit: 200, flee: 180, res: 100, mRes: 80
 };
 
 

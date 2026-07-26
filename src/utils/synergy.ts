@@ -12,7 +12,7 @@ export const calculateSynergyStats = (baseStats: Stats, equippedSkill?: any): St
     SYNERGY_CONFIG.forEach(cfg => {
         const value = baseStats[cfg.statKey] || 0;
         const target = cfg.targetKey;
-        stats[target] = (stats[target] || 0) + Math.floor(Math.floor(value / cfg.divisor) * cfg.bonus);
+        stats[target] = (stats[target] || 0) + Math.floor((value / cfg.divisor) * cfg.bonus);
     });
 
     stats.skillPower = equippedSkill?.effectPower || 0;

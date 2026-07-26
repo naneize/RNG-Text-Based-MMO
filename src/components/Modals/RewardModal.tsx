@@ -18,12 +18,26 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
         'material': 5
     };
 
+    // 🟢 ฟังก์ชันสำหรับคืนค่า Class สีตามระดับ Rarity
+    const getRarityColor = (rarity: string = '') => {
+        switch (rarity.toLowerCase()) {
+            case 'legendary':
+                return 'text-amber-400 font-extrabold drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]'; // สีทองส้ม + เรืองแสงนิดๆ
+            case 'epic':
+                return 'text-purple-400 font-bold drop-shadow-[0_0_6px_rgba(192,132,252,0.4)]'; // สีม่วง
+            case 'rare':
+                return 'text-blue-400 font-semibold'; // สีน้ำเงิน
+            case 'common':
+            default:
+                return 'text-slate-300'; // สีเทาอ่อน/ขาวมาตรฐาน
+        }
+    };
+
     const sortedRewards = [...rewards].sort((a, b) => {
         const getPriorityKey = (reward: any) => {
             const typeStr = reward.type as string;
             if (typeStr === 'material') return 'material';
 
-            // ดึงเรนิตี้จาก itemData โดยตรง
             return reward.itemData?.rarity || 'Common';
         };
 
@@ -54,16 +68,21 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
                         const targetId = reward.id || (reward as any).itemId;
                         const materialData = materialLibrary.find(m => m.id === targetId);
 
-                        // 🟢 ถ้าเจอใน materialLibrary ให้ดึง icon จากนั้นได้เลยทันที (ไม่ต้องสนว่า type จะตรงไหม)
+                        // 🟢 ดึง icon
                         const iconSrc = materialData?.icon
                             || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.icon : null)
                             || (reward as any).icon
                             || `/Icons/Materials/${targetId}.svg`;
 
+                        // 🟢 ดึงชื่อไอเทม
                         const displayName = materialData?.name
                             || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.name : null)
                             || (reward as any).name
                             || targetId;
+
+                        // 🟢 ดึงค่า Rarity เพื่อเอามาเทียบสี (ถ้าเป็น material จะให้เป็น common หรือสีมาตรฐาน)
+                        const itemRarity = (reward as any).itemData?.rarity || (reward as any).fixedRarity || (reward as any).rarity || (typeStr === 'material' ? 'Common' : typeStr);
+                        const rarityColorClass = getRarityColor(itemRarity);
 
                         return (
                             <div key={index} className="flex items-center justify-between bg-slate-800 p-2 px-3 rounded text-sm">
@@ -76,15 +95,17 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
                                             (e.target as HTMLImageElement).src = '/placeholder.png';
                                         }}
                                     />
-                                    <span className="text-white">
+                                    {/* 🟢 ใส่สีให้ชื่อไอเทมตามระดับ Rarity */}
+                                    <span className={rarityColorClass}>
                                         {displayName}
                                     </span>
                                 </div>
 
-                                <span className="text-emerald-400 font-bold">
+                                {/* 🟢 ใส่สีให้ข้อความบอกจำนวน (หรือระดับ Rarity ด้านขวา) ด้วยเช่นกัน */}
+                                <span className={`font-bold ${typeStr === 'material' ? 'text-emerald-400' : rarityColorClass}`}>
                                     {typeStr === 'material'
                                         ? `x${reward.amount || 1}`
-                                        : ((reward as any).itemData?.rarity || (reward as any).fixedRarity || (reward as any).rarity || typeStr || 'Item')}
+                                        : itemRarity}
                                 </span>
                             </div>
                         );

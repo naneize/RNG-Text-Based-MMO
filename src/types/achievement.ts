@@ -8,8 +8,8 @@ export interface AchievementTemplate {
     reward: {
         type: 'stat' | 'material' | 'item';
         amount: number;
-        itemId?: string;    // <--- ระบุเจาะจงว่าคือวัสดุ/ไอเทมชิ้นไหน (เช่น 'iron_ore')
-    };
+        itemId?: string;
+    }[]; // 🟢 เติม [] เข้าไปเพื่อให้เป็น Array รับรางวัลได้หลายชิ้น
 }
 
 export interface AchievementProgress extends AchievementTemplate {

@@ -10,7 +10,7 @@ interface Props {
 export const CollectionModal = ({ template, record, onClose }: Props) => {
     if (!record) return null;
 
-    // เช็กว่าเป็นวัสดุหรือไม่
+    // เช็กว่าเป็นวัสดุหรือสกิลหรือไม่
     const isMaterial = template.type === 'material';
     const isSkill = template.type === 'skill';
     const skillData = template as Item;
@@ -25,10 +25,14 @@ export const CollectionModal = ({ template, record, onClose }: Props) => {
 
                 <div className="flex items-center gap-4 mb-6">
                     <img src={template.icon} alt={template.name} className="w-20 h-20 bg-slate-800 p-2 rounded border border-slate-700" />
-                    <div>
-                        <p className="text-sm text-slate-400">Total Found</p>
-                        <p className="text-2xl font-bold text-white">{record.foundCount}</p>
-                    </div>
+
+                    {/* 🟢 ซ่อน Total Found ถ้าเป็น Skill (หรือเพิ่ม !isMaterial ด้วยถ้าต้องการซ่อนของวัสดุด้วยครับ) */}
+                    {template.type !== 'material' && template.type !== 'skill' && template.slot !== 'material' && template.slot !== 'skill' && (
+                        <div>
+                            <p className="text-slate-400 text-xs">Total Found</p>
+                            <p className="text-2xl font-bold text-white">{record?.foundCount || 0}</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* แสดง Stats และ Bonus เฉพาะถ้าไม่ใช่ Material */}

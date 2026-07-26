@@ -16,11 +16,10 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'First Step into Adventure',
         description: 'Obtain your first equipment item.',
         category: 'collection',
-        reward: {
-            type: 'material',
-            itemId: 'iron_ore',
-            amount: 10
-        },
+        reward: [
+            { type: 'material', itemId: 'iron_ore', amount: 10 },
+            { type: 'material', itemId: 'steel_ingot', amount: 5 }
+        ],
         isUnlocked: false,
         isClaimed: false,
     },
@@ -29,45 +28,52 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Common Collector',
         description: 'Equip at least 5 Common items.',
         category: 'collection',
-        reward: {
-            type: 'material',
-            itemId: 'iron_ore',
-            amount: 10
-        },
+        reward: [
+            { type: 'material', itemId: 'iron_ore', amount: 10 },
+            { type: 'material', itemId: 'leather', amount: 5 }
+        ],
         isUnlocked: false,
         isClaimed: false,
     },
-    'KILL_RARE': {
-        id: 'KILL_RARE',
-        title: 'Rare Hunter',
-        description: 'Defeat a boss while equipped entirely with Rare items.',
-        category: 'challenge',
-        reward: {
-            type: 'material',
-            itemId: 'iron_ore',
-            amount: 100
-        },
+    'OVERKILL_1000': {
+        id: 'OVERKILL_1000',
+        title: 'Overkill',
+        description: 'Deal over 1,000 damage in a single turn.',
+        category: 'combat', // อยู่ในหมวดหมู่ต่อสู้
+        reward: [
+            { type: 'material', itemId: 'steel_ingot', amount: 10 },
+            { type: 'material', itemId: 'magic_dust', amount: 5 }
+        ],
         isUnlocked: false,
         isClaimed: false,
     },
-    'NO_DAMAGE': {
-        id: 'NO_DAMAGE',
-        title: 'Untouchable',
-        description: 'Defeat a boss without taking any damage.',
-        category: 'challenge',
-        reward: { type: 'material', amount: 500 },
+    // 🟢 เพิ่มเควสต์ Epic แรก
+    'FIRST_EPIC': {
+        id: 'FIRST_EPIC',
+        title: 'Epic Discovery',
+        description: 'Obtain your first Epic item.',
+        category: 'collection',
+        reward: [
+            { type: 'material', itemId: 'celestial_shard', amount: 5 },
+            { type: 'material', itemId: 'void_essence', amount: 3 }
+        ],
         isUnlocked: false,
         isClaimed: false,
     },
-    'SPEED_RUN': {
-        id: 'SPEED_RUN',
-        title: 'Lightning Strike',
-        description: 'Defeat a boss within 3 turns (or seconds).',
-        category: 'challenge',
-        reward: { type: 'material', amount: 300 },
+    // 🟢 เพิ่มเควสต์ Legendary แรก
+    'FIRST_LEGENDARY': {
+        id: 'FIRST_LEGENDARY',
+        title: 'Legend of the Realm',
+        description: 'Obtain your first Legendary item.',
+        category: 'collection',
+        reward: [
+            { type: 'material', itemId: 'ancient_rune', amount: 5 },
+            { type: 'material', itemId: 'primordial_essence', amount: 3 }
+        ],
         isUnlocked: false,
         isClaimed: false,
-    }
+    },
+
 };
 
 export const useAchievementStore = create<AchievementState>()(
@@ -98,12 +104,17 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                     }));
 
-                    if (current.reward) {
-                        const { type, itemId, amount } = current.reward;
-                        if (type === 'material' && itemId) {
-                            useGameStore.getState().addMaterial(itemId, amount);
-                            console.log(`Reward Claimed: Added ${amount} of ${itemId} to inventory.`);
-                        }
+                    // 🟢 ตรวจสอบว่ามีรางวัลและเป็น Array หรือไม่
+                    if (current.reward && Array.isArray(current.reward)) {
+                        // 🟢 วนลูปแจกรางวัลทีละชิ้น
+                        current.reward.forEach((rew) => {
+                            const { type, itemId, amount } = rew;
+                            if (type === 'material' && itemId) {
+                                useGameStore.getState().addMaterial(itemId, amount);
+                                console.log(`Reward Claimed: Added ${amount} of ${itemId} to inventory.`);
+                            }
+                            // รองรับประเภทอื่น ๆ เพิ่มเติมได้ตรงนี้ (เช่น type === 'item' หรือ 'stat')
+                        });
                     }
                 }
             },
@@ -114,31 +125,41 @@ export const useAchievementStore = create<AchievementState>()(
 
                 switch (conditionKey) {
                     case 'FIRST_EQUIP':
-                        // เช็กว่ายังไม่เคยปลดล็อก และ (อาจจะมี data ส่งมาเช็กเพิ่มว่ามีอุปกรณ์จริงๆ)
                         if (!state.achievements['FIRST_EQUIP']?.isUnlocked) {
                             get().unlockAchievement('FIRST_EQUIP');
                         }
                         break;
 
-                    case 'KILL_RARE':
-                        if (!state.achievements['KILL_RARE']?.isUnlocked && data?.isAllRare) {
-                            get().unlockAchievement('KILL_RARE');
-                        }
-                        break;
-
                     case 'CHECK_EQUIPPED_ITEMS':
                         if (!state.achievements['EQUIP_FIVE_COMMONS']?.isUnlocked && data?.equippedItems) {
-                            // กรองนับจำนวนไอเทมที่สวมใส่อยู่ที่มี rarity เป็น 'common'
                             const commonCount = Object.values(data.equippedItems).filter(
                                 (item: any) => item && item.rarity?.toLowerCase() === 'common'
                             ).length;
 
-                            console.log("Current Common Items Count:", commonCount);
-                            console.log("Equipped Data:", data.equippedItems);
-
                             if (commonCount >= 5) {
                                 get().unlockAchievement('EQUIP_FIVE_COMMONS');
                             }
+                        }
+                        break;
+
+                    // 🟢 เช็กเมื่อได้รับไอเทมระดับ Epic (ส่ง data.rarity หรือ data.item มาเช็ก)
+                    case 'OBTAIN_ITEM':
+                        if (data?.rarity) {
+                            const rarity = data.rarity.toLowerCase();
+
+                            if (rarity === 'epic' && !state.achievements['FIRST_EPIC']?.isUnlocked) {
+                                get().unlockAchievement('FIRST_EPIC');
+                            }
+
+                            if (rarity === 'legendary' && !state.achievements['FIRST_LEGENDARY']?.isUnlocked) {
+                                get().unlockAchievement('FIRST_LEGENDARY');
+                            }
+                        }
+                        break;
+
+                    case 'DEAL_DAMAGE':
+                        if (data?.damage >= 1000 && !state.achievements['OVERKILL_1000']?.isUnlocked) {
+                            get().unlockAchievement('OVERKILL_1000');
                         }
                         break;
 

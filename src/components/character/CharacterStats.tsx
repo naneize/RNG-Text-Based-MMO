@@ -90,7 +90,7 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                     {sources.length > 0 && (
                                         /* 📌 เปลี่ยนจาก bottom-full mb-2 เป็น top-full mt-2 เพื่อให้ Tooltip เด้งลงด้านล่างแทน */
                                         <div className={`absolute top-full mt-2 mb-2 hidden group-hover:block w-52 p-2.5 bg-slate-950 text-xs text-slate-200 rounded-md shadow-xl border border-slate-700 z-50 pointer-events-none ${isRightSide ? 'right-0' : 'left-0'}`}>
-                                            <div className="font-bold mb-1.5 text-purple-400 border-b border-slate-800 pb-1 uppercase tracking-wider">
+                                            <div className="font-bold mb-1.5 text-amber-500 border-b border-slate-800 pb-1 uppercase tracking-wider">
                                                 {key} Breakdown
                                             </div>
                                             <div className="space-y-1">

@@ -4,10 +4,10 @@ import { SKILL_POOL } from '../data/skills';
 
 
 export const rarityConfig = [
-    { name: 'Common', count: [1, 2], mult: 1, weight: 83 },
+    { name: 'Common', count: [1, 2], mult: 1, weight: 81 },
     { name: 'Rare', count: [2, 3], mult: 2, weight: 15 },
-    { name: 'Epic', count: [3, 4], mult: 3, weight: 1.9 },
-    { name: 'Legendary', count: [5, 7], mult: 5, weight: 0.1 },
+    { name: 'Epic', count: [3, 4], mult: 3, weight: 3 },
+    { name: 'Legendary', count: [5, 7], mult: 5, weight: 1 },
 ];
 
 const ELEMENT_POOL = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'];
@@ -45,9 +45,9 @@ export const generateRandomSkill = (): Item => {
 
         // กำหนดจำนวนออฟชันเสริมขั้นต่ำตาม Rarity
         let minAffixes = 1;
-        if (config.name === 'Rare') minAffixes = 1;
-        if (config.name === 'Epic') minAffixes = 2;
-        if (config.name === 'Legendary') minAffixes = 3;
+        if (config.name === 'Rare') minAffixes = 2;
+        if (config.name === 'Epic') minAffixes = 3;
+        if (config.name === 'Legendary') minAffixes = 4;
 
         // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
         const possibleAffixes = [
@@ -64,9 +64,8 @@ export const generateRandomSkill = (): Item => {
                 enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
             },
             () => {
-                enhancedCondition.requiresLowHp = Math.random() < 0.5;
-                enhancedCondition.requiresHighHp = !enhancedCondition.requiresLowHp;
-                enhancedCondition.hpThreshold = Math.floor(Math.random() * 30) + 20;
+                enhancedCondition.requiresLowHp = true;
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // สุ่ม Threshold ในช่วง 20% - 50%
             }
         ];
 
@@ -139,9 +138,9 @@ export const generateRandomSkillSpecific = (
 
         // กำหนดจำนวนออฟชันเสริมขั้นต่ำตาม Rarity
         let minAffixes = 1;
-        if (config.name === 'Rare') minAffixes = 1;
-        if (config.name === 'Epic') minAffixes = 2;
-        if (config.name === 'Legendary') minAffixes = 3;
+        if (config.name === 'Rare') minAffixes = 2;
+        if (config.name === 'Epic') minAffixes = 3;
+        if (config.name === 'Legendary') minAffixes = 4;
 
         // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
         const possibleAffixes = [
@@ -158,9 +157,9 @@ export const generateRandomSkillSpecific = (
                 enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
             },
             () => {
-                enhancedCondition.requiresLowHp = Math.random() < 0.5;
+                enhancedCondition.requiresLowHp = true;
                 enhancedCondition.requiresHighHp = !enhancedCondition.requiresLowHp;
-                enhancedCondition.hpThreshold = Math.floor(Math.random() * 30) + 20;
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // สุ่ม Threshold ในช่วง 20% - 50%
             }
         ];
 

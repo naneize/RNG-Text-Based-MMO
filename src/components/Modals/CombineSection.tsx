@@ -27,9 +27,10 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     const [combineFailed, setCombineFailed] = useState(false);
 
     const validItems = player.inventory.filter(item =>
-        item.rarity !== 'Legendary' &&
-        item.type !== 'material'
-
+        item.slot !== 'skill' &&
+        item.type !== 'skill' &&
+        item.slot !== 'material' &&
+        item.rarity !== 'Legendary' // 💡 เพิ่มบรรทัดนี้เพื่อซ่อนไอเทมระดับ Legendary
     );
 
     //#region เงื่อนไขการผสม
@@ -37,26 +38,30 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
         switch (rarity) {
             case 'Common':
                 return {
-                    requirements: [{ material: 'iron_ore', amount: 5, }],
+                    requirements: [
+                        { material: 'iron_ore', amount: 20 },     // ปรับจาก 5 เป็น 20
+                        { material: 'steel_ingot', amount: 20 }   // ปรับจาก 5 เป็น 20
+                    ],
                     chance: 80
                 };
             case 'Rare':
                 return {
                     requirements: [
-                        { material: 'iron_ore', amount: 10 },
-                        { material: 'steel_ingot', amount: 10 },
-                        { material: 'leather', amount: 10 }
+                        { material: 'steel_ingot', amount: 40 },    // ปรับจาก 10 เป็น 40
+                        { material: 'magic_dust', amount: 35 },     // ปรับจาก 10 เป็น 35
+                        { material: 'leather', amount: 30 }         // ปรับจาก 10 เป็น 30
                     ],
                     chance: 35
                 };
             case 'Epic':
                 return {
                     requirements: [
-                        { material: 'steel_ingot', amount: 100 },
-                        { material: 'magic_dust', amount: 100 },
-                        { material: 'dragon_scale', amount: 100 }
+                        { material: 'void_essence', amount: 25 },     // ปรับจาก 5 เป็น 25
+                        { material: 'dark_crystal', amount: 25 },     // ปรับจาก 5 เป็น 25
+                        { material: 'dragon_scale', amount: 20 },     // ปรับจาก 5 เป็น 20 (สอดคล้องกับบอสดรอปหลักสิบ/ร้อย)
+                        { material: 'celestial_shard', amount: 20 }   // ปรับจาก 5 เป็น 20
                     ],
-                    chance: 5
+                    chance: 15
                 };
             default:
                 return { requirements: [], chance: 0 };
@@ -155,13 +160,18 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                 const tierOrder = ['Common', 'Rare', 'Epic', 'Legendary'];
                 const nextRarity = tierOrder[tierOrder.indexOf(firstItem.rarity) + 1];
 
+                const selectedItems = player.inventory.filter(i => selectedUids.includes(i.uid));
+                const totalLevel = selectedItems.reduce((sum, item) => sum + (item.itemLevel || 1), 0);
+                const averageLevel = Math.max(1, Math.round(totalLevel / selectedItems.length));
+
                 let newItem;
                 let attempts = 0;
                 do {
-                    newItem = generateRandomItem(nextRarity);
+                    // 💡 ส่ง averageLevel เป็นพารามิเตอร์ตัวที่ 2 เข้าไปที่นี่
+                    newItem = generateRandomItem(nextRarity, averageLevel);
                     attempts++;
                     // เงื่อนไข: ถ้าไม่มี slot (แปลว่าเป็นแร่) หรือเป็น type/slot ที่เป็น skill ให้สุ่มใหม่
-                } while ((!newItem.slot || newItem.slot === 'skill') && attempts < 10);
+                } while ((!newItem.slot || newItem.slot === 'skill' || newItem.slot === 'material') && attempts < 10);
 
                 addItem(newItem);
                 setResultItem(newItem);
@@ -272,7 +282,13 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                         <div className="flex flex-wrap gap-2 mb-4 flex-1 overflow-y-auto pr-1">
                             {validItems.map(item => (
                                 <button key={item.uid} onClick={() => toggleItem(item.uid)}
-                                    className={`w-20 h-28 rounded border-2 p-1 flex flex-col items-center justify-between ${selectedUids.includes(item.uid) ? 'border-green-500 bg-slate-800' : `${getRarityColor(item.rarity)} bg-slate-800/50`}`}>
+                                    className={`w-20 h-28 rounded border-2 p-1 flex flex-col items-center justify-between relative overflow-hidden ${selectedUids.includes(item.uid) ? 'border-green-500 bg-slate-800' : `${getRarityColor(item.rarity)} bg-slate-800/50`}`}>
+
+                                    {item.type !== 'skill' && item.slot !== 'skill' && (
+                                        <span className="absolute top-0.5 left-0.5 bg-slate-900/90 text-emerald-400 text-[8px] font-extrabold px-1 py-0.5 rounded border border-slate-700 leading-none z-20 shadow">
+                                            Lv.{item.itemLevel ?? 1}
+                                        </span>
+                                    )}
 
                                     <img src={item.icon} className="w-8 h-8 object-contain" />
 

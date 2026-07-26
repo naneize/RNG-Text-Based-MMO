@@ -31,8 +31,8 @@ export const CollectionItem = ({ template, record, isUnlocked }: Props) => {
                     {template.name}
                 </h3>
 
-                {/* จำนวนที่พบ วางไว้ใต้ชื่อแบบคลีนๆ */}
-                {isUnlocked && record && (
+                {/* 🟢 อัปเดตตรงนี้: ซ่อนทั้ง Material และ Skill (ปรับชื่อค่า type ให้ตรงกับระบบของคุณ เช่น 'skill' หรือ 'SKILL') */}
+                {isUnlocked && record && template.type !== 'material' && template.type !== 'skill' && (
                     <p className="text-[9px] text-center text-emerald-400 mt-0.5 font-bold">
                         FOUND: {record.foundCount}
                     </p>

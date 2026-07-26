@@ -247,6 +247,8 @@ export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => 
                                                 <div className="flex gap-2 text-[10px]">
                                                     <span className="text-blue-400">DEF: {Math.floor(effectiveStats.def)}</span>
                                                     <span className="text-purple-400">RES: {Math.floor(effectiveStats.res)}</span>
+                                                    {/* 🛡️ เพิ่ม MRES ไว้ด้านหลัง RES ตรงนี้ครับ */}
+                                                    <span className="text-pink-400">MRES: {Math.floor(effectiveStats.mRes || 0)}</span>
                                                 </div>
                                                 <div className="text-[10px] text-cyan-400">
                                                     Hit: {Math.floor(effectiveStats.hit)}

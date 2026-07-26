@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { calculateDamage, getEquippedBonus } from '../utils/combat';
 import type { Stats, Player, Boss } from '../types/game';
 import { WEAKNESS_BONUS_RATE } from '../types/game';
+import { useAchievementStore } from '../store/achievementStore';
 
 export const useBattle = (
     player: Player,
@@ -44,7 +45,7 @@ export const useBattle = (
         }
     }, [finalStats.maxHp]);
 
-    // 🟢 ลูปการต่อสู้หลักแยกออกมาชัดเจน ไม่ซ้อนทับกันมั่ว
+    // 🟢 ลูปการต่อสู้หลัก
     useEffect(() => {
         if (!isFighting || isFinished) return;
 
@@ -84,7 +85,7 @@ export const useBattle = (
             // 3. เริ่มต้นให้การโจมตีคิดธาตุเฉพาะจากไอเท็มสวมใส่ก่อน
             let totalElementPercent = itemElementPercent;
 
-            // 2. บอสตีผู้เล่นก่อนเพื่อหาดาเมจและอัปเดตเลือดผู้เล่นทันที
+            // 4. บอสตีผู้เล่นก่อนเพื่อหาดาเมจและอัปเดตเลือดผู้เล่นทันที
             const bossResult = calculateDamage(bossEffectiveStats, finalStats);
             const dmgToPlayer = bossResult.isMiss ? 0 : bossResult.damage;
 
@@ -92,24 +93,13 @@ export const useBattle = (
             playerHpRef.current = nextPlayerHp;
             setPlayerHp(nextPlayerHp);
 
-            // 3. ตรวจสอบเงื่อนไข Low HP จากเลือดปัจจุบันที่อัปเดตแล้ว
-            const maxHpValue = finalStats.maxHp || 1;
-            const hpPercent = (nextPlayerHp / maxHpValue) * 100;
-
-            console.log("--- CLEAN HP CHECK ---", { nextPlayerHp, maxHpValue, hpPercent });
-
-            const isLowHpActive = Boolean(
-                activeSkill?.skillCondition?.requiresLowHp &&
-                hpPercent < (activeSkill.skillCondition.hpThreshold || 50)
-            );
-
-            // 4. ผู้เล่นสวนกลับบอส
+            // 5. ผู้เล่นสวนกลับบอส
             const playerResult = calculateDamage(
                 finalStats,
                 bossEffectiveStats,
                 {
                     flatBonus: 0,
-                    elementPercent: totalElementPercent, // ส่งค่าพื้นฐานไปก่อน
+                    elementPercent: totalElementPercent,
                     racePercent: totalRacePercent,
                     weaponWeaknessPercent: weaponWeaknessPercent
                 },
@@ -126,12 +116,23 @@ export const useBattle = (
             }
 
             const dmgToBoss = playerResult.isMiss ? 0 : playerResult.damage;
+
+            if (!playerResult.isMiss) {
+                useAchievementStore.getState().checkCondition('DEAL_DAMAGE', { damage: dmgToBoss });
+            }
             const nextBossHp = Math.max(0, bossHpRef.current - dmgToBoss);
             bossHpRef.current = nextBossHp;
             setBossHp(nextBossHp);
 
-            // 5. สร้าง Log การต่อสู้
+            // 6. ตรวจสอบเงื่อนไข Low HP สำหรับแสดงใน Log
+            const maxHpValue = finalStats.maxHp || 1;
+            const hpPercent = (nextPlayerHp / maxHpValue) * 100;
+            const isLowHpActive = Boolean(
+                activeSkill?.skillCondition?.requiresLowHp &&
+                hpPercent < (activeSkill.skillCondition.hpThreshold || 50)
+            );
 
+            // 7. สร้าง Log การต่อสู้
             const bonusTextParts = [];
             if (totalElementPercent > 0) bonusTextParts.push(`Elem+${Math.round(totalElementPercent * 100)}%`);
             if (totalRacePercent > 0) bonusTextParts.push(`Race+${Math.round(totalRacePercent * 100)}%`);

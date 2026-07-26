@@ -103,6 +103,8 @@ export interface Item extends ItemTemplate {
     };
 }
 
+export const MAX_INVENTORY_SLOTS = 100;
+
 // --- 3. Player, Boss, Dungeon ---
 
 export interface Player {
@@ -132,7 +134,7 @@ export interface Player {
 
 export const PITY_CONFIG = {
     EPIC: 30,     // 👈 เปลี่ยนตรงนี้ที่เดียวจบ
-    LEGEND: 70   // 👈 เปลี่ยนตรงนี้ที่เดียวจบ
+    LEGEND: 50   // 👈 เปลี่ยนตรงนี้ที่เดียวจบ
 };
 
 export const WEAKNESS_BONUS_RATE = 0.2;

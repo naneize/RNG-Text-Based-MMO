@@ -197,7 +197,7 @@ export const LootModal = ({
                                             {((lootedItem as any).skillCondition.requiresLowHp || (lootedItem as any).skillCondition.requiresHighHp) && (
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-[9px] text-slate-400 uppercase">
-                                                        Bonus <span className="text-emerald-400 font-semibold">+25%</span> {(lootedItem as any).skillCondition.requiresLowHp ? 'When HP <' : 'When HP Below'}
+                                                        Bonus <span className="text-emerald-400 font-semibold">+25%</span> {(lootedItem as any).skillCondition.requiresLowHp ? 'When HP Below' : 'When HP Above'}
                                                     </span>
                                                     <span className="text-[10px] text-red-400 font-bold">
                                                         {(lootedItem as any).skillCondition.hpThreshold}%

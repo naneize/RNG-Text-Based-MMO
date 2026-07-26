@@ -16,6 +16,8 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
     const [selectedStatA, setSelectedStatA] = useState<string | null>(null);
     const [targetItemB, setTargetItemB] = useState<Item | null>(null);
     const [selectedStatB, setSelectedStatB] = useState<string | null>(null);
+    const [statSearchFilter, setStatSearchFilter] = useState<string>('ALL');
+    const [textSearch] = useState<string>('');
     const validTargets = inventory.filter(item => item.uid !== itemA?.uid && item.type === 'equipment');
     const availableStatsA = Object.entries(itemA?.stats || {}).filter(([_, v]) => v > 0);
     const materials = useGameStore((state) => state.player.materials);
@@ -137,10 +139,42 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                 }
             }
         }, 50);
+
+
     };
 
+    const getSuccessRateColor = (rate: number) => {
+        if (rate >= 70) return 'text-emerald-400';
+        if (rate >= 40) return 'text-amber-400';
+        if (rate >= 20) return 'text-orange-400';
+        return 'text-red-500 animate-pulse';
+    };
+
+    // 🔍 ดึงรายการ Stat ทั้งหมดที่มีอยู่ในไอเทมในกระเป๋า เพื่อมาทำปุ่ม Filter หรือ Dropdown
+    const allAvailableStatsInInventory = Array.from(
+        new Set(
+            validTargets.flatMap(item => Object.entries(item.stats).filter(([_, v]) => v > 0).map(([s]) => s))
+        )
+    );
+
+    // 🔍 กรองรายการไอเทมเป้าหมายตาม Stat และชื่อที่ค้นหา
+    const filteredTargets = validTargets.filter(item => {
+        const keyword = textSearch.toLowerCase();
+
+        // เช็คว่าชื่อไอเทมมีคำที่พิมพ์ไหม หรือมี Stat ไหนที่ชื่อตรงกับคำที่พิมพ์ไหม
+        const matchesText = item.name.toLowerCase().includes(keyword) ||
+            Object.keys(item.stats).some(stat => stat.toLowerCase().includes(keyword) && item.stats[stat] > 0);
+
+        const matchesStat = statSearchFilter === 'ALL' || (item.stats[statSearchFilter] && item.stats[statSearchFilter] > 0);
+
+        return matchesText && matchesStat;
+    }).sort((a, b) => {
+        const order = { 'Legendary': 4, 'Epic': 3, 'Rare': 2, 'Common': 1 };
+        return (order[b.rarity as keyof typeof order] || 0) - (order[a.rarity as keyof typeof order] || 0);
+    });
+
     return (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-60 p-4" onClick={onClose}>
             <div className="bg-slate-900 border border-violet-700 p-6 rounded-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
                 {/* Header ที่โชว์ชื่อ */}
                 <h2 className="text-white font-bold text-lg mb-6 text-center uppercase tracking-wider">
@@ -159,126 +193,173 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                     </div>
                 )}
 
-
-                {/* STEP 2: เลือก Item B */}
+                {/* STEP 2: เลือก Item B แบบเน้นค้นหาเฉพาะ Stat */}
                 {step === 'SELECT_TARGET_B' && (
-                    <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
-                        {[...validTargets].sort((a, b) => {
-                            const order = { 'Legendary': 4, 'Epic': 3, 'Rare': 2, 'Common': 1 };
-                            return (order[b.rarity as keyof typeof order] || 0) - (order[a.rarity as keyof typeof order] || 0);
-                        }).map((item) => (
-                            <button
-                                key={item.uid}
-                                onClick={() => { setTargetItemB(item); setStep('SELECT_STAT_B'); setSelectedStatB(null); }}
-                                className={`p-4 rounded-xl border-2 flex items-center gap-4 bg-slate-800 hover:bg-slate-750 transition-all group ${getRarityColor(item.rarity)}`}
-                            >
-                                {/* ไอคอน */}
-                                <div className="w-12 h-12 flex-shrink-0 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700">
-                                    <img src={item.icon} className="w-8 h-8 object-contain" />
-                                </div>
-
-                                {/* ข้อมูล */}
-                                <div className="text-left flex-1">
-                                    <div className="font-bold text-white mb-1 group-hover:text-emerald-400 transition-colors">
-                                        {item.name}
-                                    </div>
-
-                                    {/* Stats Grid */}
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {Object.entries(item.stats)
-                                            .filter(([_, v]) => v > 0)
-                                            .map(([stat, val]) => (
-                                                <span key={stat} className="bg-slate-950/50 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-slate-400 border border-slate-700/50">
-                                                    {stat}: <span className="text-white">{val}</span>
-                                                </span>
-                                            ))}
-                                        {Object.keys(item.stats).filter(k => (item.stats as any)[k] > 0).length === 0 && (
-                                            <span className="text-[10px] text-slate-500 italic">No stats</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* ลูกศรชี้เล็กๆ ให้ดูมี Interactive */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-emerald-500 font-bold text-lg">→</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-
-                {/* STEP 3: เลือก Stat ปลายทางใน B */}
-                {step === 'SELECT_STAT_B' && targetItemB && (
-                    <div className="space-y-4">
-
-                        {/* ส่วนแสดงค่าสถานะ (Success Rate & Materials Cost List) */}
-                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 space-y-2 text-xs">
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Success Rate:</span>
-                                <span className={`font-bold ${actualSuccessRate < 20 ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
-                                    {actualSuccessRate}%
+                    <div className="space-y-3">
+                        {/* 🏷️ Quick Filter ปุ่มคลิกเลือก Stat ไวๆ + Dropdown */}
+                        <div className="flex flex-col gap-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-slate-400 font-medium">Filter by Stat:</span>
+                                <span className="text-[12px] text-slate-400 font-medium">
+                                    {statSearchFilter === 'ALL' ? 'Showing All Stats' : `Filtered: ${statSearchFilter.toUpperCase()}`}
                                 </span>
                             </div>
-                            <div>
-                                <span className="text-slate-400 block mb-1">Required Materials:</span>
-                                <div className="grid grid-cols-1 gap-1">
-                                    {activeMaterialsConfig?.materials.map(req => {
-                                        const currentAmount = materials[req.id] || 0;
-                                        const isEnoughMat = currentAmount >= req.amount;
-                                        return (
-                                            <div key={req.id} className="flex justify-between items-center bg-slate-900 px-2 py-1 rounded">
-                                                <span className="text-slate-300 uppercase">{req.id.replace('_', ' ')}</span>
-                                                <span className={`font-bold ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
-                                                    {currentAmount} / {req.amount}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* กล่อง Warning แนวนอน */}
-                        <div className="bg-red-950/20 p-3 rounded-lg border border-red-500/30 flex items-center gap-3 shadow-lg">
-                            <div className="text-amber-500 text-xl flex-shrink-0">⚠️</div>
-                            <div className="text-[11px] text-white leading-tight flex-1">
-                                <span className="font-bold text-red-400 mr-2 uppercase tracking-tight">Critical Warning:</span>
-                                If the transfer <span className="text-white font-bold bg-red-950 px-1 rounded">fails</span>,
-                                both{" "}
-                                <span className="text-white font-bold bg-red-950 px-1 rounded mx-1">
-                                    {selectedStatA ? selectedStatA.toUpperCase() : 'STAT A'}
-                                </span>
-                                on <span className="text-white font-bold">{itemA.name}</span> and{" "}
-                                <span className="text-white font-bold bg-red-950 px-1 rounded mx-1">
-                                    {selectedStatB ? selectedStatB.toUpperCase() : 'SELECTED STAT'}
-                                </span>
-                                on <span className="text-white font-bold">{targetItemB?.name}</span> will be{" "}
-                                <span className="text-white font-bold">lost permanently</span>.
-                            </div>
-                        </div>
-
-                        {/* รายการ Stat ที่เลือกได้ */}
-                        <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(targetItemB.stats).filter(([_, v]) => v > 0).map(([stat, val]) => (
-                                <button key={stat}
-                                    onClick={() => setSelectedStatB(stat)}
-                                    className={`p-2 border rounded-lg text-white font-bold flex justify-between text-xs transition-all ${selectedStatB === stat
-                                        ? 'bg-emerald-600 border-emerald-400'
-                                        : 'bg-slate-800 border-slate-700 hover:bg-slate-700'
-                                        }`}>
-                                    <span>{stat.toUpperCase()}</span> <span>({val})</span>
+                            {/* แถบปุ่ม Quick Filter กดเลือก Stat ยอดฮิตได้ทันที */}
+                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 bg-slate-950/60 rounded-lg border border-slate-800">
+                                <button
+                                    onClick={() => setStatSearchFilter('ALL')}
+                                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${statSearchFilter === 'ALL'
+                                        ? 'bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.4)]'
+                                        : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                        }`}
+                                >
+                                    ALL
                                 </button>
-                            ))}
+                                {allAvailableStatsInInventory.map(stat => (
+                                    <button
+                                        key={stat}
+                                        onClick={() => setStatSearchFilter(stat)}
+                                        className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition-all ${statSearchFilter === stat
+                                            ? 'bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.4)]'
+                                            : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            }`}
+                                    >
+                                        {stat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* รายการไอเทมเป้าหมายที่กรองตาม Stat แล้ว */}
+                        <div className="grid grid-cols-1 gap-3 max-h-72 overflow-y-auto pr-2 mt-2">
+                            {filteredTargets.length === 0 ? (
+                                <div className="text-center py-8 text-slate-500 text-xs italic">
+                                    No items found with this stat.
+                                </div>
+                            ) : (
+                                filteredTargets.map((item) => (
+                                    <button
+                                        key={item.uid}
+                                        onClick={() => { setTargetItemB(item); setStep('SELECT_STAT_B'); setSelectedStatB(null); }}
+                                        className={`p-4 rounded-xl border-2 flex items-center gap-4 bg-slate-800 hover:bg-slate-750 transition-all group ${getRarityColor(item.rarity)}`}
+                                    >
+                                        <div className="w-12 h-12 flex-shrink-0 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700">
+                                            <img src={item.icon} className="w-8 h-8 object-contain" />
+                                        </div>
+
+                                        <div className="text-left flex-1">
+                                            <div className="font-bold text-white mb-1 group-hover:text-emerald-400 transition-colors">
+                                                {item.name}
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {Object.entries(item.stats)
+                                                    .filter(([_, v]) => v > 0)
+                                                    .map(([stat, val]) => (
+                                                        <span key={stat} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${stat === statSearchFilter ? 'bg-violet-950 text-violet-300 border-violet-500' : 'bg-slate-950/50 text-slate-400 border-slate-700/50'}`}>
+                                                            {stat}: <span className="text-white">{val}</span>
+                                                        </span>
+                                                    ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-emerald-500 font-bold text-lg">→</span>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </div>
                 )}
 
 
 
-                {/* ปุ่ม Action */}
+                {/* STEP 3: เลือก Stat ปลายทางใน B (จัดระเบียบเป็น Grid 2 คอลัมน์) */}
+                {step === 'SELECT_STAT_B' && targetItemB && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
+                        {/* 📌 คอลัมน์ซ้าย: Success Rate, Materials & Warning */}
+                        <div className="space-y-3">
+                            {/* ส่วนแสดงค่าสถานะ (Success Rate & Materials Cost List) */}
+                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 space-y-2 text-xs">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 font-medium">Success Rate :</span>
+                                    <span className={`font-bold text-sm tracking-wide ${getSuccessRateColor(actualSuccessRate)}`}>
+                                        {actualSuccessRate}%
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <span className="text-slate-400 block mb-1 font-medium">Required Materials :</span>
+                                    <div className="grid grid-cols-1 gap-1">
+                                        {activeMaterialsConfig?.materials.map(req => {
+                                            const currentAmount = materials[req.id] || 0;
+                                            const isEnoughMat = currentAmount >= req.amount;
+                                            return (
+                                                <div key={req.id} className="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800/50">
+                                                    <span className="text-slate-300 uppercase text-[11px] font-mono tracking-wider">
+                                                        {req.id.replace('_', ' ')}
+                                                    </span>
+                                                    <span className={`font-bold font-mono text-[11px] ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
+                                                        {currentAmount} / {req.amount}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* กล่อง Warning */}
+                            <div className="bg-red-950/20 p-3 rounded-lg border border-red-500/30 flex items-start gap-2.5 shadow-lg">
+                                <div className="text-amber-500 text-base flex-shrink-0 mt-0.5">⚠️</div>
+                                <div className="text-[11px] text-slate-300 leading-relaxed flex-1">
+                                    <strong className="text-red-400 uppercase tracking-wide mr-1">
+                                        Critical Warning:
+                                    </strong>
+                                    If the transfer{" "}
+                                    <span className="text-red-400 font-bold underline">fails</span>,
+                                    both{" "}
+                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                        {selectedStatA ? selectedStatA.toUpperCase() : 'STAT A'}
+                                    </strong>{" "}
+                                    and{" "}
+                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                        {selectedStatB ? selectedStatB.toUpperCase() : 'SELECTED STAT'}
+                                    </strong>{" "}
+                                    will be{" "}
+                                    <strong className="text-red-400 font-bold uppercase">
+                                        lost permanently
+                                    </strong>.
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 📌 คอลัมน์ขวา: รายการ Stat ปลายทาง (จัดเรียงเป็น 2 คอลัมน์ย่อยด้านใน) */}
+                        <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-700 flex flex-col h-full">
+                            <span className="text-xs text-slate-400 font-medium mb-2 block">Select Stat to Overwrite :</span>
+                            <div className="grid grid-cols-2 gap-2 content-start">
+                                {Object.entries(targetItemB.stats).filter(([_, v]) => v > 0).map(([stat, val]) => (
+                                    <button key={stat}
+                                        onClick={() => setSelectedStatB(stat)}
+                                        className={`p-2.5 border rounded-lg text-white font-bold flex justify-between items-center text-xs transition-all ${selectedStatB === stat
+                                            ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                                            : 'bg-slate-800 border-slate-700 hover:bg-slate-700'
+                                            }`}>
+                                        <span className="truncate">{stat.toUpperCase()}</span>
+                                        <span className="text-slate-300 ml-1">({val})</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
+                )}
+
+                {/* ปุ่ม Action ด้านล่าง */}
                 <button
-                    // เพิ่มเงื่อนไข !isProcessing เพื่อไม่ให้กดซ้ำตอนกำลังโหลด
                     onClick={handleBottomAction}
                     disabled={(step === 'SELECT_STAT_B' && (!selectedStatB || !hasEnough)) || isProcessing}
                     className={`w-full mt-6 py-3 rounded-lg font-bold transition-all relative overflow-hidden ${isProcessing
@@ -291,7 +372,6 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                 >
                     {isProcessing ? (
                         <>
-                            {/* แถบ Progress Bar */}
                             <div
                                 className="absolute left-0 top-0 h-full bg-emerald-500/30 transition-all duration-75"
                                 style={{ width: `${progress}%` }}

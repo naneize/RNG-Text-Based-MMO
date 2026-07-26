@@ -43,7 +43,7 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
                     if (item.skillCondition.elementBonusAgainst && item.skillCondition.elementBonusPercent) {
                         elementsList.push({
                             itemName: item.name,
-                            slot,
+                            slot: 'skill', // เปลี่ยนให้แสดงผลเป็นคำว่า skill เฉยๆ
                             type: item.skillCondition.elementBonusAgainst,
                             value: item.skillCondition.elementBonusPercent
                         });
@@ -51,7 +51,7 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
                     if (item.skillCondition.raceBonusAgainst && item.skillCondition.raceBonusPercent) {
                         racesList.push({
                             itemName: item.name,
-                            slot,
+                            slot: 'skill', // เปลี่ยนให้แสดงผลเป็นคำว่า skill เฉยๆ
                             type: item.skillCondition.raceBonusAgainst,
                             value: item.skillCondition.raceBonusPercent
                         });
@@ -68,21 +68,23 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] p-4" onClick={() => setShowBonusModal(false)}>
-            <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-sm max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* ขยายความกว้างสูงสุดเป็น max-w-xl เพื่อรองรับการแสดงผลแบบ 2 Column */}
+            <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h3 className="text-white font-bold text-lg mb-4 text-center border-b border-slate-700 pb-2">ACTIVE BONUSES</h3>
 
-                <div className="space-y-4">
+                {/* เปลี่ยนเป็น Grid 2 Column สำหรับหน้าจอขนาด md ขึ้นไป */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Elemental Multipliers */}
                     <div className="bg-blue-900/20 p-3 rounded border border-blue-900/30">
                         <div className="text-[10px] text-blue-400 uppercase font-bold mb-1">Elemental Multipliers</div>
                         {elementsList.length > 0 ? (
                             <div className="space-y-1.5">
                                 {elementsList.map((b, i) => (
-                                    <div key={i} className="flex justify-between text-xs">
+                                    <div key={i} className="flex justify-between items-center text-xs">
                                         <span className="text-slate-300 truncate pr-2">
                                             • {b.itemName} <span className="text-slate-500 text-[10px]">({b.slot})</span>
                                         </span>
-                                        <span className="text-emerald-400 font-mono font-bold">+{b.value}% <span className="text-blue-300">({b.type})</span></span>
+                                        <span className="text-emerald-400 font-mono font-bold whitespace-nowrap">+{b.value}% <span className="text-blue-300">({b.type})</span></span>
                                     </div>
                                 ))}
                             </div>
@@ -104,11 +106,11 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
                         {racesList.length > 0 ? (
                             <div className="space-y-1.5">
                                 {racesList.map((b, i) => (
-                                    <div key={i} className="flex justify-between text-xs">
+                                    <div key={i} className="flex justify-between items-center text-xs">
                                         <span className="text-slate-300 truncate pr-2">
                                             • {b.itemName} <span className="text-slate-500 text-[10px]">({b.slot})</span>
                                         </span>
-                                        <span className="text-emerald-400 font-mono font-bold">+{b.value}% <span className="text-amber-200">({b.type})</span></span>
+                                        <span className="text-emerald-400 font-mono font-bold whitespace-nowrap">+{b.value}% <span className="text-amber-200">({b.type})</span></span>
                                     </div>
                                 ))}
                             </div>

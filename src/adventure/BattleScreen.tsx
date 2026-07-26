@@ -88,6 +88,8 @@ export const BattleScreen = ({ player, selectedBoss, finalStats, onBack, onGameO
                             <p>ATK: <span className="text-white">{bossEffectiveStats.atk.toLocaleString()}</span></p>
                             <p>DEF: <span className="text-white">{bossEffectiveStats.def.toLocaleString()}</span></p>
                             <p>RES: <span className="text-white">{bossEffectiveStats.res.toLocaleString()}</span></p>
+                            {/* 🛡️ เพิ่ม MRES ของ Boss ไว้ต่อท้าย RES ครับ */}
+                            <p>MRES: <span className="text-white">{(bossEffectiveStats.mRes || 0).toLocaleString()}</span></p>
                             <p>FLEE: <span className="text-white">{bossEffectiveStats.flee.toLocaleString()}</span></p>
                             <p>HIT: <span className="text-white">{bossEffectiveStats.hit.toLocaleString()}</span></p>
                         </div>

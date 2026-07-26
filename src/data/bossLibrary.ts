@@ -6,7 +6,7 @@ import { bossImages, baseStats, materialTiers } from './bossAssets';
 
 const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelIndex: number): Boss => {
     const { element, race: raceList, zone, names, fixedDrops } = archetype;
-    const level = 5 + levelIndex * 5;
+    const level = 100 + levelIndex * 10;
     const bossId = `b-${String(index + 1).padStart(3, '0')}`;
 
     const bossName = names[levelIndex] || names[names.length - 1];
@@ -24,19 +24,23 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
     let atkMod = 1.0;
     let defMod = 1.0;
     let agiMod = 1.0;
+    let hitMod = 1.0;
 
-    if (seed < 25) {
+    if (seed < 20) {
         // สายแทงค์: เลือดหนา เกราะแน่น ตีเบาลงนิดนึง
         hpMod = 1.35; defMod = 1.25; atkMod = 0.85;
-    } else if (seed < 50) {
+    } else if (seed < 40) {
         // สายเบอร์เซิร์ก / ดาเมจจัด: พลังโจมตีสูงปรี๊ด แลกมาด้วยเลือดที่บางลง
         atkMod = 1.30; hpMod = 0.85; agiMod = 1.1;
-    } else if (seed < 75) {
+    } else if (seed < 60) {
         // สายว่องไว / หลบพริ้ว: หลบหลีกสูง คริไว
         agiMod = 1.35; defMod = 0.9; hpMod = 0.9;
+    } else if (seed < 80) {
+        // 🎯 สายแม่นยำ / นักล่า: แม่นยำสูงมาก (Hit พุ่ง) โจมตีดี แลกกับเกราะหรือเลือดที่ลดลงหน่อย
+        hitMod = 1.50; atkMod = 1.15; defMod = 0.85;
     } else {
         // สายสมดุล: ใช้ค่ามาตรฐาน
-        hpMod = 1.0; atkMod = 1.0; defMod = 1.0; agiMod = 1.0;
+        hpMod = 1.0; atkMod = 1.0; defMod = 1.0; agiMod = 1.0; hitMod = 1.0;
     }
 
     const stats = {
@@ -45,7 +49,7 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         agi: Math.floor(baseStats.agi * levelMultiplier * agiMod),
         vit: Math.floor(baseStats.vit * levelMultiplier * hpMod),
         int: Math.floor(baseStats.int * levelMultiplier),
-        dex: Math.floor(baseStats.dex * levelMultiplier),
+        dex: Math.floor(baseStats.dex * levelMultiplier * hitMod), // ให้ dex ส่งผลร่วมกับความแม่นยำด้วย
         luk: Math.floor(baseStats.luk * levelMultiplier),
 
         // กลุ่มคริติคอล
@@ -60,9 +64,10 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         def: Math.floor(baseStats.def * (1 + (level - 5) * 0.08) * defMod),
         res: Math.floor(baseStats.res * (1 + (level - 5) * 0.08)),
         mRes: Math.floor(baseStats.mRes * (1 + (level - 5) * 0.08)),
-        hit: Math.floor(baseStats.hit + level * 3),
-        flee: Math.floor((baseStats.flee + level * 2) * agiMod)
+        hit: Math.floor((baseStats.hit + level * 5) * hitMod), // คูณ Mod ความแม่นยำตรงนี้
+        flee: Math.floor((baseStats.flee + level * 5) * agiMod)
     };
+
 
     // 🟢 ดึงข้อมูลไอเทมและจุดอ่อนที่ฟิกซ์ไว้ตามเลเวลอินเด็กซ์นั้นๆ
     const currentDrops = fixedDrops?.[levelIndex] || {
@@ -77,6 +82,13 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
     const availableMaterials = materialTiers[tier] || materialTiers[1];
     const material1 = currentDrops.material1?.id || availableMaterials[0];
     const material2 = currentDrops.material2?.id || (availableMaterials[1] || availableMaterials[0]);
+
+    // 🟢 ปรับสูตรให้จำนวนดรอปพุ่งสูงขึ้นตามเลเวลและความยาก
+    const minMat1 = 15 + (levelIndex * 5);
+    const maxMat1 = 30 + (levelIndex * 8);
+
+    const minMat2 = 5 + (levelIndex * 2);
+    const maxMat2 = 12 + (levelIndex * 4);
 
     const legendaryChance = Number((Math.min(0.04, 0.005 + levelIndex * 0.0025)).toFixed(4));
     const epicChance = Number((Math.min(0.10, 0.015 + levelIndex * 0.0065)).toFixed(4));
@@ -115,8 +127,18 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
             { itemId: currentDrops.skill.id, type: 'skill', dropChance: epicChance, fixedRarity: 'Epic', statRanges: { effectPower: { min: 40 + levelIndex * 3, max: 55 + levelIndex * 5 } } },
             { itemId: currentDrops.skill.id, type: 'skill', dropChance: legendaryChance, fixedRarity: 'Legendary', statRanges: { effectPower: { min: 60 + levelIndex * 4, max: 80 + levelIndex * 6 } } },
 
-            { itemId: material1, type: 'material', dropChance: 0.75, amountRange: { min: 1 + levelIndex, max: 3 + levelIndex } },
-            { itemId: material2, type: 'material', dropChance: 0.15, amountRange: { min: 1 + Math.floor(levelIndex / 2), max: 3 + Math.floor(levelIndex / 2) } },
+            {
+                itemId: material1,
+                type: 'material',
+                dropChance: 0.75,
+                amountRange: { min: minMat1, max: maxMat1 } // บอสตัวแรก (เวล 50, levelIndex=0) จะดรอปประมาณ x15 - x30 ชิ้น
+            },
+            {
+                itemId: material2,
+                type: 'material',
+                dropChance: 0.20,
+                amountRange: { min: minMat2, max: maxMat2 } // บอสตัวแรก (เวล 50, levelIndex=0) จะดรอปประมาณ x5 - x12 ชิ้น
+            },
         ],
         imagePath: randomImage
     } as unknown as Boss;
