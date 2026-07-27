@@ -44,10 +44,13 @@ interface ChatState {
     clearChat: () => Promise<void>;
     subscribeToChat: () => () => void;
     toggleReaction: (messageId: string, emoji: string) => Promise<void>;
+    onlineUsers: Array<{ uid: string; username: string; lastActive: any }>;
+    subscribeToOnlineUsers: () => () => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
     messages: [],
+    onlineUsers: [],
 
     // 📤 ฟังก์ชันส่งข้อความ (รองรับการแนบ Item)
     sendMessage: async (text: string, item?: Item) => {
@@ -181,5 +184,50 @@ export const useChatStore = create<ChatState>((set) => ({
         });
 
         return unsubscribe;
+    },
+
+    subscribeToOnlineUsers: () => {
+        const q = query(collection(db, 'presences'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const now = Date.now();
+            const users: Array<{ uid: string; username: string; lastActive: any }> = [];
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                let lastActiveTime = 0;
+
+                // 🟢 รองรับเวลาได้ทุกรูปแบบ (กันข้อมูลเก่าตีกัน)
+                if (typeof data.lastActive === 'number') {
+                    // แบบใหม่ (เก็บเป็นมิลลิวินาทีตรงๆ)
+                    lastActiveTime = data.lastActive;
+                } else if (data.lastActive && typeof data.lastActive.toMillis === 'function') {
+                    // แบบ Firebase Timestamp (มีฟังก์ชัน .toMillis())
+                    lastActiveTime = data.lastActive.toMillis();
+                } else if (data.lastActive && typeof data.lastActive.seconds === 'number') {
+                    // แบบ Firebase Timestamp สำรอง (แปลงจากวินาทีเป็นมิลลิวินาที)
+                    lastActiveTime = data.lastActive.seconds * 1000;
+                }
+
+                const diffSeconds = (now - lastActiveTime) / 1000;
+                console.log(`User: ${data.username}, Diff: ${diffSeconds} วินาที`);
+
+                // ถ้าอัปเดตล่าสุดภายใน 60 วินาที นับว่าออนไลน์
+                if (lastActiveTime > 0 && (now - lastActiveTime < 60000)) {
+                    users.push({
+                        uid: data.uid,
+                        username: data.username,
+                        lastActive: data.lastActive,
+                    });
+                }
+            });
+
+            set({ onlineUsers: users });
+        }, (error) => {
+            console.error("Error listening to online users:", error);
+        });
+
+        return unsubscribe;
     }
+
 }));

@@ -16,7 +16,7 @@ interface WorldChatProps {
 const REACTION_EMOJIS = ['👍', '🔥', '❤️', '😂', '👑', '💯'];
 
 export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
-    const { messages, sendMessage, deleteMessage, clearChat, toggleReaction } = useChatStore();
+    const { messages, sendMessage, deleteMessage, clearChat, toggleReaction, onlineUsers, subscribeToOnlineUsers } = useChatStore();
     const { userProfile, user } = useAuthStore();
 
     const [inputText, setInputText] = useState('');
@@ -48,6 +48,13 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+        const unsubscribe = subscribeToOnlineUsers();
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [subscribeToOnlineUsers]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,10 +106,11 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                     <h2 className="text-white font-bold text-sm tracking-wider flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         WORLD CHAT
+                        {/* 🟢 โชว์จำนวนคนออนไลน์ตรงนี้ */}
+                        <span className="text-xs bg-emerald-900/60 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded-full font-normal">
+                            Online : {onlineUsers.length}
+                        </span>
                     </h2>
-                    <span className="text-xs text-slate-400 hidden sm:inline">
-                        Logged in as: <strong className="text-emerald-400">{userProfile?.username}</strong>
-                    </span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -133,7 +141,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                 ) : (
                     messages.map((msg: ChatMessage) => {
                         const isMyMessage = msg.uid === userProfile?.uid;
-                        const myReaction = user ? msg.reactions?.[user.uid] : undefined;
+                        const myReaction = userProfile ? msg.reactions?.[userProfile.uid] : undefined;
                         const reactionSummary = summarizeReactions(msg.reactions);
 
                         return (

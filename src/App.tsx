@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CharacterDashboard } from './components/character/CharacterDashboard';
 import { useGameStore } from './store/gameStore';
@@ -10,19 +10,20 @@ import { useAuthStore, initAuthListener } from './store/authStore';
 import { useChatStore } from './store/chatStore';
 import { LoginPage } from './components/LoginPage';
 import { UsernameSetupPage } from './pages/UsernameSetupPage';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // 🟢 1. นำเข้า Firebase tools สำหรับทำระบบออนไลน์
+import { db } from './firebase'; // 🟢 2. นำเข้า db ของคุณ (เช็ค path ให้ตรงกับโปรเจกต์)
 import './utils/statSimulator';
 
 function App() {
   const { currentPage, collectionData } = useGameStore();
   const { user, userProfile, isLoading } = useAuthStore();
   const { subscribeToChat } = useChatStore();
-  // 🟢 2. เพิ่ม State สำหรับควบคุมการเปิด-ปิดตลาดกลาง
-
 
   useEffect(() => {
     initAuthListener();
   }, []);
 
+  // ระบบฟังแชทแบบ Real-time
   useEffect(() => {
     if (userProfile) {
       const unsubscribe = subscribeToChat();
@@ -32,6 +33,35 @@ function App() {
     }
   }, [userProfile, subscribeToChat]);
 
+  // 🟢 3. เพิ่ม Heartbeat Effect สำหรับอัปเดตสถานะออนไลน์ของผู้เล่นคนนี้
+  useEffect(() => {
+    if (!userProfile?.uid) return;
+
+    const userPresenceRef = doc(db, 'presences', userProfile.uid);
+
+    const updatePresence = async () => {
+      try {
+        await setDoc(userPresenceRef, {
+          uid: userProfile.uid,
+          username: userProfile.username || 'ผู้เล่น',
+          lastActive: Date.now(), // 🟢 บันทึกเป็นตัวเลขมิลลิวินาทีตรงๆ ไปเลย จะได้เทียบง่ายและแม่นยำ
+        }, { merge: true });
+      } catch (err) {
+        console.error("Error updating presence:", err);
+      }
+    };
+
+    // อัปเดตทันทีเมื่อเข้าเกม
+    updatePresence();
+
+    // วนลูปอัปเดตทุกๆ 20 วินาที เพื่อบอกเซิร์ฟเวอร์ว่ายังออนไลน์อยู่
+    const interval = setInterval(updatePresence, 20000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [userProfile]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
@@ -40,12 +70,10 @@ function App() {
     );
   }
 
-  // 🟢 แก้ไขตรงนี้: อนุญาตให้ผ่านได้ถ้ามี user (ล็อกอินจริง) OR มี userProfile (กรณีเล่นแบบ Guest)
   if (!user && !userProfile) {
     return <LoginPage />;
   }
 
-  // ถ้าเข้ามาถึงจุดนี้ แต่ยังไม่มี userProfile (เช่น สมัครสมาชิกใหม่แต่ยังไม่ได้ตั้งชื่อ) ให้ไปหน้าตั้งชื่อ
   if (!userProfile) {
     return <UsernameSetupPage />;
   }
@@ -62,8 +90,6 @@ function App() {
       </main>
 
       <AchievementPopup />
-
-
     </div>
   );
 }
