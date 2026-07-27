@@ -51,12 +51,6 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
 
         const critDmgBonus = Math.floor(totalLuk / 20) * 1;
         if (critDmgBonus > 0) addSource('critDmg', 'LUK -> CRIT DMG', critDmgBonus);
-
-        const hitFromLuk = Math.floor(totalLuk * 0.5);
-        if (hitFromLuk > 0) addSource('hit', 'LUK -> HIT', hitFromLuk);
-
-        const fleeFromLuk = Math.floor(totalLuk * 0.2);
-        if (fleeFromLuk > 0) addSource('flee', 'LUK -> FLEE', fleeFromLuk);
     }
 
     Object.keys(synergyStats).forEach(key => {
@@ -85,24 +79,36 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
     // 3. คำนวณค่า Effective
     const effective = getEffectiveStats(synergyStats);
 
-    const statConversions: { [key in keyof Stats]?: { from: keyof Stats; mult: number; label: string } } = {
-        atk: { from: 'str', mult: STAT_MULTIPLIERS.strToAtk, label: 'STR -> ATK' },
-        def: { from: 'vit', mult: STAT_MULTIPLIERS.vitToDef, label: 'VIT -> DEF' },
-        maxHp: { from: 'vit', mult: STAT_MULTIPLIERS.vitToHp, label: 'VIT -> HP' },
-        hit: { from: 'dex', mult: STAT_MULTIPLIERS.dexToHit, label: 'DEX -> HIT' },
-        flee: { from: 'agi', mult: STAT_MULTIPLIERS.agiToFlee, label: 'AGI -> FLEE' },
-        res: { from: 'int', mult: STAT_MULTIPLIERS.intToRes, label: 'INT -> RES' },
-        mRes: { from: 'vit', mult: STAT_MULTIPLIERS.vitToMRes, label: 'VIT -> M.RES' },
-        skillPower: { from: 'int', mult: STAT_MULTIPLIERS.intToSkillPwr, label: 'INT -> Skill Pwr' }
+    const statConversions: { [key in keyof Stats]?: { from: keyof Stats; mult: number; label: string }[] } = {
+        atk: [
+            { from: 'str', mult: STAT_MULTIPLIERS.strToAtk, label: 'STR -> ATK' },
+            { from: 'dex', mult: STAT_MULTIPLIERS.dexToAtk, label: 'DEX -> ATK' } // 🟢 เพิ่ม DEX -> ATK เข้ามาให้ครบตาม getEffectiveStats
+        ],
+        def: [{ from: 'vit', mult: STAT_MULTIPLIERS.vitToDef, label: 'VIT -> DEF' }],
+        maxHp: [{ from: 'vit', mult: STAT_MULTIPLIERS.vitToHp, label: 'VIT -> HP' }],
+        hit: [
+            { from: 'dex', mult: STAT_MULTIPLIERS.dexToHit, label: 'DEX -> HIT' },
+            { from: 'luk', mult: STAT_MULTIPLIERS.lukToHit, label: 'LUK -> HIT' } // 🟢 ตรวจสอบว่ามี LUK -> HIT ครบถ้วนไหม
+        ],
+        flee: [
+            { from: 'agi', mult: STAT_MULTIPLIERS.agiToFlee, label: 'AGI -> FLEE' },
+            { from: 'luk', mult: STAT_MULTIPLIERS.lukToFlee, label: 'LUK -> FLEE' }
+        ],
+        res: [{ from: 'int', mult: STAT_MULTIPLIERS.intToRes, label: 'INT -> RES' }],
+        mRes: [{ from: 'vit', mult: STAT_MULTIPLIERS.vitToMRes, label: 'VIT -> M.RES' }],
+        skillPower: [{ from: 'int', mult: STAT_MULTIPLIERS.intToSkillPwr, label: 'INT -> Skill Pwr' }]
     };
 
-    Object.entries(statConversions).forEach(([targetKey, conf]) => {
-        if (!conf) return;
-        const statVal = synergyStats[conf.from] || 0;
-        const convertedVal = Math.floor(statVal * conf.mult);
-        if (convertedVal > 0) {
-            addSource(targetKey, conf.label, convertedVal);
-        }
+    // เวลาวนลูปเรียกใช้ ให้รองรับแบบ Array หลายตัวต่อ 1 Stat Key
+    Object.entries(statConversions).forEach(([targetKey, conversions]) => {
+        if (!conversions) return;
+        conversions.forEach(conf => {
+            const statVal = synergyStats[conf.from] || 0;
+            const convertedVal = Math.floor(statVal * conf.mult);
+            if (convertedVal > 0) {
+                addSource(targetKey, conf.label, convertedVal);
+            }
+        });
     });
 
     // 4. ทำ Cap และแปลงค่าสุดท้าย
