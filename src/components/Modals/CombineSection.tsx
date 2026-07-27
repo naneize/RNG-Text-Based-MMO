@@ -30,7 +30,7 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
         item.slot !== 'skill' &&
         item.type !== 'skill' &&
         item.slot !== 'material' &&
-        item.rarity !== 'Legendary' // 💡 เพิ่มบรรทัดนี้เพื่อซ่อนไอเทมระดับ Legendary
+        item.rarity === 'Epic' // 💡 กรองให้แสดงเฉพาะระดับ Epic เท่านั้น
     );
 
     //#region เงื่อนไขการผสม

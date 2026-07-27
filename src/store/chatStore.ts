@@ -54,11 +54,10 @@ export const useChatStore = create<ChatState>((set) => ({
         if (!text.trim() && !item) return;
 
         const authState = useAuthStore.getState();
-        const user = authState.user;
-        const userProfile = authState.userProfile;
+        const userProfile = authState.userProfile; // 🟢 ใช้แค่ userProfile ก็พอครับ
 
-        if (!user || !userProfile) {
-            console.error("User not authenticated or profile not found");
+        if (!userProfile) {
+            console.error("User profile not found");
             return;
         }
 
@@ -66,11 +65,11 @@ export const useChatStore = create<ChatState>((set) => ({
             const sanitizedItem = item ? JSON.parse(JSON.stringify(item)) : null;
 
             await addDoc(collection(db, 'chats'), {
-                uid: user.uid,
+                uid: userProfile.uid, // 🟢 ดึง uid จากโปรไฟล์แทน (รองรับทั้ง User จริงและ Guest)
                 username: userProfile.username,
                 text: text.trim(),
                 item: sanitizedItem,
-                reactions: {}, // เริ่มต้นไม่มีใคร react
+                reactions: {},
                 createdAt: serverTimestamp()
             });
         } catch (err) {
@@ -82,20 +81,18 @@ export const useChatStore = create<ChatState>((set) => ({
     // 1. ตรงส่วน Interface (ถ้ามีแยกไว้) หรือ type ของ Store ให้ใส่เครื่องหมาย ? หน้า playerData
     shareStatsToChat: async (playerData?: Player) => {
         const authState = useAuthStore.getState();
-        const user = authState.user;
-        const userProfile = authState.userProfile;
+        const userProfile = authState.userProfile; // 🟢 ใช้แค่ userProfile
 
-        if (!user || !userProfile) {
-            console.error("User not authenticated or profile not found");
+        if (!userProfile) {
+            console.error("User profile not found");
             return;
         }
 
-        // 2. ถ้าไม่ได้ส่ง playerData เข้ามา ให้ fallback ไปใช้ userProfile หรือข้อมูลปัจจุบันแทน
         const targetData = playerData || userProfile;
 
         try {
             const sanitizedStats = JSON.parse(JSON.stringify({
-                uid: user.uid,
+                uid: userProfile.uid, // 🟢 ใช้ uid จากโปรไฟล์
                 username: userProfile.username,
                 finalStats: (targetData as any).finalStats || {},
                 statBreakdown: (targetData as any).statBreakdown || {},
@@ -103,7 +100,7 @@ export const useChatStore = create<ChatState>((set) => ({
             }));
 
             await addDoc(collection(db, 'chats'), {
-                uid: user.uid,
+                uid: userProfile.uid, // 🟢 ใช้ uid จากโปรไฟล์
                 username: userProfile.username,
                 text: `shared their character stats!`,
                 playerStats: sanitizedStats,
@@ -139,25 +136,25 @@ export const useChatStore = create<ChatState>((set) => ({
         }
     },
 
-    // ❤️ ติด/ถอด reaction ของตัวเองในข้อความนี้
+    // ❤️ ติด/ถอด reaction ของตัวเองในข้อความนี้ (รองรับ Guest)
     toggleReaction: async (messageId: string, emoji: string) => {
-        const user = useAuthStore.getState().user;
-        if (!user) return;
+        const userProfile = useAuthStore.getState().userProfile;
+        if (!userProfile) return;
 
         try {
             const messageRef = doc(db, 'chats', messageId);
             const currentMsg = useChatStore.getState().messages.find(m => m.id === messageId);
-            const currentReaction = currentMsg?.reactions?.[user.uid];
+            const currentReaction = currentMsg?.reactions?.[userProfile.uid];
 
             if (currentReaction === emoji) {
                 // กดซ้ำอีโมจิเดิม → ถอดออก
                 await updateDoc(messageRef, {
-                    [`reactions.${user.uid}`]: deleteField()
+                    [`reactions.${userProfile.uid}`]: deleteField()
                 });
             } else {
                 // ยังไม่เคย react หรือเปลี่ยนเป็นอีโมจิใหม่
                 await updateDoc(messageRef, {
-                    [`reactions.${user.uid}`]: emoji
+                    [`reactions.${userProfile.uid}`]: emoji
                 });
             }
         } catch (err) {

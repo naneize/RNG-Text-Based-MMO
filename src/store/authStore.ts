@@ -43,6 +43,8 @@ interface AuthState {
     checkUsernameExists: (username: string) => Promise<boolean>;
     saveUsername: (username: string) => Promise<boolean>;
     fetchUserProfile: (uid: string) => Promise<void>;
+
+    loginAsGuest: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -61,6 +63,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch (err: any) {
             set({ error: mapFirebaseError(err.code) });
         }
+    },
+
+    // 🟢 ฟังก์ชันจำลองการเข้าสู่ระบบแบบ Guest
+    loginAsGuest: () => {
+        set({ error: null });
+
+        // สร้างข้อมูลโปรไฟล์จำลองชั่วคราว
+        const guestProfile: UserProfile = {
+            uid: 'guest_' + Date.now(),
+            email: null,
+            username: 'Guest_' + Math.floor(1000 + Math.random() * 9000),
+        };
+
+        // เซ็ตสถานะให้เหมือนล็อกอินผ่านแล้ว โดยใช้ object ปลอมหรือเซ็ต userProfile ตรงๆ
+        set({
+            user: null, // ไม่มี Firebase User จริง
+            userProfile: guestProfile,
+            isLoading: false,
+        });
+
+        // (ทางเลือก) ถ้าต้องการเซ็ตชื่อผู้เล่นใน gameStore พร้อมกันด้วย
+        useGameStore.setState((state) => ({
+            player: {
+                ...state.player,
+                name: guestProfile.username,
+            }
+        }));
     },
 
     register: async (email, password) => {
@@ -90,22 +119,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     logout: async () => {
         try {
-            // 🟢 1. ดึง uid ออกมาก่อนที่สโตร์จะโดนล้าง
-            const currentUid = useAuthStore.getState().user?.uid || auth.currentUser?.uid;
+            const currentUid = useAuthStore.getState().user?.uid;
 
+            // ถ้ามี UID จริงๆ ค่อยสั่งเซฟข้อมูลลง Firestore
             if (currentUid) {
-                // ส่ง uid เข้าไปบังคับเซฟเลย ป้องกันปัญหาสต็อกโดนเคลียร์ก่อนเซฟ
                 await useGameStore.getState().saveUserData(currentUid);
+                await signOut(auth);
             }
         } catch (error) {
             console.error("Failed to save game data before logout:", error);
         }
 
-        // 🔓 2. ทำการ Sign out ออกจาก Firebase
-        await signOut(auth);
+        // ล้างสเตตัสทั้งหมด (ไม่ว่าจะเป็น User จริงหรือ Guest ก็เคลียร์เกลี้ยงเหมือนกัน)
         set({ user: null, userProfile: null });
-
-        // 🧹 3. สั่งล้างข้อมูลเกมทั้งหมด
         useGameStore.getState().resetGame();
     },
 

@@ -180,6 +180,7 @@ export const useGameStore = create<GameState>()(
             isProcessingReward: false,
             setProcessingReward: (status) => set({ isProcessingReward: status }),
 
+
             // เพิ่ม ? string เข้าไป เพื่อให้รองรับการส่งค่าเข้ามาได้ และไม่บังคับ (Optional)
             saveUserData: async (forcedUid?: string) => {
                 const uid = forcedUid || useAuthStore.getState().user?.uid || auth.currentUser?.uid;

@@ -24,13 +24,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (user && userProfile) {
+    if (userProfile) {
       const unsubscribe = subscribeToChat();
       return () => {
         if (unsubscribe) unsubscribe();
       };
     }
-  }, [user, userProfile, subscribeToChat]);
+  }, [userProfile, subscribeToChat]);
 
   if (isLoading) {
     return (
@@ -40,10 +40,12 @@ function App() {
     );
   }
 
-  if (!user) {
+  // 🟢 แก้ไขตรงนี้: อนุญาตให้ผ่านได้ถ้ามี user (ล็อกอินจริง) OR มี userProfile (กรณีเล่นแบบ Guest)
+  if (!user && !userProfile) {
     return <LoginPage />;
   }
 
+  // ถ้าเข้ามาถึงจุดนี้ แต่ยังไม่มี userProfile (เช่น สมัครสมาชิกใหม่แต่ยังไม่ได้ตั้งชื่อ) ให้ไปหน้าตั้งชื่อ
   if (!userProfile) {
     return <UsernameSetupPage />;
   }

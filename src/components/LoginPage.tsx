@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 
 export const LoginPage = () => {
-    const { login, register, loginWithGoogle, error, clearError } = useAuthStore();
+    const { login, register, loginWithGoogle, loginAsGuest, error, clearError } = useAuthStore();
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -121,6 +121,13 @@ export const LoginPage = () => {
                         {mode === 'login' ? 'Sign Up' : 'Sign In'}
                     </button>
                 </p>
+
+                <button
+                    onClick={loginAsGuest}
+                    className="w-full mt-3 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-sm transition flex items-center justify-center gap-2"
+                >
+                    Play as Guest
+                </button>
 
                 {/* เครดิต Game-Icons */}
                 <div className="mt-8 pt-4 border-t border-slate-800/80 text-center">

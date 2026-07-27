@@ -6,7 +6,7 @@ type PageType = 'home' | 'adventure' | 'collection' | 'achievement';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
-    const { user, logout } = useAuthStore();
+    const { user, userProfile, logout } = useAuthStore();
 
     const menu: { id: PageType; label: string }[] = [
         { id: 'home', label: 'Main' },
@@ -39,15 +39,16 @@ export const Sidebar = () => {
 
             {/* ดันส่วนผู้เล่น + ปุ่ม Logout ไปอยู่ล่างสุดของ sidebar */}
             <div className="mt-auto pt-4 border-t border-slate-800">
-                {user && (
-                    <p className="text-slate-500 text-xs px-3 mb-2 truncate">
-                        {user.email || user.displayName || 'ผู้เล่น'}
+                {/* 🟢 2. ปรับเงื่อนไขให้แสดง username จาก userProfile ก่อน */}
+                {(userProfile || user) && (
+                    <p className="text-emerald-400 text-xs px-3 mb-2 truncate font-medium">
+                        Account : {userProfile?.username || user?.email || user?.displayName || 'ผู้เล่น'}
                     </p>
                 )}
                 <button
                     node-type="logout"
                     onClick={handleLogout}
-                    className="w-full p-3 rounded-lg text-left text-red-400 hover:bg-red-950/40 transition"
+                    className="w-full p-3 rounded-lg text-left text-red-400 hover:bg-red-950/40 transition cursor-pointer"
                 >
                     Logout
                 </button>
