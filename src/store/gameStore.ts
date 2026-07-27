@@ -1,11 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Player, Stats, Item, CollectionRecord, Boss } from '../types/game';
+import { PITY_CONFIG } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { getTotalStats } from '../utils/combat';
 import { TRANSFER_COSTS } from '../data/transferConfig';
 import { calculateBossDrops } from '../utils/dropLogic';
 import { useAchievementStore } from './achievementStore';
+import {
+    doc,
+    getDoc,
+    setDoc,
+} from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { useAuthStore } from './authStore';
+
+
 
 export interface SalvageRateConfig {
     rate: number;         // เช่น 0.9 (ใช้คำนวณ)
@@ -67,10 +77,13 @@ interface GameState {
     setStats: (newStats: Stats) => void;
     totalOpens: number;
     addOpen: () => void;
+    saveUserData: (forcedUid?: string) => Promise<void>;
     equipItem: (item: Item) => void;
     unequipItem: (item: Item) => void;
     removeItem: (uid: string) => void;
     removeMaterial: (name: string, amount: number) => void;
+    resetGame: () => void;
+    loadUserData: (uid: string) => Promise<void>;
     collectionData: CollectionRecord[];
     unlockItem: (item: Item) => void;
     updateInventoryItem: (uid: string, updatedItem: Item) => void;
@@ -93,6 +106,9 @@ interface GameState {
         }[];
         message: string;
     };
+
+
+
     epicPity: number;
     legendPity: number;
     addEpicPity: () => void;
@@ -102,6 +118,8 @@ interface GameState {
 
     achievements: Record<string, { isUnlocked: boolean; progress?: number }>;
     unlockAchievement: (id: string) => void;
+
+
 
 }
 
@@ -133,6 +151,7 @@ export const useGameStore = create<GameState>()(
             currentPage: 'home',
             setCurrentPage: (page) => set({ currentPage: page }),
             collectionData: [],
+
             player: {
                 name: 'Novice',
                 level: 1,
@@ -161,11 +180,115 @@ export const useGameStore = create<GameState>()(
             isProcessingReward: false,
             setProcessingReward: (status) => set({ isProcessingReward: status }),
 
+            // เพิ่ม ? string เข้าไป เพื่อให้รองรับการส่งค่าเข้ามาได้ และไม่บังคับ (Optional)
+            saveUserData: async (forcedUid?: string) => {
+                const uid = forcedUid || useAuthStore.getState().user?.uid || auth.currentUser?.uid;
+                if (!uid) return;
 
+                try {
+                    const state = get();
+
+                    if (!state.player || !state.player.name) {
+                        console.warn("Aborting save: Player data looks empty.");
+                        return;
+                    }
+
+                    const playerDocRef = doc(db, 'players', uid);
+
+                    const rawData = {
+                        player: state.player || {},
+                        collectionData: state.collectionData || [],
+                        totalOpens: state.totalOpens || 0,
+                        epicPity: state.epicPity || 0,
+                        legendPity: state.legendPity || 0,
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    // 🟢 ฟังก์ชัน recursive สำหรับกวาดล้างค่า undefined ออกให้เกลี้ยง (แปลงเป็น null แทน)
+                    const removeUndefined = (obj: any): any => {
+                        if (obj === undefined) return null;
+                        if (obj === null || typeof obj !== 'object') return obj;
+                        if (Array.isArray(obj)) {
+                            return obj.map(removeUndefined);
+                        }
+                        const cleaned: Record<string, any> = {};
+                        for (const key of Object.keys(obj)) {
+                            const cleanedVal = removeUndefined(obj[key]);
+                            if (cleanedVal !== undefined) {
+                                cleaned[key] = cleanedVal;
+                            }
+                        }
+                        return cleaned;
+                    };
+
+                    const cleanData = removeUndefined(rawData);
+
+                    await setDoc(playerDocRef, cleanData, { merge: true });
+
+                    console.log("Game data saved successfully for:", uid);
+                } catch (error) {
+                    console.error("Error saving user data to Firestore:", error);
+                }
+            },
+
+            resetGame: () => set({
+                currentPage: 'home',
+                collectionData: [],
+                totalOpens: 0,
+                epicPity: 0,
+                legendPity: 0,
+                player: {
+                    name: 'Novice',
+                    level: 1,
+                    baseStats: {
+                        maxHp: 100, str: 0, agi: 0, vit: 0, int: 0, dex: 0, luk: 0, hit: 0, flee: 0,
+                        critRate: 0, critDmg: 0, atk: 0, def: 0, res: 0, mRes: 0
+                    },
+                    currentHp: 100,
+                    inventory: [],
+                    materials: {},
+                    equippedItems: {
+                        weapon: null, armor: null, shield: null, cloak: null,
+                        helmet: null, necklace: null, ring: null, boots: null,
+                        skill1: null, skill2: null
+                    },
+                    totalRolls: 0,
+                    epicPity: 0,
+                    legendPity: 0,
+                }
+            }),
+
+
+
+            // 📥 2. ฟังก์ชันโหลดข้อมูลเกมแยกตาม UID ของผู้ใช้จาก Firestore
+            loadUserData: async (uid: string) => {
+                try {
+                    const docRef = doc(db, 'players', uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        set({
+                            player: data.player || get().player,
+                            collectionData: data.collectionData || [],
+                            totalOpens: data.totalOpens || 0,
+                            epicPity: data.epicPity || 0,
+                            legendPity: data.legendPity || 0,
+                            // 🟢 เพิ่มตรงนี้เพื่อโหลดสถานะ Achievement กลับมาด้วย
+                            achievements: data.achievements || get().achievements,
+                        });
+                        console.log("Game data loaded successfully for:", uid);
+                    }
+                } catch (error) {
+                    console.error("Error loading user data:", error);
+                }
+            },
 
             addEpicPity: () => set((state) => ({
-                epicPity: state.epicPity + 1,
-                player: { ...state.player, epicPity: state.player.epicPity + 1 }
+                epicPity: Math.min(state.epicPity + 1, PITY_CONFIG.EPIC),
+                player: {
+                    ...state.player,
+                    epicPity: Math.min(state.player.epicPity + 1, PITY_CONFIG.EPIC)
+                }
             })),
             resetEpicPity: () => set((state) => ({
                 epicPity: 0,
@@ -173,8 +296,11 @@ export const useGameStore = create<GameState>()(
             })),
 
             addLegendPity: () => set((state) => ({
-                legendPity: state.legendPity + 1,
-                player: { ...state.player, legendPity: state.player.legendPity + 1 }
+                legendPity: Math.min(state.legendPity + 1, PITY_CONFIG.LEGEND),
+                player: {
+                    ...state.player,
+                    legendPity: Math.min(state.player.legendPity + 1, PITY_CONFIG.LEGEND)
+                }
             })),
             resetLegendPity: () => set((state) => ({
                 legendPity: 0,
@@ -185,6 +311,7 @@ export const useGameStore = create<GameState>()(
             addOpen: () => set((state) => ({ totalOpens: state.totalOpens + 1 })),
 
             achievements: {},
+
             unlockAchievement: (id) => {
                 const current = get().achievements[id];
                 if (!current?.isUnlocked) {
@@ -194,44 +321,58 @@ export const useGameStore = create<GameState>()(
                             [id]: { ...state.achievements[id], isUnlocked: true }
                         }
                     }));
+                    get().saveUserData(); // 🟢 บันทึกข้อมูลเมื่อปลดล็อก Achievement
                 }
             },
 
             setStats: (newStats) => set((state) => ({
                 player: { ...state.player, baseStats: newStats }
             })),
+
             unlockItem: (item: Item) => set((state) => ({
                 collectionData: getUpdatedCollection(state.collectionData, item)
             })),
-            addItem: (item: Item) => set((state) => ({
-                player: {
-                    ...state.player,
-                    inventory: [...state.player.inventory, item]
-                },
-                collectionData: getUpdatedCollection(state.collectionData, item)
-            })),
-            addMaterial: (idOrName: string, amount: number) => set((state) => {
-                const normalizedId = idOrName.toLowerCase().replace(/ /g, '_');
-                const template = itemLibrary.find(i => i.id === normalizedId);
-                if (!template) return state;
-                const itemForCollection: Item = {
-                    ...template,
-                    uid: Math.random().toString(36).substr(2, 9),
-                    rarity: 'Common' as any,
-                    stats: (template as any).stats || {},
-                    statsLog: []
-                };
-                return {
+
+            addItem: (item: Item) => {
+                set((state) => ({
                     player: {
                         ...state.player,
-                        materials: {
-                            ...state.player.materials,
-                            [template.id]: (state.player.materials[template.id] || 0) + amount
-                        }
+                        inventory: [...state.player.inventory, item]
                     },
-                    collectionData: getUpdatedCollection(state.collectionData, itemForCollection)
-                };
-            }),
+                    collectionData: getUpdatedCollection(state.collectionData, item)
+                }));
+                get().saveUserData(); // 🟢 บันทึกข้อมูลเมื่อได้รับไอเทมใหม่
+            },
+
+            addMaterial: (idOrName: string, amount: number) => {
+                set((state) => {
+                    const normalizedId = idOrName.toLowerCase().replace(/ /g, '_');
+                    const template = itemLibrary.find(i => i.id === normalizedId);
+                    if (!template) return state;
+
+                    const itemForCollection: Item = {
+                        ...template,
+                        uid: Math.random().toString(36).substr(2, 9),
+                        rarity: 'Common' as any,
+                        type: 'material',
+                        slot: 'material',
+                        stats: (template as any).stats || {},
+                        statsLog: []
+                    };
+
+                    return {
+                        player: {
+                            ...state.player,
+                            materials: {
+                                ...state.player.materials,
+                                [template.id]: (state.player.materials[template.id] || 0) + amount
+                            }
+                        },
+                        collectionData: getUpdatedCollection(state.collectionData, itemForCollection)
+                    };
+                });
+                get().saveUserData(); // 🟢 บันทึกข้อมูลเมื่อได้วัตถุดิบ
+            },
 
             equipItem: (item: Item) => set((state) => {
                 const { player } = state;
@@ -301,44 +442,41 @@ export const useGameStore = create<GameState>()(
                 getTotalStats(nextPlayer);
                 console.groupEnd();
 
+                get().saveUserData();
+
 
                 return { player: nextPlayer };
             }),
 
-            unequipItem: (item: Item) => set((state) => {
+            unequipItem: (item: Item) => {
+                let nextPlayer = { ...get().player };
+
                 // Handle skill items specially
                 if (item.type === 'skill') {
-                    if (state.player.equippedItems.skill1?.uid === item.uid) {
-                        return {
-                            player: {
-                                ...state.player,
-                                inventory: [...state.player.inventory, item],
-                                equippedItems: { ...state.player.equippedItems, skill1: null }
-                            }
-                        };
+                    if (nextPlayer.equippedItems.skill1?.uid === item.uid) {
+                        nextPlayer.inventory = [...nextPlayer.inventory, item];
+                        nextPlayer.equippedItems = { ...nextPlayer.equippedItems, skill1: null };
+                    } else if (nextPlayer.equippedItems.skill2?.uid === item.uid) {
+                        nextPlayer.inventory = [...nextPlayer.inventory, item];
+                        nextPlayer.equippedItems = { ...nextPlayer.equippedItems, skill2: null };
+                    } else {
+                        return; // ถ้าไม่ได้ใส่สกิลนี้ไว้ ให้จบการทำงาน
                     }
-                    if (state.player.equippedItems.skill2?.uid === item.uid) {
-                        return {
-                            player: {
-                                ...state.player,
-                                inventory: [...state.player.inventory, item],
-                                equippedItems: { ...state.player.equippedItems, skill2: null }
-                            }
-                        };
-                    }
-                    return state;
+                } else {
+                    // Handle regular equipment
+                    const slot = item.slot as keyof typeof nextPlayer.equippedItems;
+                    if (nextPlayer.equippedItems[slot]?.uid !== item.uid) return;
+
+                    nextPlayer.inventory = [...nextPlayer.inventory, item];
+                    nextPlayer.equippedItems = { ...nextPlayer.equippedItems, [slot]: null };
                 }
 
-                // Handle regular equipment
-                if (state.player.equippedItems[item.slot]?.uid !== item.uid) return state;
-                return {
-                    player: {
-                        ...state.player,
-                        inventory: [...state.player.inventory, item],
-                        equippedItems: { ...state.player.equippedItems, [item.slot]: null }
-                    }
-                };
-            }),
+                // อัปเดต State ใน Store
+                set({ player: nextPlayer });
+
+                // 💾 บันทึกข้อมูลลง Firestore ทันทีหลังถอดอุปกรณ์สำเร็จ
+                get().saveUserData();
+            },
 
             salvageItem: (uid: string) => {
                 const state = get();
@@ -421,6 +559,8 @@ export const useGameStore = create<GameState>()(
                             materialsGained = [{ id: 'iron_ore', amount: 1 }];
                             break;
                     }
+
+
                 }
 
                 get().removeItem(uid);
@@ -428,6 +568,8 @@ export const useGameStore = create<GameState>()(
                 materialsGained.forEach(mat => {
                     get().addMaterial(mat.id, mat.amount);
                 });
+
+                get().saveUserData();
 
                 return {
                     success: isSuccess,
@@ -501,6 +643,8 @@ export const useGameStore = create<GameState>()(
                     amount
                 }));
 
+                get().saveUserData();
+
                 return {
                     success: true,
                     totalSalvaged: itemsToSalvage.length,
@@ -509,6 +653,8 @@ export const useGameStore = create<GameState>()(
                     detailedResults, // 🟢 ส่งรายละเอียดกลับไปด้วย
                     message: `Salvaged ${itemsToSalvage.length} ${targetRarity} items (${successCount} successful)!`
                 };
+
+
             },
 
             removeItem: (uid: string) => set((state) => {
@@ -600,6 +746,8 @@ export const useGameStore = create<GameState>()(
                     get().updateInventoryItem(itemA.uid, { ...itemA, stats: newStatsA });
                     get().updateInventoryItem(itemB.uid, { ...itemB, stats: newStatsB });
 
+                    get().saveUserData();
+
                     return {
                         success: false,
                         itemAName: itemA.name,
@@ -608,7 +756,9 @@ export const useGameStore = create<GameState>()(
                         removedStatB: statB, removedValB: valB,
                         message: "Transfer failed! Both stats lost."
                     };
+
                 }
+
             },
 
             updateInventoryItem: (uid, updatedItem) => set((state) => ({
@@ -633,6 +783,9 @@ export const useGameStore = create<GameState>()(
                             get().addItem(reward.itemData);
                         }
                     });
+
+                    get().saveUserData();
+
                     setTimeout(() => { isProcessing = false; }, 1000);
                 }
 

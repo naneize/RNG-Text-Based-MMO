@@ -116,20 +116,24 @@ export interface Player {
     inventory: Item[];
     materials: Record<string, number>;
     totalRolls: number;
-    epicPity: number;     // ✅ เพิ่มเข้ามาใหม่
+    epicPity: number;
     legendPity: number;
     equippedItems: {
         weapon: Item | null;
         armor: Item | null;
         shield: Item | null;
         cloak: Item | null;
-        helmet: Item | null; // ตรวจสอบให้ตรงกับที่ใช้งานใน GameStore
+        helmet: Item | null;
         necklace: Item | null;
         ring: Item | null;
         boots: Item | null;
         skill1: Item | null;
         skill2: Item | null;
     };
+    // 🟢 เพิ่มฟิลด์เสริมสำหรับรองรับการ Inspect และแสดงผล Stats
+    uid?: string;
+    finalStats?: Stats;
+    statBreakdown?: Record<string, { label: string; value: number }[]>;
 }
 
 export const PITY_CONFIG = {
@@ -192,3 +196,5 @@ export interface DropItem {
     statRanges?: Partial<Record<keyof Stats, { min: number; max: number }>>;
     fixedRarity?: 'Common' | 'Rare' | 'Epic' | 'Legendary';
 }
+
+

@@ -1,7 +1,8 @@
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 
-type PageType = 'home' | 'adventure' | 'collection' | 'achievement'; // เพิ่ม 'worldchat' เข้าไปใน type
+
+type PageType = 'home' | 'adventure' | 'collection' | 'achievement';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
@@ -12,7 +13,6 @@ export const Sidebar = () => {
         { id: 'adventure', label: 'Boss Lobby' },
         { id: 'collection', label: 'Items Collection' },
         { id: 'achievement', label: 'Achievements' },
-
     ];
 
     const handleLogout = async () => {
@@ -34,6 +34,8 @@ export const Sidebar = () => {
                     {item.label}
                 </button>
             ))}
+
+
 
             {/* ดันส่วนผู้เล่น + ปุ่ม Logout ไปอยู่ล่างสุดของ sidebar */}
             <div className="mt-auto pt-4 border-t border-slate-800">

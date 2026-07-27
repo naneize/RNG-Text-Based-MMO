@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useGameStore } from './gameStore';
 import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
@@ -6,6 +7,8 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     signOut,
+    setPersistence,
+    inMemoryPersistence, // 🟢 นำเข้าตัวจัดการเซสชันแบบแยกแท็บ
     type User,
 } from 'firebase/auth';
 import {
@@ -51,6 +54,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     login: async (email, password) => {
         set({ error: null });
         try {
+            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนเข้าสู่ระบบ
+            await setPersistence(auth, inMemoryPersistence);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             await get().fetchUserProfile(userCredential.user.uid);
         } catch (err: any) {
@@ -61,7 +66,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     register: async (email, password) => {
         set({ error: null });
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนสมัครสมาชิก
+            await setPersistence(auth, inMemoryPersistence);
+            await createUserWithEmailAndPassword(auth, email, password);
             set({ userProfile: null }); // สมัครใหม่ยังไม่มีชื่อ ต้องไปหน้าตั้งชื่อ
         } catch (err: any) {
             set({ error: mapFirebaseError(err.code) });
@@ -71,6 +78,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     loginWithGoogle: async () => {
         set({ error: null });
         try {
+            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนล็อกอินด้วย Google
+            await setPersistence(auth, inMemoryPersistence);
             const provider = new GoogleAuthProvider();
             const userCredential = await signInWithPopup(auth, provider);
             await get().fetchUserProfile(userCredential.user.uid);
@@ -80,8 +89,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     logout: async () => {
+        try {
+            // 🟢 1. ดึง uid ออกมาก่อนที่สโตร์จะโดนล้าง
+            const currentUid = useAuthStore.getState().user?.uid || auth.currentUser?.uid;
+
+            if (currentUid) {
+                // ส่ง uid เข้าไปบังคับเซฟเลย ป้องกันปัญหาสต็อกโดนเคลียร์ก่อนเซฟ
+                await useGameStore.getState().saveUserData(currentUid);
+            }
+        } catch (error) {
+            console.error("Failed to save game data before logout:", error);
+        }
+
+        // 🔓 2. ทำการ Sign out ออกจาก Firebase
         await signOut(auth);
         set({ user: null, userProfile: null });
+
+        // 🧹 3. สั่งล้างข้อมูลเกมทั้งหมด
+        useGameStore.getState().resetGame();
     },
 
     clearError: () => set({ error: null }),
@@ -170,6 +195,7 @@ function mapFirebaseError(code: string): string {
     }
 }
 
+
 // ผูก listener เช็ค session ค้าง — เรียกครั้งเดียวตอนแอปเริ่มทำงาน (ใน main.tsx)
 export const initAuthListener = () => {
     onAuthStateChanged(auth, async (firebaseUser) => {
@@ -182,8 +208,15 @@ export const initAuthListener = () => {
                 userProfile: userSnap.exists() ? (userSnap.data() as UserProfile) : null,
                 isLoading: false
             });
+
+            // 📥 โหลดข้อมูลเกมเฉพาะของไอดีนี้จาก Firestore ทันที
+            await useGameStore.getState().loadUserData(firebaseUser.uid);
+
         } else {
             useAuthStore.setState({ user: null, userProfile: null, isLoading: false });
+
+            // 🧹 ล้างข้อมูลเกมทิ้งหากไม่มีผู้ใช้งาน
+            useGameStore.getState().resetGame();
         }
     });
 };

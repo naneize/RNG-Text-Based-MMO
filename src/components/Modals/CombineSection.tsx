@@ -36,23 +36,7 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     //#region เงื่อนไขการผสม
     const getCombineCost = (rarity: string): CombineCost => {
         switch (rarity) {
-            case 'Common':
-                return {
-                    requirements: [
-                        { material: 'iron_ore', amount: 20 },     // ปรับจาก 5 เป็น 20
-                        { material: 'steel_ingot', amount: 20 }   // ปรับจาก 5 เป็น 20
-                    ],
-                    chance: 80
-                };
-            case 'Rare':
-                return {
-                    requirements: [
-                        { material: 'steel_ingot', amount: 40 },    // ปรับจาก 10 เป็น 40
-                        { material: 'magic_dust', amount: 35 },     // ปรับจาก 10 เป็น 35
-                        { material: 'leather', amount: 30 }         // ปรับจาก 10 เป็น 30
-                    ],
-                    chance: 35
-                };
+
             case 'Epic':
                 return {
                     requirements: [
@@ -61,7 +45,7 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                         { material: 'dragon_scale', amount: 20 },     // ปรับจาก 5 เป็น 20 (สอดคล้องกับบอสดรอปหลักสิบ/ร้อย)
                         { material: 'celestial_shard', amount: 20 }   // ปรับจาก 5 เป็น 20
                     ],
-                    chance: 15
+                    chance: 20
                 };
             default:
                 return { requirements: [], chance: 0 };
@@ -157,7 +141,7 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
             // 4. ตรวจสอบโอกาสสำเร็จ
             const roll = Math.random() * 100;
             if (roll <= cost.chance) {
-                const tierOrder = ['Common', 'Rare', 'Epic', 'Legendary'];
+                const tierOrder = ['Epic', 'Legendary'];
                 const nextRarity = tierOrder[tierOrder.indexOf(firstItem.rarity) + 1];
 
                 const selectedItems = player.inventory.filter(i => selectedUids.includes(i.uid));
@@ -268,8 +252,14 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                         <h2 className="text-xl font-bold text-yellow-500 mb-2 text-center">COMBINE STATION</h2>
 
                         <div className="flex gap-2 mb-4 justify-center">
-                            {['Common', 'Rare', 'Epic'].map((rarity) => (
-                                <button key={rarity} onClick={() => handleAutoPick(rarity)} className="px-3 py-1 bg-slate-700 text-white text-xs rounded border border-slate-500">Auto-Pick {rarity}</button>
+                            {['Epic'].map((rarity) => (
+                                <button
+                                    key={rarity}
+                                    onClick={() => handleAutoPick(rarity)}
+                                    className={`px-3 py-1 bg-slate-700 text-white text-xs rounded border ${getRarityColor(rarity)}`}
+                                >
+                                    AUTO-PICK {rarity.toUpperCase()}
+                                </button>
                             ))}
                         </div>
 

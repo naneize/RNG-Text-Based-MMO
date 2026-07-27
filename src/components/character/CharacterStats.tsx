@@ -2,41 +2,48 @@ import { useState } from 'react';
 import type { Player } from '../../types/game';
 import { STAT_CAPS } from '../../utils/statCalculator';
 import { StatLimitModal } from '../Modals/StatLimitModal';
-import type { Stats } from '../../types/game';
+import type { Stats, Item } from '../../types/game';
 
 
 interface CharacterStatsProps {
-    player: Player;
+    player?: Player;
     finalStats: Stats;
     statBreakdown?: Record<string, { label: string; value: number }[]>; // 📌 เพิ่มรับค่านี้
-    setShowBonusModal: (show: boolean) => void;
+    equippedItems?: Record<string, Item | null>; // 👈 เพิ่มบรรทัดนี้เข้าไป
+    setShowBonusModal?: (show: boolean) => void;
+    hideExtraButtons?: boolean;
 }
 
 
 
-export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShowBonusModal }: CharacterStatsProps) => {
+export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShowBonusModal, hideExtraButtons = false }: CharacterStatsProps) => {
     const [showLimitModal, setShowLimitModal] = useState(false);
 
     return (
         <div className="space-y-4">
-            <div className="flex gap-2 ml-4">
-                <button
-                    onClick={() => setShowBonusModal(true)}
-                    className="bg-slate-700 hover:bg-slate-600 text-[10px] text-white px-2 py-1 rounded border border-slate-600 font-bold"
-                >
-                    BONUS DETAILS
-                </button>
 
-                <button
-                    onClick={() => setShowLimitModal(true)}
-                    className="bg-purple-900/30 hover:bg-purple-800/40 text-[10px] text-purple-300 px-2 py-1 rounded border border-purple-800 font-bold"
-                >
-                    STAT LIMITS
-                </button>
-            </div>
+            {!hideExtraButtons && (
+                <>
+                    <div className="flex gap-2 ml-4">
+                        <button
+                            onClick={() => setShowBonusModal?.(true)}
+                            className="bg-slate-700 hover:bg-slate-600 text-[10px] text-white px-2 py-1 rounded border border-slate-600 font-bold"
+                        >
+                            BONUS DETAILS
+                        </button>
 
-            {showLimitModal && (
-                <StatLimitModal onClose={() => setShowLimitModal(false)} />
+                        <button
+                            onClick={() => setShowLimitModal(true)}
+                            className="bg-purple-900/30 hover:bg-purple-800/40 text-[10px] text-purple-300 px-2 py-1 rounded border border-purple-800 font-bold"
+                        >
+                            STAT LIMITS
+                        </button>
+                    </div>
+
+                    {showLimitModal && (
+                        <StatLimitModal onClose={() => setShowLimitModal(false)} />
+                    )}
+                </>
             )}
 
             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
@@ -56,9 +63,11 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                             const isCapped = cap !== undefined && value >= cap;
 
                             // กำหนดสี: ถ้าล้นให้เป็นสีส้ม/แดงเตือน, ถ้าปกติเป็นสีเขียว
+                            // 🛠️ ป้องกัน Error กรณีที่ player หรือ baseStats เป็น undefined
+                            const baseStatValue = player?.baseStats?.[key as keyof typeof player.baseStats] || 0;
                             const textColor = isCapped
                                 ? 'text-orange-400'
-                                : (value > (player.baseStats[key as keyof typeof player.baseStats] || 0) ? 'text-yellow-400' : 'text-emerald-400');
+                                : (value > baseStatValue ? 'text-yellow-400' : 'text-emerald-400');
 
                             // 📌 ดึงข้อมูลที่มาของสเตตัสตัวนี้
                             const sources = statBreakdown[key] || [];

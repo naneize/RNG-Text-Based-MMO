@@ -6,12 +6,14 @@ import { EquippedGear } from './EquippedGear';
 import { InventorySection } from './InventorySection';
 import { LootModal } from '../../components/Modals/LootedModal';
 import { ItemDetailModal } from '../../components/Modals/ItemDetailModal';
-import { SkillModal } from '../../components/Modals/MaterialModal';
+import { MaterialModal } from '../../components/Modals/MaterialModal';
 import { BonusDetailModal } from '../../components/Modals/BonusDetailModal';
 import { TransferModal } from '../../components/Modals/TransferModal';
 import { SalvageModal } from '../../components/Modals/SalvageModal';
 import { WorldChat } from '../../components/WorldChat';
+import { useChatStore } from '../../store/chatStore';
 import type { Item } from '../../types/game';
+import { SkillModal } from '../../components/Modals/SkillModal';
 
 export const CharacterDashboard = () => {
     const {
@@ -27,6 +29,8 @@ export const CharacterDashboard = () => {
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [itemToSalvage, setItemToSalvage] = useState<Item | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [selectedSkill, setSelectedSkill] = useState<{ name: string; level: number } | null>(null);
+    const { shareStatsToChat } = useChatStore();
 
     return (
         <div className="flex flex-col gap-4">
@@ -44,7 +48,7 @@ export const CharacterDashboard = () => {
                     {/* ปุ่มเปิด World Chat ใต้กล่อง Stat */}
                     <button
                         onClick={() => setIsChatOpen(true)}
-                        className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+                        className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
                         World Chat
@@ -108,6 +112,15 @@ export const CharacterDashboard = () => {
                         setItemToSalvage(item);
                         setSelectedItem(null);
                     }}
+                    onShareToChat={async (item) => {
+                        setIsChatOpen(true);
+                        try {
+                            const chatStore = useChatStore.getState();
+                            await chatStore.sendMessage(`Shared Item :`, item);
+                        } catch (error) {
+                            console.error("Failed to share item to chat:", error);
+                        }
+                    }}
                 />
             )}
 
@@ -124,10 +137,18 @@ export const CharacterDashboard = () => {
                 />
             )}
 
-            {selectedMaterial && (
+            {selectedSkill && (
                 <SkillModal
-                    selectedSkill={selectedMaterial}
-                    setSelectedSkill={setSelectedMaterial}
+                    selectedSkill={selectedSkill}
+                    setSelectedSkill={setSelectedSkill}
+                />
+            )}
+
+            {/* สำหรับแสดง Material (Celestial Shard ฯลฯ) */}
+            {selectedMaterial && (
+                <MaterialModal
+                    selectedMaterial={selectedMaterial}
+                    setSelectedMaterial={setSelectedMaterial}
                 />
             )}
             {showBonusModal && (
@@ -147,12 +168,21 @@ export const CharacterDashboard = () => {
             )}
 
 
-            {/* 🖥️ Modal หน้าต่าง World Chat แบบเด้งขึ้นมาทับหน้าจอ */}
+            {/* 🖥️ Modal หน้าต่าง World Chat */}
             {isChatOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <WorldChat onClose={() => setIsChatOpen(false)} />
+                    <WorldChat
+                        onClose={() => setIsChatOpen(false)}
+                        // ส่งข้อมูลสเตตัสปัจจุบันเข้าไปให้ WorldChat ใช้แชร์
+                        onShareStats={() => shareStatsToChat({
+                            ...player,
+                            finalStats,
+                            statBreakdown
+                        })}
+                    />
                 </div>
             )}
+
         </div>
     );
 };

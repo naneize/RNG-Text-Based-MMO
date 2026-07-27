@@ -6,7 +6,7 @@ import { bossImages, baseStats, materialTiers } from './bossAssets';
 
 const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelIndex: number): Boss => {
     const { element, race: raceList, zone, names, fixedDrops } = archetype;
-    const level = 100 + levelIndex * 10;
+    const level = 90 + levelIndex * 10;
     const bossId = `b-${String(index + 1).padStart(3, '0')}`;
 
     const bossName = names[levelIndex] || names[names.length - 1];

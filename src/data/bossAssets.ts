@@ -106,7 +106,7 @@ export const baseStats = {
     atk: 150,
     def: 100,
     maxHp: 5000,
-    hit: 200, flee: 180, res: 100, mRes: 80
+    hit: 200, flee: 150, res: 100, mRes: 80
 };
 
 

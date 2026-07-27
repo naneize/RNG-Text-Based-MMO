@@ -8,6 +8,8 @@ import { getTotalStatsWithBreakdown } from '../utils/combat';
 import { useAchievementStore } from '../store/achievementStore';
 import { PITY_CONFIG } from '../types/game';
 import { MAX_INVENTORY_SLOTS } from '../types/game';
+import { useChatStore } from '../store/chatStore';
+
 
 export const useCharacterDashboard = () => {
     const { player, equipItem, unequipItem, epicPity, legendPity } = useGameStore();
@@ -25,7 +27,7 @@ export const useCharacterDashboard = () => {
     const isAutoRef = useRef(isAutoActive);
     const workerRef = useRef<Worker | null>(null);
 
-    const executeSingleRoll = () => {
+    const executeSingleRoll = async () => {
         // ดึงสถานะและฟังก์ชันทั้งหมดจาก Store (รวมถึงระบบ Pity)
         const store = useGameStore.getState();
         const {
@@ -56,27 +58,29 @@ export const useCharacterDashboard = () => {
         const currentEpicPity = useGameStore.getState().epicPity;
         const currentLegendPity = useGameStore.getState().legendPity;
 
-        // 3. ตรวจสอบเงื่อนไข Pity
-        if (currentEpicPity >= PITY_CONFIG.EPIC) {
-            newItem = generateRandomItem('epic', randomLevel);
-            resetEpicPity();
-            addLegendPity();
-        } else if (currentLegendPity >= PITY_CONFIG.LEGEND) {
+        // 3. ตรวจสอบเงื่อนไข Pity แบบป้องกันการเลยเพดาน
+        if (currentLegendPity >= PITY_CONFIG.LEGEND) {
             newItem = generateRandomItem('legendary', randomLevel);
             resetLegendPity();
             resetEpicPity();
+        } else if (currentEpicPity >= PITY_CONFIG.EPIC) {
+            newItem = generateRandomItem('epic', randomLevel);
+            resetEpicPity();
+            addLegendPity(); // ขยับ Legend Pity ต่อเมื่อการันตี Epic
         } else {
             newItem = generateRandomItem(undefined, randomLevel);
+
+            // เช็คผลลัพธ์จากการสุ่มปกติ
             if (newItem.rarity === 'Legendary') {
                 resetLegendPity();
                 resetEpicPity();
-                addEpicPity();
             } else if (newItem.rarity === 'Epic') {
                 resetEpicPity();
                 addLegendPity();
             } else {
-                addEpicPity();
-                addLegendPity();
+                // ถ้าได้เกลือ (Common/Rare ปกติ) ถึงจะบวก Pity ทีละ 1 และล็อกไม่ให้เกินเพดาน
+                if (currentLegendPity < PITY_CONFIG.LEGEND) addLegendPity();
+                if (currentEpicPity < PITY_CONFIG.EPIC) addEpicPity();
             }
         }
 
@@ -91,49 +95,52 @@ export const useCharacterDashboard = () => {
             useAchievementStore.getState().checkCondition('OBTAIN_ITEM', { rarity: newItem.rarity });
         }
 
+        if (newItem && newItem.rarity === 'Legendary') {
+            useChatStore.getState().sendMessage(
+                `Server Broadcast: A Legendary item has been unleashed!`,
+                newItem
+            ).catch((error) => {
+                console.error("Failed to send legendary announcement to chat:", error);
+            });
+        }
         return newItem;
     };
 
     useEffect(() => {
-        workerRef.current = new Worker(
+        // 1. สร้าง Worker ขึ้นมา
+        const worker = new Worker(
             new URL('../workers/lootWorker.ts', import.meta.url),
             { type: 'module' }
         );
+        workerRef.current = worker;
 
-        workerRef.current.onmessage = (e: MessageEvent) => {
-            // 🟢 อัปเดตแถบวิ่งเวลา Auto รัน
+        // 2. 🟢 เช็คและกำหนด onmessage ด้วย optional chaining (?.) เพื่อป้องกัน Error ตอนที่ ref เป็น null
+        worker.onmessage = async (e: MessageEvent) => {
             if (e.data.action === 'PROGRESS') {
                 setProgress(e.data.progress);
                 setIsLooting(true);
             }
 
-            // 🟢 เมื่อ Worker บอกว่าครบรอบ ให้ Main Thread จัดการสุ่มและหยิบของเข้ากระเป๋า
             if (e.data.action === 'TICK_ROLL') {
                 const currentInventory = useGameStore.getState().player.inventory;
 
-                // เช็คกระเป๋าเต็ม
                 if (currentInventory.length >= MAX_INVENTORY_SLOTS) {
                     setIsAutoActive(false);
                     setIsLooting(false);
                     setProgress(0);
+                    isAutoRef.current = false;
                     workerRef.current?.postMessage({ action: 'STOP_AUTO' });
                     return;
                 }
 
-                // สุ่มและหยิบของเข้ากระเป๋าตามปกติ
-                const newItem = executeSingleRoll();
-
-                // 🟢 ใช้ isAutoRef.current เช็คสถานะจริงๆ แบบสดใหม่ (ถ้ากำลัง Auto อยู่ จะไม่เข้าเงื่อนไขนี้)
-                if (!isAutoRef.current) {
-                    setLootedItem(newItem);
-                }
-
+                await executeSingleRoll();
                 setProgress(0);
             }
         };
 
         return () => {
-            workerRef.current?.terminate();
+            worker.terminate();
+            workerRef.current = null;
         };
     }, []);
 
@@ -200,7 +207,7 @@ export const useCharacterDashboard = () => {
 
 
 
-    const handleLoot = (isAuto = false) => {
+    const handleLoot = async (isAuto = false) => {
         const currentInventory = useGameStore.getState().player.inventory;
 
         if (currentInventory.length >= MAX_INVENTORY_SLOTS) {
@@ -211,28 +218,38 @@ export const useCharacterDashboard = () => {
             return;
         }
 
-        // --- กรณี กดมือ (Manual Roll) ---
+        // ถ้ากำลังสุ่มอยู่แล้ว ไม่ให้กดซ้ำ
         if (isLooting) return;
 
         setIsLooting(true);
         setProgress(0);
 
-        const duration = 1000; // กดมือ 1 วินาที
-        const interval = 20;
-        const steps = duration / interval;
-        let currentStep = 0;
+        // ✨ ถ้าเป็นการกดมือ (Manual) ให้ใช้ setInterval จำลองหลอดวิ่ง 1 วินาที
+        if (!isAuto) {
+            const duration = 1000;
+            const interval = 20;
+            const steps = duration / interval;
+            let currentStep = 0;
 
-        const timer = setInterval(() => {
-            currentStep++;
-            setProgress((currentStep / steps) * 100);
+            const timer = setInterval(async () => {
+                currentStep++;
+                setProgress((currentStep / steps) * 100);
 
-            if (currentStep >= steps) {
-                clearInterval(timer);
-                const newItem = executeSingleRoll();
-                setIsLooting(false);
-                setLootedItem(newItem);
-            }
-        }, interval);
+                if (currentStep >= steps) {
+                    clearInterval(timer);
+
+                    // สุ่มไอเทมหลังจากหลอดวิ่งครบ 1 วินาที
+                    const newItem = await executeSingleRoll();
+
+                    setIsLooting(false);
+                    setLootedItem(newItem); // เด้ง Modal เฉพาะตอนกดมือ
+                }
+            }, interval);
+        } else {
+            // กรณีถ้าเป็น Auto จะวิ่งผ่าน Worker (ไม่ใช้ก้อนนี้)
+            await executeSingleRoll();
+            setIsLooting(false);
+        }
     };
 
     const toggleAutoLoot = () => {
@@ -285,7 +302,7 @@ export const useCharacterDashboard = () => {
 
     const equippedInSlot = selectedItem ? player.equippedItems[selectedItem.slot] : null;
 
-    console.log("Real Inventory Length:", player.inventory.length);
+
 
     return {
         player, finalStats, selectedItem, setSelectedItem, selectedMaterial, setSelectedMaterial, statBreakdown,
