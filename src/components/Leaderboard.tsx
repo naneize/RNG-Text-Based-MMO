@@ -7,7 +7,7 @@ interface LeaderboardProps {
     onClose?: () => void;
 }
 
-// ชื่อย่อสวยๆ สำหรับแสดงผล (ไม่ต้องโชว์ camelCase ตรงๆ)
+// ชื่อย่อสวยๆ สำหรับแสดงผล
 const STAT_LABELS: Record<keyof Stats, string> = {
     str: 'STR', agi: 'AGI', vit: 'VIT', int: 'INT', dex: 'DEX', luk: 'LUK',
     critRate: 'Crit Rate', critDmg: 'Crit Dmg', atk: 'ATK', def: 'DEF',
@@ -19,14 +19,24 @@ export const Leaderboard = ({ onClose }: LeaderboardProps) => {
     const { boards, isLoading, fetchBoard } = useLeaderboardStore();
     const { userProfile, user } = useAuthStore();
     const [selectedStat, setSelectedStat] = useState<keyof Stats>('atk');
-    const [showAllStats, setShowAllStats] = useState(false);
+    const [showAllStats, setShowAllStats] = useState(true); // ตั้งค่าเริ่มต้นเป็น True ให้โชว์ภาพรวมทั้งหมดทันทีเพื่อความสะอาด
 
     // Guest = มี userProfile (ชื่อปลอม) แต่ไม่มี Firebase user จริง
     const isGuest = !!userProfile && !user;
 
+    // โหลดข้อมูลทุก Stat ทันทีที่เปิด Leaderboard
     useEffect(() => {
-        fetchBoard(selectedStat);
-    }, [selectedStat]);
+        LEADERBOARD_STATS.forEach((statKey) => {
+            fetchBoard(statKey);
+        });
+    }, []);
+
+    // โหลดเฉพาะ Stat ที่เลือกเพิ่ม (กรณีเปลี่ยนโหมดมาดูแบบเดี่ยว)
+    useEffect(() => {
+        if (!showAllStats) {
+            fetchBoard(selectedStat);
+        }
+    }, [selectedStat, showAllStats]);
 
     const entries = boards[selectedStat] || [];
 
@@ -52,47 +62,47 @@ export const Leaderboard = ({ onClose }: LeaderboardProps) => {
                 </div>
             )}
 
-            {/* แถวเดียว: แท็บเลือก stat (เลื่อนได้) + ปุ่มสลับโหมดแสดงผล */}
-            <div className="flex items-center gap-2 p-3 border-b border-slate-800">
-                <div className="flex-1 flex flex-wrap gap-1.5">
-                    {LEADERBOARD_STATS.map((statKey) => (
-                        <button
-                            key={statKey}
-                            onClick={() => setSelectedStat(statKey)}
-                            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition ${selectedStat === statKey
-                                ? 'bg-emerald-700 text-white'
-                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                }`}
+            {/* แถบควบคุมด้านบน: สลับโหมดภาพรวม / เลือกดูเฉพาะสเตตัสแบบคลีนๆ */}
+            <div className="flex items-center justify-between p-3 border-b border-slate-800 bg-slate-900/50">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-400">
+                        {showAllStats ? 'Overview (All Stats)' : 'Detailed View:'}
+                    </span>
+                    {!showAllStats && (
+                        <select
+                            value={selectedStat}
+                            onChange={(e) => setSelectedStat(e.target.value as keyof Stats)}
+                            className="bg-slate-800 border border-slate-700 text-white text-xs rounded-md px-2 py-1 focus:outline-none focus:border-emerald-500"
                         >
-                            {STAT_LABELS[statKey]}
-                        </button>
-                    ))}
+                            {LEADERBOARD_STATS.map((statKey) => (
+                                <option key={statKey} value={statKey}>
+                                    {STAT_LABELS[statKey]}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                 </div>
 
-                {/* ปุ่ม toggle แบบไอคอนเดียว ไม่กินพื้นที่ */}
+                {/* ปุ่มสลับโหมด */}
                 <button
                     onClick={() => setShowAllStats(!showAllStats)}
-                    title={showAllStats ? 'Switch to single view' : 'Show all stats'}
-                    className={`shrink-0 px-3 h-8 rounded-md text-xs font-bold transition flex items-center justify-center border ${showAllStats
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition border ${showAllStats
                         ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                        : 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:bg-slate-700 hover:border-slate-600'
+                        : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                         }`}
                 >
-                    ALL
+                    {showAllStats ? 'Switch to Single View' : 'Show All Overview'}
                 </button>
             </div>
-            {/* รายชื่อ top 10 */}
+
+            {/* รายชื่อและข้อมูล Leaderboard */}
             <div className="flex-1 overflow-y-auto p-4">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full text-slate-500 text-sm">
                         Loading . . .
                     </div>
-                ) : entries.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-500 text-sm">
-                        No data in this category
-                    </div>
                 ) : showAllStats ? (
-                    // 📊 โหมดภาพรวม SHOW ALL: จัดเรียงเป็นกริด 2 คอลัมน์ (ดีไซน์คล้ายกล่องสเตตัสตัวละคร) โชว์ Top 3 ของแต่ละสเตต
+                    // 📊 โหมดภาพรวม SHOW ALL: จัดเรียงเป็นกริด 2 คอลัมน์ โชว์ Top 3 ของแต่ละสเตตัส
                     <div className="grid grid-cols-2 gap-3">
                         {LEADERBOARD_STATS.map((statKey) => {
                             const statEntries = boards[statKey] || [];
@@ -113,41 +123,75 @@ export const Leaderboard = ({ onClose }: LeaderboardProps) => {
                                     {/* รายชื่อ Top 3 ภายในกล่อง */}
                                     <div className="flex flex-col gap-1.5 text-xs">
                                         {/* อันดับ 1 */}
-                                        <div className="flex items-center justify-between bg-slate-900/40 px-2 py-1 rounded">
-                                            <span className="text-amber-400 font-bold truncate max-w-[90px]" title={top1?.username || '-'}>
-                                                🥇 {top1 ? top1.username : '-'}
-                                            </span>
-                                            <span className="text-amber-300 font-semibold">
-                                                {top1 ? Math.floor(top1.stats[statKey] || 0).toLocaleString() : '0'}
-                                            </span>
-                                        </div>
+                                        {(() => {
+                                            const isMe1 = top1?.uid === userProfile?.uid;
+                                            return (
+                                                <div className={`flex items-center justify-between px-2 py-1 rounded transition ${isMe1 ? 'bg-emerald-900/40 border border-emerald-700/60' : 'bg-slate-900/40'
+                                                    }`}>
+                                                    <div className="flex items-center gap-1.5 truncate max-w-[110px]">
+                                                        <span className="text-amber-400 font-bold shrink-0">🥇</span>
+                                                        <span className={`truncate ${isMe1 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}`} title={top1?.username || '-'}>
+                                                            {top1 ? top1.username : '-'}
+                                                        </span>
+                                                        {isMe1 && <span className="text-[9px] text-emerald-500 shrink-0">(YOU)</span>}
+                                                    </div>
+                                                    <span className="text-amber-300 font-semibold shrink-0">
+                                                        {top1 ? Math.floor(top1.stats[statKey] || 0).toLocaleString() : '0'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* อันดับ 2 */}
-                                        <div className="flex items-center justify-between px-2 py-0.5">
-                                            <span className="text-slate-300 truncate max-w-[90px]" title={top2?.username || '-'}>
-                                                🥈 {top2 ? top2.username : '-'}
-                                            </span>
-                                            <span className="text-slate-300">
-                                                {top2 ? Math.floor(top2.stats[statKey] || 0).toLocaleString() : '0'}
-                                            </span>
-                                        </div>
+                                        {(() => {
+                                            const isMe2 = top2?.uid === userProfile?.uid;
+                                            return (
+                                                <div className={`flex items-center justify-between px-2 py-1 rounded transition ${isMe2 ? 'bg-emerald-900/40 border border-emerald-700/60' : ''
+                                                    }`}>
+                                                    <div className="flex items-center gap-1.5 truncate max-w-[110px]">
+                                                        <span className="text-slate-300 font-bold shrink-0">🥈</span>
+                                                        <span className={`truncate ${isMe2 ? 'text-emerald-400 font-bold' : 'text-slate-300'}`} title={top2?.username || '-'}>
+                                                            {top2 ? top2.username : '-'}
+                                                        </span>
+                                                        {isMe2 && <span className="text-[9px] text-emerald-500 shrink-0">(YOU)</span>}
+                                                    </div>
+                                                    <span className={`shrink-0 ${isMe2 ? 'text-emerald-400 font-semibold' : 'text-slate-300'}`}>
+                                                        {top2 ? Math.floor(top2.stats[statKey] || 0).toLocaleString() : '0'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* อันดับ 3 */}
-                                        <div className="flex items-center justify-between px-2 py-0.5">
-                                            <span className="text-orange-500 truncate max-w-[90px]" title={top3?.username || '-'}>
-                                                🥉 {top3 ? top3.username : '-'}
-                                            </span>
-                                            <span className="text-slate-400">
-                                                {top3 ? Math.floor(top3.stats[statKey] || 0).toLocaleString() : '0'}
-                                            </span>
-                                        </div>
+                                        {(() => {
+                                            const isMe3 = top3?.uid === userProfile?.uid;
+                                            return (
+                                                <div className={`flex items-center justify-between px-2 py-1 rounded transition ${isMe3 ? 'bg-emerald-900/40 border border-emerald-700/60' : ''
+                                                    }`}>
+                                                    <div className="flex items-center gap-1.5 truncate max-w-[110px]">
+                                                        <span className="text-orange-500 font-bold shrink-0">🥉</span>
+                                                        <span className={`truncate ${isMe3 ? 'text-emerald-400 font-bold' : 'text-orange-500'}`} title={top3?.username || '-'}>
+                                                            {top3 ? top3.username : '-'}
+                                                        </span>
+                                                        {isMe3 && <span className="text-[9px] text-emerald-500 shrink-0">(YOU)</span>}
+                                                    </div>
+                                                    <span className={`shrink-0 ${isMe3 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}`}>
+                                                        {top3 ? Math.floor(top3.stats[statKey] || 0).toLocaleString() : '0'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
+                ) : entries.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+                        No data in this category
+                    </div>
                 ) : (
-                    // list เดิม: โชว์ทีละ stat แบบรายชื่อ Top 10 เต็มจอ
+                    // โหมดดูเดี่ยว Top 10 เต็มจอ
                     <div className="flex flex-col gap-2">
                         {entries.map((entry, index) => {
                             const isMe = entry.uid === userProfile?.uid;
