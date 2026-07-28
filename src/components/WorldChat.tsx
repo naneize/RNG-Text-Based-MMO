@@ -376,6 +376,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                             statBreakdown={inspectingPlayerStats.statBreakdown}
                             equippedItems={inspectingPlayerStats.equippedItems as Record<string, Item | null>}
                             hideExtraButtons={true} // 👈 ซ่อนปุ่มเฉพาะตอนส่องผู้เล่นอื่น
+                            hideBreakdown={true}
                         />
                     </div>
                 </div>

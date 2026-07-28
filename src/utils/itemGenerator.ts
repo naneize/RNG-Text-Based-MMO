@@ -316,12 +316,13 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
     const isWeapon = template.slot === 'weapon';
 
-    const STAT_CAPS: Record<string, number> = {
+    /* const STAT_CAPS: Record<string, number> = {
         critRate: 10,  // จำกัดไว้ไม่เกิน 50%
         critDmg: 80,  // จำกัดไว้ไม่เกิน 200%
         hit: 80,
         flee: 80
-    };
+    }; */
+
     const PERCENT_STATS = new Set(['critRate', 'critDmg', 'hit', 'flee']);
 
     // ===== FIX #2: เพิ่มเงื่อนไข !baseStatsSet.has(s) =====
@@ -390,14 +391,14 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         );
     }
 
-    // Clamp รอบสุดท้าย — ครอบคลุมทั้ง base stat (ที่ตั้งก่อน loop เช่น stats.hit ของ weapon)
-    // และ stat ที่ได้จาก bonus loop ด้านบน ป้องกันไม่ให้ค่าไหนหลุด cap ไปได้เลย
+    /* ปิดการใช้งาน Clamp รอบสุดท้าย เพื่อให้สเตตัสวิ่งไปตามจริงได้เต็มที่
     for (const stat of PERCENT_STATS) {
         if (stats[stat] !== undefined) {
             const cap = STAT_CAPS[stat] ?? 100;
             stats[stat] = Math.min(stats[stat], cap);
         }
     }
+    */
 
     // DEBUG: สรุปผลลัพธ์สุดท้ายของไอเทมชิ้นนี้
     console.log(`[generateRandomItem] ผลลัพธ์สุดท้าย:`, {
@@ -548,12 +549,12 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
 
     const isWeapon = template.slot === 'weapon';
 
-    const STAT_CAPS: Record<string, number> = {
-        critRate: 10,
-        critDmg: 80,
+    /* const STAT_CAPS: Record<string, number> = {
+        critRate: 10,  // จำกัดไว้ไม่เกิน 50%
+        critDmg: 80,  // จำกัดไว้ไม่เกิน 200%
         hit: 80,
         flee: 80
-    };
+    }; */
     const PERCENT_STATS = new Set(['critRate', 'critDmg', 'hit', 'flee']);
 
     // ===== FIX #2: เพิ่มเงื่อนไข !baseStatsSet.has(s) =====
@@ -607,12 +608,14 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         );
     }
 
-    for (const stat of PERCENT_STATS) {
-        if (stats[stat] !== undefined) {
-            const cap = STAT_CAPS[stat] ?? 100;
-            stats[stat] = Math.min(stats[stat], cap);
-        }
-    }
+    /* ปิดการใช้งาน Clamp รอบสุดท้าย เพื่อให้สเตตัสวิ่งไปตามจริงได้เต็มที่
+     for (const stat of PERCENT_STATS) {
+         if (stats[stat] !== undefined) {
+             const cap = STAT_CAPS[stat] ?? 100;
+             stats[stat] = Math.min(stats[stat], cap);
+         }
+     }
+     */
 
     console.log(`[generateRandomItemSpecific] ผลลัพธ์สุดท้าย:`, {
         name: `${config.name} ${template.name}`,

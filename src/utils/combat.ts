@@ -1,7 +1,7 @@
 import type { Player, Stats } from '../types/game';
 import { calculateSynergyStats } from './synergy';
 import type { Boss } from '../types/game';
-import { finalizeStats } from './statCalculator';
+import { finalizeStats, STAT_CAPS } from './statCalculator';
 
 export interface StatSource {
     label: string;
@@ -111,8 +111,45 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
         });
     });
 
+
     // 4. ทำ Cap และแปลงค่าสุดท้าย
     const finalStats = finalizeStats(effective);
+
+
+    // 🔍 [เพิ่มตรงนี้] ดักเก็บ Breakdown ของส่วนที่ล้นและถูกแปลงข้ามสเตตัส
+    // 1. critRate ล้น -> critDmg
+    if ((effective.critRate || 0) > (STAT_CAPS.critRate as number)) {
+        const excess = effective.critRate - (STAT_CAPS.critRate as number);
+        const convertedCritDmg = Math.floor(excess * 0.3);
+        if (convertedCritDmg > 0) addSource('critDmg', 'CritRate -> CritDmg', convertedCritDmg);
+    }
+
+    // 2. critDmg ล้น -> ATK และ HIT
+    if ((effective.critDmg || 0) > (STAT_CAPS.critDmg as number)) {
+        const excess = effective.critDmg - (STAT_CAPS.critDmg as number);
+        const convertedAtk = Math.floor(excess * 0.2);
+        const convertedHit = Math.floor(excess * 0.1);
+        if (convertedAtk > 0) addSource('atk', 'CritDmg -> ATK', convertedAtk);
+        if (convertedHit > 0) addSource('hit', 'CritDmg -> HIT', convertedHit);
+    }
+
+    // 3. flee ล้น -> RES และ M.RES
+    if ((effective.flee || 0) > (STAT_CAPS.flee as number)) {
+        const excess = effective.flee - (STAT_CAPS.flee as number);
+        const convertedRes = Math.floor(excess * 0.20);
+        const convertedMRes = Math.floor(excess * 0.10);
+        if (convertedRes > 0) addSource('res', 'Flee -> RES', convertedRes);
+        if (convertedMRes > 0) addSource('mRes', 'Flee -> M.RES', convertedMRes);
+    }
+
+    // 4. hit ล้น -> ATK (ตรงนี้แหละที่คุณตามหาครับ!)
+    if ((effective.hit || 0) > (STAT_CAPS.hit as number)) {
+        const excess = effective.hit - (STAT_CAPS.hit as number);
+        const convertedAtk = Math.floor(excess * 0.2);
+        if (convertedAtk > 0) {
+            addSource('atk', 'HIT -> ATK', convertedAtk);
+        }
+    }
 
     if (finalStats.critRate <= 0) delete breakdown['critRate'];
     if (finalStats.critDmg <= 0) delete breakdown['critDmg'];

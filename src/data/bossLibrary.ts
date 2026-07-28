@@ -62,8 +62,8 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
 
         // กลุ่มป้องกันและแม่นยำ
         def: Math.floor(baseStats.def * (1 + (level - 5) * 0.08) * defMod),
-        res: Math.floor(baseStats.res * (1 + (level - 5) * 0.08)),
-        mRes: Math.floor(baseStats.mRes * (1 + (level - 5) * 0.08)),
+        res: Math.floor(baseStats.res * (1 + (level - 5) * 0.03)),
+        mRes: Math.floor(baseStats.mRes * (1 + (level - 5) * 0.03)),
         hit: Math.floor((baseStats.hit + level * 5) * hitMod), // คูณ Mod ความแม่นยำตรงนี้
         flee: Math.floor((baseStats.flee + level * 5) * agiMod)
     };

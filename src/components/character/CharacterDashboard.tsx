@@ -11,6 +11,7 @@ import { BonusDetailModal } from '../../components/Modals/BonusDetailModal';
 import { TransferModal } from '../../components/Modals/TransferModal';
 import { SalvageModal } from '../../components/Modals/SalvageModal';
 import { WorldChat } from '../../components/WorldChat';
+import { Leaderboard } from '../../components/Leaderboard';
 import { useChatStore } from '../../store/chatStore';
 import type { Item } from '../../types/game';
 import { SkillModal } from '../../components/Modals/SkillModal';
@@ -29,6 +30,7 @@ export const CharacterDashboard = () => {
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [itemToSalvage, setItemToSalvage] = useState<Item | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<{ name: string; level: number } | null>(null);
     const { shareStatsToChat } = useChatStore();
 
@@ -52,6 +54,15 @@ export const CharacterDashboard = () => {
                     >
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
                         World Chat
+                    </button>
+
+                    {/* ปุ่มเปิด Leaderboard */}
+                    <button
+                        onClick={() => setIsLeaderboardOpen(true)}
+                        className="w-full py-3 px-4 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                        <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
+                        Leaderboard
                     </button>
                 </div>
 
@@ -182,6 +193,14 @@ export const CharacterDashboard = () => {
                     />
                 </div>
             )}
+
+            {/* 🏆 Modal หน้าต่าง Leaderboard */}
+            {isLeaderboardOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Leaderboard onClose={() => setIsLeaderboardOpen(false)} />
+                </div>
+            )}
+
 
         </div>
     );

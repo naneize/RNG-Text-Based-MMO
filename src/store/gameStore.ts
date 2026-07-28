@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { useAuthStore } from './authStore';
+import { useLeaderboardStore } from './leaderboardStore';
 
 
 
@@ -445,6 +446,13 @@ export const useGameStore = create<GameState>()(
 
                 get().saveUserData();
 
+                // 🟢 อัปเดต leaderboard ทุกครั้งที่ stat เปลี่ยนจาก equip
+                const equipAuthUser = useAuthStore.getState().user;
+                const equipAuthProfile = useAuthStore.getState().userProfile;
+                if (equipAuthUser && equipAuthProfile) {
+                    const finalStats = getTotalStats(nextPlayer);
+                    useLeaderboardStore.getState().updateMyEntry(equipAuthUser.uid, equipAuthProfile.username, finalStats);
+                }
 
                 return { player: nextPlayer };
             }),
@@ -477,6 +485,14 @@ export const useGameStore = create<GameState>()(
 
                 // 💾 บันทึกข้อมูลลง Firestore ทันทีหลังถอดอุปกรณ์สำเร็จ
                 get().saveUserData();
+
+                // 🟢 อัปเดต leaderboard ทุกครั้งที่ stat เปลี่ยนจาก unequip
+                const unequipAuthUser = useAuthStore.getState().user;
+                const unequipAuthProfile = useAuthStore.getState().userProfile;
+                if (unequipAuthUser && unequipAuthProfile) {
+                    const finalStats = getTotalStats(nextPlayer);
+                    useLeaderboardStore.getState().updateMyEntry(unequipAuthUser.uid, unequipAuthProfile.username, finalStats);
+                }
             },
 
             salvageItem: (uid: string) => {

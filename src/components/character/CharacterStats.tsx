@@ -12,11 +12,12 @@ interface CharacterStatsProps {
     equippedItems?: Record<string, Item | null>; // 👈 เพิ่มบรรทัดนี้เข้าไป
     setShowBonusModal?: (show: boolean) => void;
     hideExtraButtons?: boolean;
+    hideBreakdown?: boolean;
 }
 
 
 
-export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShowBonusModal, hideExtraButtons = false }: CharacterStatsProps) => {
+export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShowBonusModal, hideExtraButtons = false, hideBreakdown = false }: CharacterStatsProps) => {
     const [showLimitModal, setShowLimitModal] = useState(false);
 
     return (
@@ -86,8 +87,8 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                         {isCapped ? (
                                             <span className="flex items-center gap-1">
                                                 {Math.floor(cap)}
-                                                <span className="text-[9px] text-slate-500 font-normal opacity-70">
-                                                    ▲ MAX
+                                                <span className="text-[9px] text-rose-500 font-medium opacity-90">
+                                                    ▲ LIMIT
                                                 </span>
                                             </span>
                                         ) : (
@@ -95,9 +96,9 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                         )}
                                     </span>
 
-                                    {/* 📌 ส่วนของ Tooltip ที่ปรับให้สลับฝั่งอัตโนมัติซ้าย/ขวา */}
-                                    {sources.length > 0 && (
-                                        /* 📌 เปลี่ยนจาก bottom-full mb-2 เป็น top-full mt-2 เพื่อให้ Tooltip เด้งลงด้านล่างแทน */
+
+                                    {/* 📌 เพิ่มเงื่อนไข !hideBreakdown เข้าไปตรงนี้ด้วย เพื่อบล็อกไม่ให้เรนเดอร์ Tooltip ออกมาเลย */}
+                                    {!hideBreakdown && sources.length > 0 && (
                                         <div className={`absolute top-full mt-2 mb-2 hidden group-hover:block w-52 p-2.5 bg-slate-950 text-xs text-slate-200 rounded-md shadow-xl border border-slate-700 z-50 pointer-events-none ${isRightSide ? 'right-0' : 'left-0'}`}>
                                             <div className="font-bold mb-1.5 text-amber-500 border-b border-slate-800 pb-1 uppercase tracking-wider">
                                                 {key} Breakdown
@@ -111,13 +112,14 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                                 ))}
                                             </div>
 
-                                            {/* ส่วนแสดงผลรวม (Total) ด้านล่างสุด */}
                                             <div className="mt-2 pt-1.5 border-t border-slate-800 flex justify-between font-bold text-slate-100">
                                                 <span>Total</span>
                                                 <span className="font-mono text-emerald-400">{totalSum}</span>
                                             </div>
                                         </div>
                                     )}
+
+
                                 </div>
 
                             );
