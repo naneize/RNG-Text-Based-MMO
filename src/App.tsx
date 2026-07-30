@@ -10,8 +10,9 @@ import { useAuthStore, initAuthListener } from './store/authStore';
 import { useChatStore } from './store/chatStore';
 import { LoginPage } from './components/LoginPage';
 import { UsernameSetupPage } from './pages/UsernameSetupPage';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // 🟢 1. นำเข้า Firebase tools สำหรับทำระบบออนไลน์
-import { db } from './firebase'; // 🟢 2. นำเข้า db ของคุณ (เช็ค path ให้ตรงกับโปรเจกต์)
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { MarketplacePage } from './components/Marketplace/MarketplacePage';
 import './utils/statSimulator';
 
 function App() {
@@ -87,6 +88,7 @@ function App() {
         {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}
         {currentPage === 'adventure' && <AdventurePage />}
         {currentPage === 'achievement' && <AchievementPage />}
+        {currentPage === 'marketplace' && <MarketplacePage />}
       </main>
 
       <AchievementPopup />

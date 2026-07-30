@@ -15,6 +15,8 @@ import { Leaderboard } from '../../components/Leaderboard';
 import { useChatStore } from '../../store/chatStore';
 import type { Item } from '../../types/game';
 import { SkillModal } from '../../components/Modals/SkillModal';
+import { SellItemModal } from '../../components/Marketplace/SellItemModal';
+import { RerollModal } from '../Modals/RerollModal';
 
 export const CharacterDashboard = () => {
     const {
@@ -23,16 +25,19 @@ export const CharacterDashboard = () => {
         showBonusModal, setShowBonusModal, isLooting, progress, synergyBonusList,
         getCombinedBonuses, getDropChance, handleLoot, slots, filterOptions,
         filteredInventory, getRarityColor, equippedItem, equipItem, unequipItem, transferItemStat,
-        epicPity, legendPity, toggleAutoLoot, isAutoActive,
+        epicPity, legendPity, toggleAutoLoot, isAutoActive, totalOpens, handleSellItem
     } = useCharacterDashboard();
 
     const [itemA, setItemA] = useState<Item | null>(null);
+    const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [itemToSalvage, setItemToSalvage] = useState<Item | null>(null);
+    const [itemToReroll, setItemToReroll] = useState<Item | null>(null); // 👉 1. เพิ่ม State สำหรับ Reroll ตรงนี้
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<{ name: string; level: number } | null>(null);
     const { shareStatsToChat } = useChatStore();
+
 
     return (
         <div className="flex flex-col gap-4">
@@ -94,6 +99,7 @@ export const CharacterDashboard = () => {
                     legendPity={legendPity}
                     isAutoActive={isAutoActive}
                     toggleAutoLoot={toggleAutoLoot}
+                    totalRoll={totalOpens}
                 />
 
             </div>
@@ -121,6 +127,10 @@ export const CharacterDashboard = () => {
                     }}
                     onSalvageClick={(item) => {
                         setItemToSalvage(item);
+                        setSelectedItem(null);
+                    }}
+                    onRerollClick={(item) => {
+                        setItemToReroll(item);
                         setSelectedItem(null);
                     }}
                     onShareToChat={async (item) => {
@@ -178,6 +188,15 @@ export const CharacterDashboard = () => {
                 />
             )}
 
+            {/* 👇 3. เพิ่มการแสดงผล RerollModal ไว้ตรงนี้ */}
+            {itemToReroll && (
+                <RerollModal
+                    item={itemToReroll}
+                    onClose={() => setItemToReroll(null)}
+                    getRarityColor={getRarityColor}
+                />
+            )}
+
 
             {/* 🖥️ Modal หน้าต่าง World Chat */}
             {isChatOpen && (
@@ -201,7 +220,19 @@ export const CharacterDashboard = () => {
                 </div>
             )}
 
-
+            {isSellModalOpen && (
+                <SellItemModal
+                    inventory={filteredInventory}
+                    onClose={() => setIsSellModalOpen(false)}
+                    onSell={async (itemUid, price, currencyType) => {
+                        const result = await handleSellItem(itemUid, price, currencyType);
+                        if (result.success) {
+                            setIsSellModalOpen(false);
+                        }
+                        return result;
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -3,6 +3,7 @@ import { itemLibrary } from '../../data/itemLibrary';
 import { MAX_INVENTORY_SLOTS } from '../../types/game';
 import { useState } from 'react';
 import { BulkSalvageModal } from '../Modals/BulkSalvageModal';
+import { useGameStore } from '../../store/gameStore';
 
 interface InventorySectionProps {
     player: Player;
@@ -21,6 +22,7 @@ interface InventorySectionProps {
     legendPity: number;
     isAutoActive: boolean;
     toggleAutoLoot: () => void;
+    totalRoll: number;
 }
 
 export const InventorySection = ({
@@ -39,11 +41,12 @@ export const InventorySection = ({
     epicPity,
     legendPity,
     isAutoActive,
-    toggleAutoLoot
+    toggleAutoLoot,
 }: InventorySectionProps) => {
 
     const [pendingSalvageItems, setPendingSalvageItems] = useState<Item[] | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const totalOpens = useGameStore((state) => state.totalOpens);
 
     const showToast = (msg: string) => {
         setToastMessage(msg);
@@ -276,39 +279,50 @@ export const InventorySection = ({
 
             {/* ปุ่ม ROLL FOR LOOT & AUTO ROLL Toggle */}
             <div className="flex gap-2 w-full max-w-xs mx-auto items-start">
-                <div className="relative flex-1 overflow-hidden rounded-lg border border-emerald-500/50 shadow-md">
-                    {(isLooting || isAutoActive) && (
-                        <div
-                            className={`absolute top-0 left-0 h-full transition-all duration-75 ease-linear pointer-events-none ${isAutoActive ? 'bg-amber-400/40' : 'bg-emerald-400/40'
-                                }`}
-                            style={{ width: `${progress}%` }}
-                        />
-                    )}
 
-                    <button
-                        onClick={() => handleLoot()}
-                        disabled={isLooting || isAutoActive || player.inventory.length >= MAX_INVENTORY_SLOTS}
-                        className={`w-full py-4 font-bold text-sm transition-all relative z-10 
-            ${player.inventory.length >= MAX_INVENTORY_SLOTS
-                                ? 'bg-red-950 text-red-400 cursor-not-allowed border-red-800'
+                {/* ฝั่งซ้าย: ปุ่ม ROLL FOR LOOT + Total Rolls */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                    <div className="relative w-full overflow-hidden rounded-lg border border-emerald-500/50 shadow-md">
+                        {(isLooting || isAutoActive) && (
+                            <div
+                                className={`absolute top-0 left-0 h-full transition-all duration-75 ease-linear pointer-events-none ${isAutoActive ? 'bg-amber-400/40' : 'bg-emerald-400/40'
+                                    }`}
+                                style={{ width: `${progress}%` }}
+                            />
+                        )}
+
+                        <button
+                            onClick={() => handleLoot()}
+                            disabled={isLooting || isAutoActive || player.inventory.length >= MAX_INVENTORY_SLOTS}
+                            className={`w-full py-4 font-bold text-sm transition-all relative z-10 
+                ${player.inventory.length >= MAX_INVENTORY_SLOTS
+                                    ? 'bg-red-950 text-red-400 cursor-not-allowed border-red-800'
+                                    : isAutoActive
+                                        ? 'bg-amber-900/40 text-amber-300 font-mono'
+                                        : isLooting
+                                            ? 'bg-emerald-900/50 text-emerald-200 font-mono'
+                                            : 'bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg active:scale-[0.98]'
+                                }`}
+                        >
+                            {player.inventory.length >= MAX_INVENTORY_SLOTS
+                                ? 'INVENTORY FULL'
                                 : isAutoActive
-                                    ? 'bg-amber-900/40 text-amber-300 font-mono'
+                                    ? `AUTO ROLLING... ${Math.round(progress)}%`
                                     : isLooting
-                                        ? 'bg-emerald-900/50 text-emerald-200 font-mono'
-                                        : 'bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg active:scale-[0.98]'
-                            }`}
-                    >
-                        {player.inventory.length >= MAX_INVENTORY_SLOTS
-                            ? 'INVENTORY FULL'
-                            : isAutoActive
-                                ? `AUTO ROLLING... ${Math.round(progress)}%`
-                                : isLooting
-                                    ? `ROLLING... ${Math.round(progress)}%`
-                                    : 'ROLL FOR LOOT'
-                        }
-                    </button>
+                                        ? `ROLLING... ${Math.round(progress)}%`
+                                        : 'ROLL FOR LOOT'
+                            }
+                        </button>
+                    </div>
+
+                    {/* 🟢 ย้าย Total Rolls มาอยู่ใต้ปุ่มซ้ายตรงนี้ */}
+                    <div className="flex flex-col items-center text-[11px] font-mono tracking-wider uppercase leading-tight">
+                        <span className="text-slate-400">Total Rolls</span>
+                        <span className="text-slate-200 font-bold text-sm mt-0.5">{totalOpens ?? 0}</span>
+                    </div>
                 </div>
 
+                {/* ฝั่งขวา: ปุ่ม Auto Roll + IDLE MODE (คงเดิม) */}
                 <div className="flex flex-col items-center gap-1">
                     <button
                         type="button"
@@ -331,6 +345,7 @@ export const InventorySection = ({
                         IDLE MODE (2.5 SEC)
                     </span>
                 </div>
+
             </div>
 
             {/* Modal ยืนยัน/แสดงผล Bulk Salvage */}
@@ -340,6 +355,7 @@ export const InventorySection = ({
                     onClose={() => setPendingSalvageItems(null)}
                 />
             )}
+
 
         </div>
     );

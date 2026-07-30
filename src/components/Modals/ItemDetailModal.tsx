@@ -1,4 +1,5 @@
 import type { Item } from '../../types/game';
+import { getFullStatRanges, getSpecialBonusRange } from '../../utils/statRanges';
 
 interface ItemDetailModalProps {
     selectedItem: Item;
@@ -9,9 +10,13 @@ interface ItemDetailModalProps {
     equipItem: (item: Item) => void;
     onTransferClick: () => void;
     onSalvageClick: (item: Item) => void;
+    onRerollClick: (item: Item) => void;
     onShareToChat?: (item: Item) => void;
     hideActions?: boolean;
+
 }
+
+
 
 export const ItemDetailModal = ({
     selectedItem,
@@ -22,9 +27,20 @@ export const ItemDetailModal = ({
     equipItem,
     onTransferClick,
     onSalvageClick,
+    onRerollClick,
     onShareToChat,
     hideActions = false,
 }: ItemDetailModalProps) => {
+
+    const statRanges = getFullStatRanges({
+        slot: selectedItem.slot,
+        weaponType: selectedItem.weaponType,
+        rarity: selectedItem.rarity,
+        itemLevel: selectedItem.itemLevel,
+    });
+    const specialRange = getSpecialBonusRange(selectedItem.rarity);
+
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedItem(null)}>
             <div className={`relative bg-slate-900 border-2 ${getRarityColor(selectedItem.rarity)} p-8 rounded-2xl w-full max-w-2xl flex flex-col md:flex-row gap-6`} onClick={e => e.stopPropagation()}>
@@ -184,39 +200,83 @@ export const ItemDetailModal = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
-                                    {(selectedItem.elementBonus || equippedInSlot?.elementBonus) && (
-                                        <div className="col-span-2 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex justify-between items-center">
-                                            <span className="text-[9px] text-blue-400 font-bold uppercase">
-                                                Element: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                {equippedInSlot?.elementBonus && (
-                                                    <span className="text-[10px] text-slate-500">{equippedInSlot.elementBonus.value}%</span>
-                                                )}
-                                                {equippedInSlot?.elementBonus && <span className="text-[10px] text-slate-600">→</span>}
-                                                <span className="text-emerald-400 font-bold text-[11px]">
-                                                    + {selectedItem.elementBonus?.value || 0}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {(selectedItem.elementBonus || equippedInSlot?.elementBonus) && (() => {
+                                        const newVal = selectedItem.elementBonus?.value || 0;
+                                        const oldVal = equippedInSlot?.elementBonus?.value || 0;
+                                        const diff = newVal - oldVal;
+                                        const isMax = newVal >= specialRange.max;
 
-                                    {(selectedItem.raceBonus || equippedInSlot?.raceBonus) && (
-                                        <div className="col-span-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex justify-between items-center">
-                                            <span className="text-[9px] text-amber-400 font-bold uppercase">
-                                                Race: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                {equippedInSlot?.raceBonus && (
-                                                    <span className="text-[10px] text-slate-500">{equippedInSlot.raceBonus.value}%</span>
-                                                )}
-                                                {equippedInSlot?.raceBonus && <span className="text-[10px] text-slate-500">→</span>}
-                                                <span className="text-emerald-400 font-bold text-[11px]">
-                                                    + {selectedItem.raceBonus?.value || 0}%
+                                        return (
+                                            <div className="col-span-2 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex justify-between items-center">
+                                                <span className="text-[9px] text-blue-400 font-bold uppercase">
+                                                    Element: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
                                                 </span>
+                                                <div className="flex flex-col items-end">
+                                                    <div className="flex items-center gap-2">
+                                                        {equippedInSlot?.elementBonus && (
+                                                            <span className="text-[10px] text-slate-500">{equippedInSlot.elementBonus.value}%</span>
+                                                        )}
+                                                        {equippedInSlot?.elementBonus && <span className="text-[10px] text-slate-600">→</span>}
+                                                        <span className="text-emerald-400 font-bold text-[11px]">
+                                                            + {newVal}%
+                                                            {isMax && (
+                                                                <span className="text-[9px] ml-1 text-amber-400 font-bold align-middle">
+                                                                    MAX
+                                                                </span>
+                                                            )}
+                                                            {equippedInSlot && diff !== 0 && (
+                                                                <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                    ({diff > 0 ? '+' : ''}{diff})
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
+                                                        {specialRange.min}–{specialRange.max}%
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
+
+                                    {(selectedItem.raceBonus || equippedInSlot?.raceBonus) && (() => {
+                                        const newVal = selectedItem.raceBonus?.value || 0;
+                                        const oldVal = equippedInSlot?.raceBonus?.value || 0;
+                                        const diff = newVal - oldVal;
+                                        const isMax = newVal >= specialRange.max;
+
+                                        return (
+                                            <div className="col-span-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex justify-between items-center">
+                                                <span className="text-[9px] text-amber-400 font-bold uppercase">
+                                                    Race: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
+                                                </span>
+                                                <div className="flex flex-col items-end">
+                                                    <div className="flex items-center gap-2">
+                                                        {equippedInSlot?.raceBonus && (
+                                                            <span className="text-[10px] text-slate-500">{equippedInSlot.raceBonus.value}%</span>
+                                                        )}
+                                                        {equippedInSlot?.raceBonus && <span className="text-[10px] text-slate-500">→</span>}
+                                                        <span className="text-emerald-400 font-bold text-[11px]">
+                                                            + {newVal}%
+                                                            {isMax && (
+                                                                <span className="text-[9px] ml-1 text-amber-400 font-bold align-middle">
+                                                                    MAX
+                                                                </span>
+                                                            )}
+                                                            {equippedInSlot && diff !== 0 && (
+                                                                <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                    ({diff > 0 ? '+' : ''}{diff})
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
+                                                        {specialRange.min}–{specialRange.max}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {Array.from(new Set([...Object.keys(selectedItem.stats), ...Object.keys(equippedInSlot?.stats || {})])).map((stat) => {
                                         const newVal = (selectedItem.stats as any)[stat] || 0;
@@ -225,17 +285,31 @@ export const ItemDetailModal = ({
 
                                         if (newVal === 0 && oldVal === 0) return null;
 
+                                        const range = statRanges[stat as keyof typeof statRanges];
+                                        const isMax = !!range && newVal >= range.max; // ✅ เช็คว่าค่าชน max ของ range หรือไม่
+
                                         return (
                                             <div key={stat} className="bg-slate-800 p-2 rounded text-center">
                                                 <div className="text-[9px] text-slate-400 uppercase">{stat}</div>
                                                 <div className="font-bold text-sm text-slate-200">
                                                     {newVal > 0 ? newVal : 0}
+                                                    {isMax && (
+                                                        <span className="text-[9px] ml-1 text-amber-400 font-bold align-middle">
+                                                            MAX
+                                                        </span>
+                                                    )}
                                                     {equippedInSlot && diff !== 0 && (
                                                         <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                                             ({diff > 0 ? '+' : ''}{diff})
                                                         </span>
                                                     )}
                                                 </div>
+                                                {range && (
+                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'
+                                                        }`}>
+                                                        {range.min}–{range.max}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
@@ -278,6 +352,18 @@ export const ItemDetailModal = ({
                                     STATS TRANSFER
                                 </button>
                             )}
+                            {/* 3. เพิ่มปุ่ม REROLL ในส่วนปุ่มกดการกระทำ */}
+                            {selectedItem.type !== 'skill' && selectedItem.type !== 'material' && (
+                                <button
+                                    onClick={() => {
+                                        onRerollClick(selectedItem);
+                                        setSelectedItem(null);
+                                    }}
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2 rounded font-bold text-white transition-all text-xs cursor-pointer shadow-lg shadow-indigo-900/30"
+                                >
+                                    REROLL
+                                </button>
+                            )}
 
                             {selectedItem.type !== 'material' && (
                                 <button
@@ -285,11 +371,13 @@ export const ItemDetailModal = ({
                                         onSalvageClick(selectedItem);
                                         setSelectedItem(null);
                                     }}
-                                    className="flex-1 bg-amber-600 hover:bg-amber-500 py-2 rounded font-bold text-white transition-all text-xs cursor-pointer"
+                                    className="flex-1 bg-rose-600 hover:bg-rose-500 py-2 rounded font-bold text-white transition-all text-xs cursor-pointer shadow-lg shadow-rose-900/30"
                                 >
                                     SALVAGE ITEM
                                 </button>
                             )}
+
+
                         </div>
                     )}
                 </div>

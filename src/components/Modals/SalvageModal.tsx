@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore, SALVAGE_RATES } from '../../store/gameStore';
 import { itemLibrary } from '../../data/itemLibrary';
+import { SALVAGE_MATERIALS, DEFAULT_SALVAGE_FALLBACK } from '../../data/salvageConfig'; // ✅ เพิ่มบรรทัดนี้
 import type { Item } from '../../types/game';
 
 interface SalvageModalProps {
@@ -9,37 +10,20 @@ interface SalvageModalProps {
     getRarityColor: (rarity: string) => string;
 }
 
-// ฟังก์ชันพรีวิว Expected Rewards (กรณีสุ่มย่อยสำเร็จ)
+
+// ฟังก์ชันพรีวิว Expected Rewards (กรณีสุ่มย่อยสำเร็จ) — ดึงจาก SALVAGE_MATERIALS ที่เดียวกับ gameStore.ts
 export const getExpectedMaterials = (rarity: string) => {
-    switch (rarity?.toLowerCase()) {
-        case 'common':
-            return [
-                { name: 'Iron Ore', count: '1 - 3' },
-                { name: 'Steel Ingot', count: '1 - 2' }
-            ];
-        case 'rare':
-            return [
-                { name: 'Magic Dust', count: '2 - 4' },
-                { name: 'Mithril', count: '1 - 2' },
-                { name: 'Leather', count: '1 - 2' }
-            ];
-        case 'epic':
-            return [
-                { name: 'Dark Crystal', count: '1 - 2' },
-                { name: 'Dragon Scale', count: '1' },
-                { name: 'Gold Ore', count: '2 - 4' }
-            ];
-        case 'legendary':
-            return [
-                { name: 'Void Essence', count: '1' },
-                { name: 'Celestial Shard', count: '1 - 2' },
-                { name: 'Ancient Rune', count: '1' },
-                { name: 'Primordial Essence', count: '1' }
-            ];
-        default:
-            return [{ name: 'Iron Ore', count: '1' }];
-    }
+    const table = SALVAGE_MATERIALS[rarity?.toLowerCase()];
+    const drops = table ? table.success : DEFAULT_SALVAGE_FALLBACK;
+
+    return drops.map(d => {
+        const template = itemLibrary.find(i => i.id === d.id);
+        const name = template?.name || d.id.replace(/_/g, ' '); // เผื่อ id ไหนหาไม่เจอ ยังอ่านออกอยู่
+        const count = d.min === d.max ? `${d.min}` : `${d.min} - ${d.max}`;
+        return { name, count };
+    });
 };
+
 
 export const SalvageModal: React.FC<SalvageModalProps> = ({ item, onClose, getRarityColor }) => {
     const salvageItem = useGameStore((state) => state.salvageItem);

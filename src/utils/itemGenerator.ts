@@ -10,8 +10,8 @@ export const rarityConfig = [
     { name: 'Legendary', count: [5, 7], mult: 5, weight: 1 },
 ];
 
-const ELEMENT_POOL = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'];
-const RACE_POOL = ['DemiHuman', 'Plant', 'Brute', 'Undead', 'Demon', 'Angel'];
+export const ELEMENT_POOL = ['Fire', 'Water', 'Earth', 'Wind', 'Dark', 'Holy', 'Neutral'];
+export const RACE_POOL = ['DemiHuman', 'Plant', 'Brute', 'Undead', 'Demon', 'Angel', 'Dragon'];
 
 const getRandomRarity = (forcedRarity?: string) => {
     if (forcedRarity) {
@@ -239,6 +239,13 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         return Math.floor((base + (level * levelScale)) * rarityMult);
     };
 
+    const VARIATION_PERCENT = 0.05;
+    const getStatWithVariation = (base: number, rarityMult: number, level: number, levelScale: number) => {
+        const baseVal = getStat(base, rarityMult, level, levelScale);
+        const variation = Math.floor(baseVal * VARIATION_PERCENT * (Math.random() * 2 - 1));
+        return Math.max(1, baseVal + variation);
+    };
+
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
@@ -251,54 +258,55 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
         // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
         const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
-        const randomVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
-        stats.atk = Math.max(1, baseAtk + randomVariation);
-        baseStatsSet.add('atk'); // FIX: lock atk ไว้ ไม่ให้โดนสุ่มซ้ำ
+        const variationPercent = 0.05; // ±5% ปรับได้ตามต้องการ
+        const atkVariation = Math.floor(baseAtk * variationPercent * (Math.random() * 2 - 1));
+        stats.atk = Math.max(1, baseAtk + atkVariation);
+        baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1); // สมมติให้ scale เลเวลเพิ่มขึ้นทีละ 1 ต่อเลเวล
-        const hitVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
+        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1);
+        const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
         stats.hit = Math.max(1, baseHit + hitVariation);
-        baseStatsSet.add('hit'); // FIX: lock hit ไว้ ไม่ให้โดนสุ่มซ้ำ
+        baseStatsSet.add('hit');
 
         // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(3, baseMult, itemLevel, 1); // ใช้ base เป็น 3, scale เป็น 3 (หรือปรับตามต้องการ)
-            const strVariation = Math.floor(Math.random() * 11) - 5; // สุ่มแกว่ง -5 ถึง +5
+            const baseStr = getStat(3, baseMult, itemLevel, 1);
+            const strVariation = Math.floor(baseStr * variationPercent * (Math.random() * 2 - 1));
             stats.str = Math.max(1, baseStr + strVariation);
             baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
-        stats.atk = getStat(12, baseMult, itemLevel, 1);
-        stats.hit = Math.floor(7 * baseMult);
-        baseStatsSet.add('atk'); // FIX
-        baseStatsSet.add('hit'); // FIX
+        stats.atk = getStatWithVariation(12, baseMult, itemLevel, 1);
+        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
+        baseStatsSet.add('atk');
+        baseStatsSet.add('hit');
     }
     else if (template.slot === 'helm') {
-        stats.def = getStat(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStat(100, baseMult, itemLevel, 10);
-        stats.hit = Math.floor(7 * baseMult);
-        baseStatsSet.add('def');   // FIX
-        baseStatsSet.add('maxHp'); // FIX
-        baseStatsSet.add('hit');   // FIX
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 10);
+        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
+        baseStatsSet.add('def');
+        baseStatsSet.add('maxHp');
+        baseStatsSet.add('hit');
     }
     else if (['armor', 'shield'].includes(template.slot)) {
-        stats.def = getStat(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStat(100, baseMult, itemLevel, 3);
-        baseStatsSet.add('def');   // FIX
-        baseStatsSet.add('maxHp'); // FIX
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 3);
+        baseStatsSet.add('def');
+        baseStatsSet.add('maxHp');
     }
     else if (template.slot === 'boots') {
-        stats.def = getStat(10, baseMult, itemLevel, 1);
-        stats.flee = getStat(10, baseMult, itemLevel, 1);
-        baseStatsSet.add('def');  // FIX
-        baseStatsSet.add('flee'); // FIX
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.flee = getStatWithVariation(10, baseMult, itemLevel, 1);
+        baseStatsSet.add('def');
+        baseStatsSet.add('flee');
     }
     else if (template.slot === 'cloak') {
-        stats.int = getStat(12, baseMult, itemLevel, 1);
-        stats.def = getStat(10, baseMult, itemLevel, 1);
-        baseStatsSet.add('int'); // FIX
-        baseStatsSet.add('def'); // FIX
+        stats.int = getStatWithVariation(12, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        baseStatsSet.add('int');
+        baseStatsSet.add('def');
     }
 
     // DEBUG: ดูว่า stat ไหนถูก lock เป็นค่าเบสไปแล้วบ้างสำหรับไอเทมชิ้นนี้
@@ -307,7 +315,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         return acc;
     }, {} as Record<string, number>);
 
-    console.log(`[generateRandomItem] slot=${template.slot} rarity=${config.name} baseStatsValues=`, baseStatsValues);
+    console.log(`[generateRandomItem] slot=${template.slot} rarity=${config.name} itemLevel=${itemLevel} baseStatsValues=`, baseStatsValues);
 
 
     const ALL_STATS: (keyof Stats)[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk', 'maxHp',
@@ -323,7 +331,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         flee: 80
     }; */
 
-    const PERCENT_STATS = new Set(['critRate', 'critDmg', 'hit', 'flee']);
+
 
     // ===== FIX #2: เพิ่มเงื่อนไข !baseStatsSet.has(s) =====
     // เดิมกรองแค่ critRate/critDmg และ def/res/mRes (เฉพาะอาวุธ)
@@ -404,6 +412,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     console.log(`[generateRandomItem] ผลลัพธ์สุดท้าย:`, {
         name: `${config.name} ${template.name}`,
         slot: template.slot,
+        itemLevel,
         stats,
         statsLog
     });
@@ -481,6 +490,13 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         return Math.floor((base + (level * levelScale)) * rarityMult);
     };
 
+    const VARIATION_PERCENT = 0.05;
+    const getStatWithVariation = (base: number, rarityMult: number, level: number, levelScale: number) => {
+        const baseVal = getStat(base, rarityMult, level, levelScale);
+        const variation = Math.floor(baseVal * VARIATION_PERCENT * (Math.random() * 2 - 1));
+        return Math.max(1, baseVal + variation);
+    };
+
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
@@ -492,57 +508,58 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
 
         // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
         const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
-        const randomVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
-        stats.atk = Math.max(1, baseAtk + randomVariation);
-        baseStatsSet.add('atk'); // FIX: lock atk ไว้ ไม่ให้โดนสุ่มซ้ำ
+        const variationPercent = 0.05; // ±5% ปรับได้ตามต้องการ
+        const atkVariation = Math.floor(baseAtk * variationPercent * (Math.random() * 2 - 1));
+        stats.atk = Math.max(1, baseAtk + atkVariation);
+        baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1); // สมมติให้ scale เลเวลเพิ่มขึ้นทีละ 1 ต่อเลเวล
-        const hitVariation = Math.floor(Math.random() * 11) - 5; // จะได้ค่า -5 ถึง +5
+        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1);
+        const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
         stats.hit = Math.max(1, baseHit + hitVariation);
-        baseStatsSet.add('hit'); // FIX: lock hit ไว้ ไม่ให้โดนสุ่มซ้ำ
+        baseStatsSet.add('hit');
 
         // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(3, baseMult, itemLevel, 1); // ใช้ base เป็น 3, scale เป็น 3 (หรือปรับตามต้องการ)
-            const strVariation = Math.floor(Math.random() * 11) - 5; // สุ่มแกว่ง -5 ถึง +5
+            const baseStr = getStat(3, baseMult, itemLevel, 1);
+            const strVariation = Math.floor(baseStr * variationPercent * (Math.random() * 2 - 1));
             stats.str = Math.max(1, baseStr + strVariation);
             baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
-        stats.atk = getStat(12, baseMult, itemLevel, 1);
-        stats.hit = Math.floor(7 * baseMult);
-        baseStatsSet.add('atk'); // FIX
-        baseStatsSet.add('hit'); // FIX
+        stats.atk = getStatWithVariation(12, baseMult, itemLevel, 1);
+        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
+        baseStatsSet.add('atk');
+        baseStatsSet.add('hit');
     }
     else if (template.slot === 'helm') {
-        stats.def = getStat(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStat(100, baseMult, itemLevel, 10);
-        stats.hit = Math.floor(7 * baseMult);
-        baseStatsSet.add('def');   // FIX
-        baseStatsSet.add('maxHp'); // FIX
-        baseStatsSet.add('hit');   // FIX
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 10);
+        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
+        baseStatsSet.add('def');
+        baseStatsSet.add('maxHp');
+        baseStatsSet.add('hit');
     }
     else if (['armor', 'shield'].includes(template.slot)) {
-        stats.def = getStat(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStat(100, baseMult, itemLevel, 3);
-        baseStatsSet.add('def');   // FIX
-        baseStatsSet.add('maxHp'); // FIX
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 3);
+        baseStatsSet.add('def');
+        baseStatsSet.add('maxHp');
     }
     else if (template.slot === 'boots') {
-        stats.def = getStat(10, baseMult, itemLevel, 1);
-        stats.flee = getStat(10, baseMult, itemLevel, 1);
-        baseStatsSet.add('def');  // FIX
-        baseStatsSet.add('flee'); // FIX
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.flee = getStatWithVariation(10, baseMult, itemLevel, 1);
+        baseStatsSet.add('def');
+        baseStatsSet.add('flee');
     }
     else if (template.slot === 'cloak') {
-        stats.int = getStat(12, baseMult, itemLevel, 1);
-        stats.def = getStat(10, baseMult, itemLevel, 1);
-        baseStatsSet.add('int'); // FIX
-        baseStatsSet.add('def'); // FIX
+        stats.int = getStatWithVariation(12, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        baseStatsSet.add('int');
+        baseStatsSet.add('def');
     }
 
-    console.log(`[generateRandomItemSpecific] slot=${template.slot} rarity=${config.name} baseStatsSet=`, [...baseStatsSet]);
+    console.log(`[generateRandomItemSpecific] slot=${template.slot} rarity=${config.name} itemLevel=${itemLevel} baseStatsSet=`, [...baseStatsSet]);
 
     const ALL_STATS: (keyof Stats)[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk', 'maxHp',
         'hit', 'flee', 'critRate', 'critDmg', 'res', 'mRes', 'def', 'atk'];
@@ -555,7 +572,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         hit: 80,
         flee: 80
     }; */
-    const PERCENT_STATS = new Set(['critRate', 'critDmg', 'hit', 'flee']);
+
 
     // ===== FIX #2: เพิ่มเงื่อนไข !baseStatsSet.has(s) =====
     const COMMON_POOL = ALL_STATS.filter(s => {
@@ -620,6 +637,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     console.log(`[generateRandomItemSpecific] ผลลัพธ์สุดท้าย:`, {
         name: `${config.name} ${template.name}`,
         slot: template.slot,
+        itemLevel,        // ✅ เพิ่มบรรทัดนี้
         stats,
         statsLog
     });

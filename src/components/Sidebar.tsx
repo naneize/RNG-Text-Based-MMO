@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 
 
-type PageType = 'home' | 'adventure' | 'collection' | 'achievement';
+type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
@@ -13,6 +13,7 @@ export const Sidebar = () => {
         { id: 'adventure', label: 'Boss Lobby' },
         { id: 'collection', label: 'Items Collection' },
         { id: 'achievement', label: 'Achievements' },
+        ...(user ? [{ id: 'marketplace' as PageType, label: 'Marketplace' }] : []), // ✅ ซ่อนถ้าเป็น Guest
     ];
 
     const handleLogout = async () => {

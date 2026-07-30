@@ -12,7 +12,7 @@ import { useChatStore } from '../store/chatStore';
 
 
 export const useCharacterDashboard = () => {
-    const { player, equipItem, unequipItem, epicPity, legendPity } = useGameStore();
+    const { player, equipItem, unequipItem, epicPity, legendPity, totalOpens } = useGameStore();
 
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
     const [selectedMaterial, setSelectedMaterial] = useState<{ name: string, amount: number } | null>(null);
@@ -41,7 +41,7 @@ export const useCharacterDashboard = () => {
         } = store;
 
         // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
-        // 1. คำนวณ maxLevel ตามเดิม
+
         const maxLevel = totalOpens < 1000
             ? 1 + Math.floor(totalOpens / 10) * 5
             : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
@@ -60,13 +60,21 @@ export const useCharacterDashboard = () => {
 
         // 3. ตรวจสอบเงื่อนไข Pity แบบป้องกันการเลยเพดาน
         if (currentLegendPity >= PITY_CONFIG.LEGEND) {
+            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Legendary (ไม่เอา material)
             newItem = generateRandomItem('legendary', randomLevel);
+            while (newItem.type === 'material') {
+                newItem = generateRandomItem('legendary', randomLevel);
+            }
             resetLegendPity();
             resetEpicPity();
         } else if (currentEpicPity >= PITY_CONFIG.EPIC) {
+            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Epic (ไม่เอา material)
             newItem = generateRandomItem('epic', randomLevel);
+            while (newItem.type === 'material') {
+                newItem = generateRandomItem('epic', randomLevel);
+            }
             resetEpicPity();
-            addLegendPity(); // ขยับ Legend Pity ต่อเมื่อการันตี Epic
+            addLegendPity();
         } else {
             newItem = generateRandomItem(undefined, randomLevel);
 
@@ -205,7 +213,24 @@ export const useCharacterDashboard = () => {
         return item ? ((item.weight / totalWeight) * 100).toFixed(1) : "0.0";
     };
 
+    // 🛒 เพิ่มฟังก์ชันสำหรับส่งข้อมูลการขายไอเทมไปยัง Store
+    const handleSellItem = async (itemUid: string, price: number, currencyType: string) => {
+        try {
+            // สมมติว่าใน gameStore (หรือ marketplaceStore) ของคุณมีฟังก์ชันสำหรับลงขาย
+            const store = useGameStore.getState();
 
+            // ตัวอย่างการเรียกใช้ฟังก์ชันขายใน Store (ปรับชื่อฟังก์ชันให้ตรงกับ Store จริงของคุณครับ)
+            if (typeof (store as any).listItem === 'function') {
+                return await (store as any).listItem(itemUid, price, currencyType);
+            } else {
+                console.error("listItem function not found in useGameStore");
+                return { success: false, message: "Store function not found" };
+            }
+        } catch (error) {
+            console.error("Failed to sell item:", error);
+            return { success: false, message: "Failed to sell item" };
+        }
+    };
 
     const handleLoot = async (isAuto = false) => {
         const currentInventory = useGameStore.getState().player.inventory;
@@ -313,7 +338,7 @@ export const useCharacterDashboard = () => {
         transferItemStat,
         isAutoActive,
         setIsAutoActive,
-        // 🟢 เพิ่ม toggleAutoLoot ออกไปให้ UI ผูกเข้ากับปุ่มกด Auto Roll ครับ
-        toggleAutoLoot
+        toggleAutoLoot,
+        totalOpens, handleSellItem
     };
 };

@@ -7,14 +7,17 @@ import { getTotalStats } from '../utils/combat';
 import { TRANSFER_COSTS } from '../data/transferConfig';
 import { calculateBossDrops } from '../utils/dropLogic';
 import { useAchievementStore } from './achievementStore';
-import {
-    doc,
-    getDoc,
-    setDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { useAuthStore } from './authStore';
 import { useLeaderboardStore } from './leaderboardStore';
+import { SALVAGE_MATERIALS, DEFAULT_SALVAGE_FALLBACK, rollMaterials } from '../data/salvageConfig';
+import { getFullStatRanges, getSpecialBonusRange } from '../utils/statRanges';
+import { ELEMENT_POOL, RACE_POOL } from '../utils/itemGenerator';
+import {
+    STAT_TO_MATERIAL, ELEMENT_BONUS_MATERIAL, RACE_BONUS_MATERIAL,
+    UNIVERSAL_MATERIAL, calculateRerollCost, type RerollResult,
+} from '../data/rerollConfig';
 
 
 
@@ -70,8 +73,8 @@ interface TransferResult {
 }
 
 interface GameState {
-    currentPage: 'home' | 'adventure' | 'collection' | 'achievement';
-    setCurrentPage: (page: 'home' | 'adventure' | 'collection' | 'achievement') => void;
+    currentPage: 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace';
+    setCurrentPage: (page: 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace') => void;
     player: Player;
     addItem: (item: Item) => void;
     addMaterial: (name: string, amount: number) => void;
@@ -109,7 +112,8 @@ interface GameState {
     };
 
 
-
+    rerollStat: (uid: string, statKey: keyof Stats, useSafetyLock?: boolean, useUniversal?: boolean) => RerollResult;
+    rerollSpecialBonus: (uid: string, bonusType: 'element' | 'race', useSafetyLock?: boolean, useUniversal?: boolean) => RerollResult;
     epicPity: number;
     legendPity: number;
     addEpicPity: () => void;
@@ -119,6 +123,7 @@ interface GameState {
 
     achievements: Record<string, { isUnlocked: boolean; progress?: number }>;
     unlockAchievement: (id: string) => void;
+    subscribeToPlayer: (uid: string) => () => void;
 
 
 
@@ -516,69 +521,14 @@ export const useGameStore = create<GameState>()(
 
                 const isSuccess = Math.random() < successRate;
 
-                if (isSuccess) {
-                    // --- กรณีสำเร็จ ---
-                    switch (rarity) {
-                        case 'common':
-                            materialsGained = [
-                                { id: 'iron_ore', amount: Math.floor(Math.random() * 3) + 1 },
-                                { id: 'steel_ingot', amount: Math.floor(Math.random() * 2) + 1 }
-                            ];
-                            break;
-                        case 'rare':
-                            materialsGained = [
-                                { id: 'magic_dust', amount: Math.floor(Math.random() * 3) + 2 },
-                                { id: 'mithril', amount: Math.floor(Math.random() * 2) + 1 },
-                                { id: 'leather', amount: Math.floor(Math.random() * 2) + 1 }
-                            ];
-                            break;
-                        case 'epic':
-                            materialsGained = [
-                                { id: 'dark_crystal', amount: Math.floor(Math.random() * 2) + 1 },
-                                { id: 'dragon_scale', amount: 1 },
-                                { id: 'gold_ore', amount: Math.floor(Math.random() * 3) + 2 }
-                            ];
-                            break;
-                        case 'legendary':
-                            materialsGained = [
-                                { id: 'void_essence', amount: 1 },
-                                { id: 'celestial_shard', amount: Math.floor(Math.random() * 2) + 1 },
-                                { id: 'ancient_rune', amount: 1 },
-                                { id: 'primordial_essence', amount: 1 }
-                            ];
-                            break;
-                        default:
-                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
-                            break;
-                    }
-                } else {
-                    // --- กรณีไม่สำเร็จ ---
-                    switch (rarity) {
-                        case 'common':
-                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
-                            break;
-                        case 'rare':
-                            materialsGained = [
-                                { id: 'magic_dust', amount: 1 },
-                                { id: 'leather', amount: 1 }
-                            ];
-                            break;
-                        case 'epic':
-                            materialsGained = [
-                                { id: 'dark_crystal', amount: 1 },
-                                { id: 'gold_ore', amount: 1 }
-                            ];
-                            break;
-                        case 'legendary':
-                            materialsGained = [{ id: 'celestial_shard', amount: 1 }];
-                            break;
-                        default:
-                            materialsGained = [{ id: 'iron_ore', amount: 1 }];
-                            break;
-                    }
+                // ✅ ดึง material ที่ได้จาก SALVAGE_MATERIALS (config กลางเดียวกับที่ UI preview ใช้)
+                // แทนที่ switch-case เดิมที่ hardcode ซ้ำกัน 2 ที่
+                const table = SALVAGE_MATERIALS[rarity];
+                const drops = isSuccess
+                    ? (table?.success || DEFAULT_SALVAGE_FALLBACK)
+                    : (table?.fail || DEFAULT_SALVAGE_FALLBACK);
 
-
-                }
+                materialsGained = rollMaterials(drops);
 
                 get().removeItem(uid);
 
@@ -778,6 +728,131 @@ export const useGameStore = create<GameState>()(
 
             },
 
+            rerollStat: (uid, statKey, useSafetyLock = false, useUniversal = false) => {
+                const state = get();
+                const item = state.player.inventory.find(i => i.uid === uid);
+                if (!item) return { success: false, message: 'Item not found in inventory.' };
+                if (item.type !== 'equipment') return { success: false, message: 'Reroll can only be used on equipment.' };
+
+                const currentVal = (item.stats as any)?.[statKey];
+                if (!currentVal) return { success: false, message: `This item has no stat ${statKey}.` };
+
+                const requiredMaterial = STAT_TO_MATERIAL[statKey];
+                if (!requiredMaterial) return { success: false, message: `Stat ${statKey} does not support rerolling yet.` };
+
+                const materialId = useUniversal ? UNIVERSAL_MATERIAL : requiredMaterial;
+                const cost = calculateRerollCost(item.rarity, item.itemLevel ?? 1, useSafetyLock, useUniversal);
+                const currentAmount = state.player.materials[materialId] || 0;
+
+                if (currentAmount < cost) {
+                    return { success: false, message: `Not enough ${materialId}. (Required: ${cost}, Have: ${currentAmount})` };
+                }
+
+                const ranges = getFullStatRanges({
+                    slot: item.slot,
+                    weaponType: item.weaponType,
+                    rarity: item.rarity,
+                    itemLevel: item.itemLevel ?? 1,
+                });
+                const range = ranges[statKey];
+                if (!range) return { success: false, message: 'Valid stat range not found.' };
+
+                const newVal = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+
+                get().removeMaterial(materialId, cost);
+
+                let finalVal = newVal;
+                let kept = false;
+                if (useSafetyLock && newVal < currentVal) {
+                    finalVal = currentVal;
+                    kept = true;
+                }
+
+                const newStats = { ...item.stats, [statKey]: finalVal };
+                const newStatsLog = (item.statsLog || []).map(log =>
+                    log.statKey === statKey ? { ...log, value: finalVal } : log
+                );
+
+                get().updateInventoryItem(uid, { ...item, stats: newStats, statsLog: newStatsLog });
+                get().saveUserData();
+
+                return {
+                    success: true,
+                    oldValue: currentVal,
+                    newValue: finalVal,
+                    kept,
+                    message: kept
+                        ? `New roll (${newVal}) was worse, Safety Lock kept the original value (${currentVal}).`
+                        : `${String(statKey).toUpperCase()} changed from ${currentVal} to ${finalVal}.`,
+                };
+            },
+
+            rerollSpecialBonus: (uid, bonusType, useSafetyLock = false, useUniversal = false) => {
+                const state = get();
+                const item = state.player.inventory.find(i => i.uid === uid);
+                if (!item) return { success: false, message: 'Item not found in inventory.' };
+
+                const currentBonus = bonusType === 'element' ? item.elementBonus : item.raceBonus;
+                if (!currentBonus) {
+                    return { success: false, message: `This item has no ${bonusType === 'element' ? 'Element' : 'Race'} Bonus.` };
+                }
+
+                const requiredMaterial = bonusType === 'element' ? ELEMENT_BONUS_MATERIAL : RACE_BONUS_MATERIAL;
+                const materialId = useUniversal ? UNIVERSAL_MATERIAL : requiredMaterial;
+                const cost = calculateRerollCost(item.rarity, item.itemLevel ?? 1, useSafetyLock, useUniversal);
+                const currentAmount = state.player.materials[materialId] || 0;
+
+                if (currentAmount < cost) {
+                    return { success: false, message: `Not enough ${materialId}. (Required: ${cost}, Have: ${currentAmount})` };
+                }
+
+                const range = getSpecialBonusRange(item.rarity);
+                const newValue = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+
+                get().removeMaterial(materialId, cost);
+
+                let finalBonus: any;
+
+                if (bonusType === 'element') {
+                    type ElementType = 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
+                    const pool = ELEMENT_POOL as readonly ElementType[];
+                    const newType = pool[Math.floor(Math.random() * pool.length)];
+
+                    finalBonus = { type: newType, value: newValue };
+                    if (useSafetyLock && newValue < (currentBonus as { type: ElementType; value: number }).value) {
+                        finalBonus = currentBonus;
+                    }
+                } else {
+                    type RaceType = 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon';
+                    const pool = RACE_POOL as readonly RaceType[];
+                    const newType = pool[Math.floor(Math.random() * pool.length)];
+
+                    finalBonus = { type: newType, value: newValue };
+                    if (useSafetyLock && newValue < (currentBonus as { type: RaceType; value: number }).value) {
+                        finalBonus = currentBonus;
+                    }
+                }
+
+                const kept = useSafetyLock && newValue < currentBonus.value;
+
+                const updatedItem = bonusType === 'element'
+                    ? { ...item, elementBonus: finalBonus }
+                    : { ...item, raceBonus: finalBonus };
+
+                get().updateInventoryItem(uid, updatedItem);
+                get().saveUserData();
+
+                return {
+                    success: true,
+                    oldBonus: currentBonus,
+                    newBonus: finalBonus,
+                    kept,
+                    message: kept
+                        ? `New roll (${finalBonus.type} +${finalBonus.value}%) was worse, Safety Lock kept the original (${currentBonus.type} +${currentBonus.value}%).`
+                        : `Changed from ${currentBonus.type} +${currentBonus.value}% to ${finalBonus.type} +${finalBonus.value}%.`,
+                };
+            },
+
             updateInventoryItem: (uid, updatedItem) => set((state) => ({
                 player: {
                     ...state.player,
@@ -808,6 +883,19 @@ export const useGameStore = create<GameState>()(
 
                 // 3. คืนค่ารางวัลให้ UI ไปแสดงผลเสมอ ไม่ว่าเงื่อนไขจะเป็นยังไง
                 return rewards;
+            },
+
+            subscribeToPlayer: (uid: string) => {
+                const playerRef = doc(db, 'players', uid);
+                const unsubscribe = onSnapshot(playerRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.player) {
+                            set({ player: data.player });
+                        }
+                    }
+                });
+                return unsubscribe; // คืนค่าฟังก์ชัน unsubscribe สำหรับเอาไปใช้ใน useEffect cleanup
             },
         }),
         {
