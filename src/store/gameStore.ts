@@ -776,6 +776,9 @@ export const useGameStore = create<GameState>()(
                 get().updateInventoryItem(uid, { ...item, stats: newStats, statsLog: newStatsLog });
                 get().saveUserData();
 
+                const diff = finalVal - currentVal;
+                const diffText = diff > 0 ? ` (+${diff})` : diff < 0 ? ` (${diff})` : ' (No change)';
+
                 return {
                     success: true,
                     oldValue: currentVal,
@@ -783,7 +786,7 @@ export const useGameStore = create<GameState>()(
                     kept,
                     message: kept
                         ? `New roll (${newVal}) was worse, Safety Lock kept the original value (${currentVal}).`
-                        : `${String(statKey).toUpperCase()} changed from ${currentVal} to ${finalVal}.`,
+                        : `${String(statKey).toUpperCase()} changed from ${currentVal} to ${finalVal}${diffText}.`,
                 };
             },
 
@@ -839,8 +842,13 @@ export const useGameStore = create<GameState>()(
                     ? { ...item, elementBonus: finalBonus }
                     : { ...item, raceBonus: finalBonus };
 
+
+
                 get().updateInventoryItem(uid, updatedItem);
                 get().saveUserData();
+
+                const diff = finalBonus.value - currentBonus.value;
+                const diffText = diff > 0 ? ` (+${diff}%)` : diff < 0 ? ` (${diff}%)` : ' (No change)';
 
                 return {
                     success: true,
@@ -849,7 +857,7 @@ export const useGameStore = create<GameState>()(
                     kept,
                     message: kept
                         ? `New roll (${finalBonus.type} +${finalBonus.value}%) was worse, Safety Lock kept the original (${currentBonus.type} +${currentBonus.value}%).`
-                        : `Changed from ${currentBonus.type} +${currentBonus.value}% to ${finalBonus.type} +${finalBonus.value}%.`,
+                        : `Changed from ${currentBonus.type} +${currentBonus.value}% to ${finalBonus.type} +${finalBonus.value}%${diffText}.`,
                 };
             },
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { PatchNotesModal } from '../components/Modals/PatchNotesModal'; // นำเข้าคอมโพเนนต์ใหม่
 
 export const LoginPage = () => {
     const { login, register, loginWithGoogle, loginAsGuest, error, clearError } = useAuthStore();
@@ -131,69 +132,8 @@ export const LoginPage = () => {
                     </div>
                 </div>
 
-                {/* 📌 Column 2: Patch Notes / Updates Box */}
-                <div className="w-full lg:w-1/2 p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-2xl flex flex-col">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                        <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                            <span>🚀</span> Latest Updates & Patch Notes
-                        </h2>
-                        <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
-                            v0.0.2
-                        </span>
-                    </div>
-
-                    <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[450px] text-xs">
-                        {/* Update 1 */}
-                        <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-white text-sm">✨ Cloud Save & Profile Sync</span>
-                                <span className="text-[10px] text-emerald-400 font-mono">New</span>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed">
-                                Implemented cloud data synchronization for player stats, inventory, and progression across multiple devices.
-                            </p>
-                        </div>
-
-                        {/* Update 2 */}
-                        <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-white text-sm">🛡️ Advanced Equipment Tiering</span>
-                                <span className="text-[10px] text-emerald-400 font-mono">Updated</span>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed">
-                                Added rare prefix and suffix modifiers to dropped items, enhancing custom stat rolls and build varieties.
-                            </p>
-                        </div>
-
-                        {/* Update 3 */}
-                        <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-white text-sm">⚖️ Economy & Drop Rate Tweaks</span>
-                                <span className="text-[10px] text-amber-400 font-mono">Balance</span>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed">
-                                Rebalanced crafting resource costs and fine-tuned RNG drop rates for high-tier materials in mid-game zones.
-                            </p>
-                        </div>
-
-                        {/* Update 4 */}
-                        <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-white text-sm">🐛 Bug Fixes & UI Enhancements</span>
-                                <span className="text-[10px] text-blue-400 font-mono">Fix</span>
-                            </div>
-                            <p className="text-slate-400 leading-relaxed">
-                                Resolved an issue with stat-overflow calculations and optimized overall UI responsiveness on mobile screens.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-800 text-center">
-                        <p className="text-[11px] text-slate-500">
-                            Thank you for playing! Stay tuned for more updates.
-                        </p>
-                    </div>
-                </div>
+                {/* 📌 Column 2: เรียกใช้งาน Patch Notes Modal ที่แยกออกมา */}
+                <PatchNotesModal />
 
             </div>
         </div>

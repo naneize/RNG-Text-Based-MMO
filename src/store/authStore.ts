@@ -26,6 +26,7 @@ interface UserProfile {
     uid: string;
     email: string | null;
     username: string;
+    role?: 'developer' | 'player'; // 🟢 เพิ่มฟิลด์เก็บยศ
 }
 
 interface AuthState {
@@ -46,6 +47,16 @@ interface AuthState {
 
     loginAsGuest: () => void;
 }
+
+// 🚀 กำหนดรายชื่ออีเมลที่เป็น Developer ของคุณตรงนี้
+const DEVELOPER_EMAILS = [
+    "nanza9073@gmail.com", // ⚠️ เปลี่ยนเป็นอีเมลจริงที่คุณใช้ล็อกอิน
+];
+
+export const isUserDeveloper = (email?: string | null) => {
+    if (!email) return false;
+    return DEVELOPER_EMAILS.includes(email);
+};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
@@ -75,6 +86,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             email: null,
             username: 'Guest_' + Math.floor(1000 + Math.random() * 9000),
         };
+
+
 
         // เซ็ตสถานะให้เหมือนล็อกอินผ่านแล้ว โดยใช้ object ปลอมหรือเซ็ต userProfile ตรงๆ
         set({
@@ -156,7 +169,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const userRef = doc(db, 'users', uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
-                set({ userProfile: userSnap.data() as UserProfile });
+                const data = userSnap.data() as UserProfile;
+
+                // 🟢 เช็คและกำกับยศ Developer จากอีเมลตอนดึงข้อมูล
+                const isDev = isUserDeveloper(data.email);
+                const profileWithRole = {
+                    ...data,
+                    role: isDev ? ('developer' as const) : ('player' as const)
+                };
+
+                set({ userProfile: profileWithRole });
             } else {
                 set({ userProfile: null });
             }
@@ -180,10 +202,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             }
 
             const userRef = doc(db, 'users', currentUser.uid);
+
+            // 🟢 เช็คยศ Developer ตอนสร้างโปรไฟล์
+            const isDev = isUserDeveloper(currentUser.email);
+
             const profileData: UserProfile = {
                 uid: currentUser.uid,
                 email: currentUser.email,
                 username: username,
+                role: isDev ? 'developer' : 'player', // บันทึก role ลงไป
             };
 
             await setDoc(userRef, {
@@ -191,7 +218,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 createdAt: new Date().toISOString()
             }, { merge: true });
 
-            // อัปเดต state โปรไฟล์ในเครื่องทันที
             set({ userProfile: profileData });
             return true;
         } catch (err: any) {
@@ -229,19 +255,26 @@ export const initAuthListener = () => {
             const userRef = doc(db, 'users', firebaseUser.uid);
             const userSnap = await getDoc(userRef);
 
+            let profile: UserProfile | null = null;
+            if (userSnap.exists()) {
+                const data = userSnap.data() as UserProfile;
+                const isDev = isUserDeveloper(firebaseUser.email);
+                profile = {
+                    ...data,
+                    role: isDev ? 'developer' : 'player'
+                };
+            }
+
             useAuthStore.setState({
                 user: firebaseUser,
-                userProfile: userSnap.exists() ? (userSnap.data() as UserProfile) : null,
+                userProfile: profile,
                 isLoading: false
             });
 
-            // 📥 โหลดข้อมูลเกมเฉพาะของไอดีนี้จาก Firestore ทันที
             await useGameStore.getState().loadUserData(firebaseUser.uid);
 
         } else {
             useAuthStore.setState({ user: null, userProfile: null, isLoading: false });
-
-            // 🧹 ล้างข้อมูลเกมทิ้งหากไม่มีผู้ใช้งาน
             useGameStore.getState().resetGame();
         }
     });

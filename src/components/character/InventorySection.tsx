@@ -86,8 +86,13 @@ export const InventorySection = ({
                 ))}
             </div>
 
-            {/* ส่วนแสดง Materials แบบแยกสัดส่วน */}
-            <div className="flex gap-2 flex-wrap">
+            <h3 className="text-[10px] text-slate-400 uppercase font-bold mb-1">
+                Material
+            </h3>
+
+            {/* ส่วนแสดง Materials แบบจำกัดความสูงและเลื่อนดูได้ (ไม่ให้รกและบังปุ่ม Roll) */}
+            <div className="max-h-28 overflow-y-auto pr-1 flex gap-1.5 flex-wrap bg-slate-950/40 p-2 rounded border border-slate-800/80">
+
                 {Object.entries(player.materials).map(([id, amount]) => {
                     const itemData = itemLibrary.find(i => i.id === id);
                     const displayName = itemData ? itemData.name : id.replace(/_/g, ' ');
@@ -96,9 +101,10 @@ export const InventorySection = ({
                         <button
                             key={id}
                             onClick={() => setSelectedMaterial({ name: displayName, amount })}
-                            className="bg-slate-800 px-3 py-1 rounded border border-slate-700 text-[10px] text-emerald-400 font-bold flex items-center gap-2 hover:border-emerald-500 transition-colors"
+                            className="bg-slate-900 px-2 py-1 rounded border border-slate-800 text-[10px] text-emerald-400 font-bold flex items-center gap-1.5 hover:border-emerald-500 transition-colors"
                         >
-                            {displayName.toUpperCase()}: <span className="text-white">{amount}</span>
+                            <span className="text-slate-300">{displayName.toUpperCase()}</span>
+                            <span className="bg-emerald-500/20 text-emerald-300 px-1 rounded">{amount}</span>
                         </button>
                     );
                 })}
@@ -143,7 +149,7 @@ export const InventorySection = ({
             </div>
 
             {/* ช่อง Inventory */}
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-1">
                 <h3 className="text-[10px] text-slate-400 uppercase font-bold">
                     Inventory
                 </h3>
@@ -156,7 +162,8 @@ export const InventorySection = ({
             </div>
 
             {/* Grid แสดงรายการไอเทมในกระเป๋า */}
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1 content-start border border-slate-800 p-2 rounded bg-slate-950/50 min-h-[100px]">
+            <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1 content-start border border-slate-800 p-2 rounded bg-slate-950/50 min-h-25">
+
                 {filteredInventory.length === 0 ? (
                     <div className="w-full text-center py-8 text-xs text-slate-600 font-medium">
                         No items found
@@ -182,98 +189,109 @@ export const InventorySection = ({
                 <h3 className="font-bold text-slate-300 border-b border-slate-700 pb-1 mb-2 text-[12px]">EQUIPPED SKILLS</h3>
                 <div className="flex gap-2">
                     {/* Skill Slot 1 */}
-                    <div className={`relative flex-1 h-16 bg-slate-800 border-2 ${player.equippedItems.skill1 ? getRarityColor(player.equippedItems.skill1.rarity) : 'border-slate-700'} rounded flex flex-col items-center justify-center p-1 group`}>
+                    <div className={`relative flex-1 h-12 bg-slate-800 border-2 ${player.equippedItems.skill1 ? getRarityColor(player.equippedItems.skill1.rarity) : 'border-slate-700'} rounded flex items-center px-2 gap-2 group`}>
                         {player.equippedItems.skill1 ? (
                             <>
-                                <img src={player.equippedItems.skill1.icon} alt={player.equippedItems.skill1.name} className="w-6 h-6 object-contain" />
-                                <span className="text-emerald-400 text-[10px] truncate w-full text-center px-1">{player.equippedItems.skill1.name}</span>
-                                {player.equippedItems.skill1.skillCondition && (
-                                    <div className="flex gap-1 mt-0.5">
-                                        {player.equippedItems.skill1.skillCondition.damageType && (
-                                            <span className={`text-[8px] font-bold px-1 rounded ${player.equippedItems.skill1.skillCondition.damageType === 'magic' ? 'bg-purple-900/50 text-purple-300' : 'bg-orange-900/50 text-orange-300'}`}>
-                                                {player.equippedItems.skill1.skillCondition.damageType === 'magic' ? 'MAGIC' : 'PHYS'}
-                                            </span>
-                                        )}
-                                        {player.equippedItems.skill1.skillCondition.elementBonusAgainst && (
-                                            <span className="text-[8px] font-bold px-1 rounded bg-blue-900/50 text-blue-300">
-                                                +{player.equippedItems.skill1.skillCondition.elementBonusPercent}% VS {player.equippedItems.skill1.skillCondition.elementBonusAgainst.slice(0, 3)}
-                                            </span>
-                                        )}
-                                        {player.equippedItems.skill1.skillCondition.scalingStat && (
-                                            <span className="text-[8px] font-bold px-1 rounded bg-emerald-900/50 text-emerald-300">
-                                                {player.equippedItems.skill1.skillCondition.scalingStat.toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
+                                <img src={player.equippedItems.skill1.icon} alt={player.equippedItems.skill1.name} className="w-5 h-5 object-contain flex-shrink-0" />
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-emerald-400 text-[10px] truncate">{player.equippedItems.skill1.name}</span>
+                                    {player.equippedItems.skill1.skillCondition && (
+                                        <div className="flex gap-1 mt-0.5 flex-wrap">
+                                            {player.equippedItems.skill1.skillCondition.damageType && (
+                                                <span className={`text-[7px] font-bold px-1 rounded ${player.equippedItems.skill1.skillCondition.damageType === 'magic' ? 'bg-purple-900/50 text-purple-300' : 'bg-orange-900/50 text-orange-300'}`}>
+                                                    {player.equippedItems.skill1.skillCondition.damageType === 'magic' ? 'MAGIC' : 'PHYS'}
+                                                </span>
+                                            )}
+                                            {player.equippedItems.skill1.skillCondition.elementBonusAgainst && (
+                                                <span className="text-[7px] font-bold px-1 rounded bg-blue-900/50 text-blue-300">
+                                                    +{player.equippedItems.skill1.skillCondition.elementBonusPercent}% VS {player.equippedItems.skill1.skillCondition.elementBonusAgainst.slice(0, 3)}
+                                                </span>
+                                            )}
+                                            {player.equippedItems.skill1.skillCondition.scalingStat && (
+                                                <span className="text-[7px] font-bold px-1 rounded bg-emerald-900/50 text-emerald-300">
+                                                    {player.equippedItems.skill1.skillCondition.scalingStat.toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                                 <button onClick={() => unequipItem(player.equippedItems.skill1!)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10">X</button>
                             </>
-                        ) : <span className="text-[10px] text-slate-700">Slot 1</span>}
+                        ) : <span className="text-[10px] text-slate-700 w-full text-center">Slot 1</span>}
                     </div>
 
                     {/* Skill Slot 2 */}
-                    <div className={`relative flex-1 h-16 bg-slate-800 border-2 ${player.equippedItems.skill2 ? getRarityColor(player.equippedItems.skill2.rarity) : 'border-slate-700'} rounded flex flex-col items-center justify-center p-1 group`}>
+                    <div className={`relative flex-1 h-12 bg-slate-800 border-2 ${player.equippedItems.skill2 ? getRarityColor(player.equippedItems.skill2.rarity) : 'border-slate-700'} rounded flex items-center px-2 gap-2 group`}>
                         {player.equippedItems.skill2 ? (
                             <>
-                                <img src={player.equippedItems.skill2.icon} alt={player.equippedItems.skill2.name} className="w-6 h-6 object-contain" />
-                                <span className="text-emerald-400 text-[10px] truncate w-full text-center px-1">{player.equippedItems.skill2.name}</span>
-                                {player.equippedItems.skill2.skillCondition && (
-                                    <div className="flex gap-1 mt-0.5">
-                                        {player.equippedItems.skill2.skillCondition.damageType && (
-                                            <span className={`text-[8px] font-bold px-1 rounded ${player.equippedItems.skill2.skillCondition.damageType === 'magic' ? 'bg-purple-900/50 text-purple-300' : 'bg-orange-900/50 text-orange-300'}`}>
-                                                {player.equippedItems.skill2.skillCondition.damageType === 'magic' ? 'MAGIC' : 'PHYS'}
-                                            </span>
-                                        )}
-                                        {player.equippedItems.skill2.skillCondition.elementBonusAgainst && (
-                                            <span className="text-[8px] font-bold px-1 rounded bg-blue-900/50 text-blue-300">
-                                                +{player.equippedItems.skill2.skillCondition.elementBonusPercent}% VS {player.equippedItems.skill2.skillCondition.elementBonusAgainst.slice(0, 3)}
-                                            </span>
-                                        )}
-                                        {player.equippedItems.skill2.skillCondition.scalingStat && (
-                                            <span className="text-[8px] font-bold px-1 rounded bg-emerald-900/50 text-emerald-300">
-                                                {player.equippedItems.skill2.skillCondition.scalingStat.toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
+                                <img src={player.equippedItems.skill2.icon} alt={player.equippedItems.skill2.name} className="w-5 h-5 object-contain flex-shrink-0" />
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-emerald-400 text-[10px] truncate">{player.equippedItems.skill2.name}</span>
+                                    {player.equippedItems.skill2.skillCondition && (
+                                        <div className="flex gap-1 mt-0.5 flex-wrap">
+                                            {player.equippedItems.skill2.skillCondition.damageType && (
+                                                <span className={`text-[7px] font-bold px-1 rounded ${player.equippedItems.skill2.skillCondition.damageType === 'magic' ? 'bg-purple-900/50 text-purple-300' : 'bg-orange-900/50 text-orange-300'}`}>
+                                                    {player.equippedItems.skill2.skillCondition.damageType === 'magic' ? 'MAGIC' : 'PHYS'}
+                                                </span>
+                                            )}
+                                            {player.equippedItems.skill2.skillCondition.elementBonusAgainst && (
+                                                <span className="text-[7px] font-bold px-1 rounded bg-blue-900/50 text-blue-300">
+                                                    +{player.equippedItems.skill2.skillCondition.elementBonusPercent}% VS {player.equippedItems.skill2.skillCondition.elementBonusAgainst.slice(0, 3)}
+                                                </span>
+                                            )}
+                                            {player.equippedItems.skill2.skillCondition.scalingStat && (
+                                                <span className="text-[7px] font-bold px-1 rounded bg-emerald-900/50 text-emerald-300">
+                                                    {player.equippedItems.skill2.skillCondition.scalingStat.toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                                 <button onClick={() => unequipItem(player.equippedItems.skill2!)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10">X</button>
                             </>
-                        ) : <span className="text-[10px] text-slate-700">Slot 2</span>}
+                        ) : <span className="text-[10px] text-slate-700 w-full text-center">Slot 2</span>}
                     </div>
                 </div>
             </div>
 
-            {/* Epic Pity */}
-            <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold">
-                    <span className="text-purple-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                        EPIC PITY
-                    </span>
-                    <span className="text-slate-300 font-mono">{epicPity ?? 0} <span className="text-slate-500">/ {PITY_CONFIG.EPIC}</span></span>
+            {/* Pity Bars แบบ 2 คอลัมน์ (ซ้าย-ขวา) */}
+            <div className="grid grid-cols-2 gap-2">
+                {/* Epic Pity */}
+                <div className="space-y-1 bg-slate-950/40 p-2 rounded border border-purple-500/10">
+                    <div className="flex justify-between text-[10px] font-semibold">
+                        <span className="text-purple-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                            EPIC PITY
+                        </span>
+                        <span className="font-mono text-purple-400">
+                            {epicPity ?? 0}<span className="text-purple-400/70">/{PITY_CONFIG.EPIC}</span>
+                        </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-purple-500/20">
+                        <div
+                            className="h-full bg-gradient-to-r from-purple-800 to-purple-500 rounded-full transition-all duration-300 shadow-[0_0_6px_rgba(168,85,247,0.4)]"
+                            style={{ width: `${Math.min(100, ((epicPity ?? 0) / PITY_CONFIG.EPIC) * 100)}%` }}
+                        />
+                    </div>
                 </div>
-                <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-purple-500/20">
-                    <div
-                        className="h-full bg-gradient-to-r from-purple-800 to-purple-500 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                        style={{ width: `${Math.min(100, ((epicPity ?? 0) / PITY_CONFIG.EPIC) * 100)}%` }}
-                    />
-                </div>
-            </div>
 
-            {/* Legend Pity */}
-            <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold">
-                    <span className="text-amber-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                        LEGEND PITY
-                    </span>
-                    <span className="text-slate-300 font-mono">{legendPity ?? 0} <span className="text-slate-500">/ {PITY_CONFIG.LEGEND}</span></span>
-                </div>
-                <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-amber-500/20">
-                    <div
-                        className="h-full bg-gradient-to-r from-amber-800 to-amber-500 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                        style={{ width: `${Math.min(100, ((legendPity ?? 0) / PITY_CONFIG.LEGEND) * 100)}%` }}
-                    />
+                {/* Legend Pity */}
+                <div className="space-y-1 bg-slate-950/40 p-2 rounded border border-amber-500/10">
+                    <div className="flex justify-between text-[10px] font-semibold">
+                        <span className="text-amber-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            LEGEND PITY
+                        </span>
+                        <span className="font-mono text-amber-400">
+                            {legendPity ?? 0}<span className="text-amber-400/70">/{PITY_CONFIG.LEGEND}</span>
+                        </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden p-[1px] border border-amber-500/20">
+                        <div
+                            className="h-full bg-gradient-to-r from-amber-800 to-amber-500 rounded-full transition-all duration-300 shadow-[0_0_6px_rgba(245,158,11,0.4)]"
+                            style={{ width: `${Math.min(100, ((legendPity ?? 0) / PITY_CONFIG.LEGEND) * 100)}%` }}
+                        />
+                    </div>
                 </div>
             </div>
 

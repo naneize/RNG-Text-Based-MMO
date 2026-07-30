@@ -29,7 +29,7 @@ export function getBaseStatRanges(
 
     if (slot === 'weapon') {
         r.atk = withVariation(calcBase(heavy ? 25 : 18, rarityMult, itemLevel, 2));
-        r.hit = withVariation(calcBase(heavy ? 15 : 25, rarityMult, itemLevel, 1));
+        r.hit = withVariation(calcBase(heavy ? 10 : 20, rarityMult, itemLevel, 0.5));
         if (heavy) {
             r.str = withVariation(calcBase(3, rarityMult, itemLevel, 1));
         }
@@ -54,21 +54,31 @@ export function getBaseStatRanges(
 
 }
 
+
 /** ช่วงของ bonus stat ที่สุ่มมาจาก pool (ใช้ก็ต่อเมื่อ stat นั้นถูกเลือกมาจริง) */
 export function getBonusStatRange(
     statKey: keyof Stats,
     rarityMult: number,
     itemLevel: number
 ): StatRange {
-    const bonusMult = Math.sqrt(rarityMult) * (1 + Math.log10(itemLevel + 1));
     const isCrit = statKey === 'critRate' || statKey === 'critDmg';
-    const isHp = statKey === 'maxHp';
-    const minVal = isCrit ? 2 : isHp ? 100 : 10;
-    const rangeVal = isCrit ? 4 : isHp ? 150 : 30;
-    return {
-        min: Math.round(minVal * bonusMult),
-        max: Math.round((minVal + rangeVal) * bonusMult),
-    };
+
+    if (isCrit) {
+        const minVal = 2;
+        const maxVal = 6;
+        return {
+            min: Math.round(minVal * rarityMult),
+            max: Math.round(maxVal * rarityMult),
+        };
+    } else {
+        // ใช้สูตร getStat แบบเดียวกับตอนสุ่มจริง (สมมติฐาน base 8, scale 0.8)
+        const baseVal = Math.floor((8 + itemLevel * 0.15) * rarityMult);
+        const variation = Math.floor(baseVal * 0.20); // ±20% variation
+        return {
+            min: Math.max(1, baseVal - variation),
+            max: Math.max(1, baseVal + variation),
+        };
+    }
 }
 
 /** ช่วงของ elementBonus / raceBonus ผูกกับ tier เท่านั้น */

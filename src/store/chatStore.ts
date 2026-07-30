@@ -23,6 +23,7 @@ export interface ChatMessage {
     id: string;
     uid: string;
     username: string;
+    role?: 'developer' | 'player';
     text: string;
     item?: Item;
     playerStats?: {
@@ -68,8 +69,9 @@ export const useChatStore = create<ChatState>((set) => ({
             const sanitizedItem = item ? JSON.parse(JSON.stringify(item)) : null;
 
             await addDoc(collection(db, 'chats'), {
-                uid: userProfile.uid, // 🟢 ดึง uid จากโปรไฟล์แทน (รองรับทั้ง User จริงและ Guest)
+                uid: userProfile.uid,
                 username: userProfile.username,
+                role: userProfile.role || 'player', // 🟢 แนบยศไปด้วยทุกครั้งที่พิมพ์
                 text: text.trim(),
                 item: sanitizedItem,
                 reactions: {},
@@ -105,6 +107,7 @@ export const useChatStore = create<ChatState>((set) => ({
             await addDoc(collection(db, 'chats'), {
                 uid: userProfile.uid, // 🟢 ใช้ uid จากโปรไฟล์
                 username: userProfile.username,
+                role: userProfile.role || 'player',
                 text: `shared their character stats!`,
                 playerStats: sanitizedStats,
                 reactions: {},

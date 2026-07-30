@@ -263,7 +263,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         stats.atk = Math.max(1, baseAtk + atkVariation);
         baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1);
+        const baseHit = getStat(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
         const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
         stats.hit = Math.max(1, baseHit + hitVariation);
         baseStatsSet.add('hit');
@@ -379,16 +379,19 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         // 3. เพิ่มเข้า rolledStats เพื่อไม่ให้ซ้ำในรอบถัดไป
         rolledStats.add(stat);
 
-        // 4. คำนวณค่า
         const isCrit = stat === 'critRate' || stat === 'critDmg';
-        const isHp = stat === 'maxHp';
 
-        const minVal = isCrit ? 2 : (isHp ? 100 : 10);
-        const rangeVal = isCrit ? 4 : (isHp ? 150 : 30);
+        let val: number;
+        if (isCrit) {
+            val = Math.round((Math.random() * 4 + 2) * config.mult);
+        } else {
+            // ใช้ฟังก์ชัน getStat เข้ามาช่วยคำนวณฐานตาม itemLevel 
+            const baseBonusVal = getStat(8, config.mult, itemLevel, 0.15);
+            const varPerc = 0.20; // ความผันผวน ±20%
+            const variation = Math.floor(baseBonusVal * varPerc * (Math.random() * 2 - 1));
+            val = Math.max(1, baseBonusVal + variation);
+        }
 
-        const val = Math.round((Math.random() * rangeVal + minVal) * bonusMult);
-
-        // 5. อัปเดต Stats
         stats[stat] = (stats[stat] || 0) + val;
         statsLog.push({ statKey: stat, value: val });
 
@@ -513,7 +516,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         stats.atk = Math.max(1, baseAtk + atkVariation);
         baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 15 : 25, baseMult, itemLevel, 1);
+        const baseHit = getStat(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
         const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
         stats.hit = Math.max(1, baseHit + hitVariation);
         baseStatsSet.add('hit');
@@ -609,12 +612,17 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         rolledStats.add(stat);
 
         const isCrit = stat === 'critRate' || stat === 'critDmg';
-        const isHp = stat === 'maxHp';
 
-        const minVal = isCrit ? 2 : (isHp ? 100 : 10);
-        const rangeVal = isCrit ? 4 : (isHp ? 150 : 30);
-
-        const val = Math.round((Math.random() * rangeVal + minVal) * bonusMult);
+        let val: number;
+        if (isCrit) {
+            val = Math.round((Math.random() * 4 + 2) * config.mult);
+        } else {
+            // ใช้ฟังก์ชัน getStat เข้ามาช่วยคำนวณฐานตาม itemLevel 
+            const baseBonusVal = getStat(8, config.mult, itemLevel, 0.15);
+            const varPerc = 0.20; // ความผันผวน ±20%
+            const variation = Math.floor(baseBonusVal * varPerc * (Math.random() * 2 - 1));
+            val = Math.max(1, baseBonusVal + variation);
+        }
 
         stats[stat] = (stats[stat] || 0) + val;
         statsLog.push({ statKey: stat, value: val });

@@ -149,10 +149,18 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                 key={msg.id}
                                 className={`flex flex-col max-w-[80%] relative group ${isMyMessage ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                             >
-                                <div className="relative inline-block">
-                                    <span className="text-[10px] text-slate-400 mb-1 px-1">
-                                        {msg.username}
-                                    </span>
+                                <div className="relative inline-block flex items-center gap-1.5 mb-1 px-1 flex-wrap">
+                                    {/* 🚀 ซ่อนชื่อปกติ แล้วแสดงเฉพาะป้าย DEVELOPER เมื่อเป็นแอดมิน */}
+                                    {msg.role === 'developer' ? (
+                                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[12px] px-1.5 py-0.2 rounded font-mono font-bold tracking-wider shadow-sm">
+                                            DEV
+                                        </span>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 font-semibold">
+                                            {msg.username}
+                                        </span>
+                                    )}
+
                                     <span className="text-[10px] text-slate-600">•</span>
                                     <span className="text-[10px] text-slate-500" title={formatFullDate(msg.createdAt)}>
                                         {formatMessageTime(msg.createdAt)}
@@ -349,6 +357,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                         equipItem={() => { }}
                         onTransferClick={() => { }}
                         onSalvageClick={() => { }}
+                        onRerollClick={() => { }}
                         hideActions={true}
                     />
                 </div>

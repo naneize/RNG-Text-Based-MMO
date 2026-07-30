@@ -58,7 +58,7 @@ export const CharacterDashboard = () => {
                         className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
-                        World Chat
+                        WORLD CHAT
                     </button>
 
                     {/* ปุ่มเปิด Leaderboard */}
@@ -67,7 +67,7 @@ export const CharacterDashboard = () => {
                         className="w-full py-3 px-4 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
-                        Leaderboard
+                        LEADERBOARD
                     </button>
                 </div>
 

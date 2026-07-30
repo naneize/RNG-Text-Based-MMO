@@ -126,9 +126,31 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                         </div>
                     </div>
                 ) : result ? (
-                    <div className={`p-3.5 rounded-lg border text-xs space-y-1 ${result.success ? 'bg-emerald-950/40 border-emerald-600 text-emerald-300' : 'bg-red-950/40 border-red-600 text-red-300'}`}>
-                        {result.message}
-                    </div>
+                    (() => {
+                        const isPositive = result.message.includes('(+');
+                        const isNegative = result.message.includes('(-');
+
+                        return (
+                            <div className={`p-4 rounded-xl border text-xs space-y-2 shadow-lg ${isPositive
+                                ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200'
+                                : isNegative
+                                    ? 'bg-rose-950/30 border-rose-500/50 text-rose-200'
+                                    : 'bg-slate-900 border-slate-800 text-slate-200'
+                                }`}>
+                                <div className="font-bold flex items-center gap-1.5 text-sm">
+                                    <span>{isPositive ? 'Reroll Improved' : isNegative ? 'Reroll Decreased' : 'Reroll Complete'}</span>
+                                </div>
+                                <p className="font-mono text-slate-300 leading-relaxed bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                                    {result.message.split('(')[0]}
+                                    {result.message.includes('(') && (
+                                        <span className={`font-bold ${isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-slate-400'}`}>
+                                            ({result.message.split('(')[1]}
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        );
+                    })()
                 ) : (
                     <>
                         <div className="text-xs font-semibold text-slate-300">
