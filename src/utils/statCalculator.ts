@@ -8,22 +8,33 @@ export const STAT_CAPS: Partial<Record<keyof Stats, number>> = {
 };
 
 export function finalizeStats(rawStats: Stats): Stats {
-
     const stats = { ...rawStats };
 
     // 1. แปลง critRate ล้น -> critDmg
-    if ((stats.critRate || 0) > (STAT_CAPS.critRate as number)) {
-        const excess = stats.critRate - (STAT_CAPS.critRate as number);
-        stats.critDmg = (stats.critDmg || 0) + excess * 0.3;
-        stats.critRate = STAT_CAPS.critRate as number;
+    // (สมมติ Cap CritRate คือ 95)
+    const critRateCap = STAT_CAPS.critRate as number;
+    if ((stats.critRate || 0) > critRateCap) {
+        const excess = stats.critRate - critRateCap;
+        // ปรับอัตราส่วนแปลงให้คุ้มค่าขึ้น เช่น ล้น 1% ได้ Crit DMG +1 หรือ +1.5
+        const bonusCritDmg = Math.round(excess * 1.0);
+
+        stats.critDmg = (stats.critDmg || 0) + bonusCritDmg;
+        stats.critRate = critRateCap;
     }
 
     // 2. แปลง critDmg ล้น -> ATK และ HIT
-    if ((stats.critDmg || 0) > (STAT_CAPS.critDmg as number)) {
-        const excess = stats.critDmg - (STAT_CAPS.critDmg as number);
-        stats.atk = (stats.atk || 0) + (excess * 0.2);
-        stats.hit = (stats.hit || 0) + (excess * 0.1);
-        stats.critDmg = STAT_CAPS.critDmg as number;
+    // (สมมติ Cap CritDmg คือ 700)
+    const critDmgCap = STAT_CAPS.critDmg as number;
+    if ((stats.critDmg || 0) > critDmgCap) {
+        const excess = stats.critDmg - critDmgCap;
+
+        // ใช้ Math.round() ป้องกันเลขทศนิยมยุ่งเหยิง
+        const bonusAtk = Math.round(excess * 0.2);
+        const bonusHit = Math.round(excess * 0.1);
+
+        stats.atk = (stats.atk || 0) + bonusAtk;
+        stats.hit = (stats.hit || 0) + bonusHit;
+        stats.critDmg = critDmgCap;
     }
 
     // 3. แปลง flee ล้น -> RES

@@ -34,25 +34,26 @@ export function getBaseStatRanges(
             r.str = withVariation(calcBase(3, rarityMult, itemLevel, 1));
         }
     } else if (['necklace', 'ring'].includes(slot)) {
-        r.atk = withVariation(calcBase(12, rarityMult, itemLevel, 1));
-        r.hit = withVariation(calcBase(7, rarityMult, itemLevel, 0.5));
+        r.atk = withVariation(calcBase(8, rarityMult, itemLevel, 1));
+        r.hit = withVariation(calcBase(5, rarityMult, itemLevel, 0.5));
     } else if (slot === 'helm') {
-        r.def = withVariation(calcBase(15, rarityMult, itemLevel, 2));
-        r.maxHp = withVariation(calcBase(100, rarityMult, itemLevel, 10));
+        r.def = withVariation(calcBase(10, rarityMult, itemLevel, 1.5));
+        r.maxHp = withVariation(calcBase(80, rarityMult, itemLevel, 10));
         r.hit = withVariation(calcBase(7, rarityMult, itemLevel, 0.5));
     } else if (['armor', 'shield'].includes(slot)) {
-        r.def = withVariation(calcBase(15, rarityMult, itemLevel, 2));
-        r.maxHp = withVariation(calcBase(100, rarityMult, itemLevel, 3));
+        r.def = withVariation(calcBase(15, rarityMult, itemLevel, 1.5));
+        r.maxHp = withVariation(calcBase(100, rarityMult, itemLevel, 2));
     } else if (slot === 'boots') {
-        r.def = withVariation(calcBase(10, rarityMult, itemLevel, 1));
-        r.flee = withVariation(calcBase(10, rarityMult, itemLevel, 1));
+        r.def = withVariation(calcBase(6, rarityMult, itemLevel, 0.5));
+        r.flee = withVariation(calcBase(6, rarityMult, itemLevel, 0.2));
     } else if (slot === 'cloak') {
-        r.int = withVariation(calcBase(12, rarityMult, itemLevel, 1));
-        r.def = withVariation(calcBase(10, rarityMult, itemLevel, 1));
+        r.int = withVariation(calcBase(8, rarityMult, itemLevel, 1));
+        r.def = withVariation(calcBase(5, rarityMult, itemLevel, 0.5));
     }
     return r;
 
 }
+
 
 
 /** ช่วงของ bonus stat ที่สุ่มมาจาก pool (ใช้ก็ต่อเมื่อ stat นั้นถูกเลือกมาจริง) */
@@ -61,24 +62,29 @@ export function getBonusStatRange(
     rarityMult: number,
     itemLevel: number
 ): StatRange {
-    const isCrit = statKey === 'critRate' || statKey === 'critDmg';
+    if (statKey === 'critRate') {
+        // Crit Rate: ล้อตามสูตรสุ่มจริง (8% ถึง 15%)
+        return { min: 8, max: 15 };
+    }
 
-    if (isCrit) {
-        const minVal = 2;
-        const maxVal = 6;
+    if (statKey === 'critDmg') {
+        const baseCritDmg = Math.floor(itemLevel * 0.05) + 30;
         return {
-            min: Math.round(minVal * rarityMult),
-            max: Math.round(maxVal * rarityMult),
-        };
-    } else {
-        // ใช้สูตร getStat แบบเดียวกับตอนสุ่มจริง (สมมติฐาน base 8, scale 0.8)
-        const baseVal = Math.floor((8 + itemLevel * 0.15) * rarityMult);
-        const variation = Math.floor(baseVal * 0.20); // ±20% variation
-        return {
-            min: Math.max(1, baseVal - variation),
-            max: Math.max(1, baseVal + variation),
+            min: Math.max(10, baseCritDmg - 15),
+            max: Math.max(10, baseCritDmg + 15),
         };
     }
+
+    // สเตตัสโบนัสอื่นๆ ใช้สูตรคำนวณที่ขยายเรนจ์ให้กว้างขึ้น
+    const baseVal = Math.floor((8 + itemLevel * 0.15) * rarityMult);
+
+    // 🟢 เปลี่ยนจาก 0.20 เป็น 0.35 (หรือ 35%) เพื่อให้เรนจ์ Min-Max กว้างและสอดคล้องกับตอนสุ่มจริง
+    const spread = Math.floor(baseVal * 0.35);
+
+    return {
+        min: Math.max(1, baseVal - spread),
+        max: Math.max(1, baseVal + spread),
+    };
 }
 
 /** ช่วงของ elementBonus / raceBonus ผูกกับ tier เท่านั้น */

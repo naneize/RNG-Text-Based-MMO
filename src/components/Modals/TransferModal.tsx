@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Item } from '../../types/game';
 import { useGameStore } from '../../store/gameStore';
-import { TRANSFER_COSTS } from '../../data/transferConfig';
+import { TRANSFER_COSTS, PROTECTION_COSTS } from '../../data/transferConfig';
 
 interface TransferModalProps {
     itemA: Item | null;
@@ -11,7 +11,7 @@ interface TransferModalProps {
     getRarityColor: (rarity: string) => string;
 }
 
-export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, getRarityColor }: TransferModalProps) => {
+export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: TransferModalProps) => {
     const [step, setStep] = useState<'SELECT_STAT_A' | 'SELECT_TARGET_B' | 'SELECT_STAT_B'>('SELECT_STAT_A');
     const [selectedStatA, setSelectedStatA] = useState<string | null>(null);
     const [targetItemB, setTargetItemB] = useState<Item | null>(null);
@@ -24,11 +24,13 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [protectA, setProtectA] = useState(false);
+    const [protectB, setProtectB] = useState(false);
 
     const costA = (itemA && TRANSFER_COSTS[itemA.rarity.toLowerCase() as keyof typeof TRANSFER_COSTS])
         ? TRANSFER_COSTS[itemA.rarity.toLowerCase() as keyof typeof TRANSFER_COSTS]
         : null;
-    const costB = targetItemB ? TRANSFER_COSTS[targetItemB.rarity.toLowerCase()] : null;
+    const costB = targetItemB ? TRANSFER_COSTS[targetItemB.rarity.toLowerCase() as keyof typeof TRANSFER_COSTS] : null;
     const actualSuccessRate = (costA && costB) ? Math.min(costA.successRate, costB.successRate) : 0;
 
     const activeMaterialsConfig = (costA && costB)
@@ -40,6 +42,19 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
         return playerHas >= req.amount;
     }) : false;
 
+    // ✅ ต้นทุน protection ของแต่ละฝั่ง (ว่างเปล่าถ้าไม่ได้ติ๊ก)
+    const protectionCostA = protectA && itemA ? (PROTECTION_COSTS[itemA.rarity.toLowerCase()] || []) : [];
+    const protectionCostB = protectB && targetItemB ? (PROTECTION_COSTS[targetItemB.rarity.toLowerCase()] || []) : [];
+
+    // ✅ เช็คว่าพอทั้ง transfer cost + protection cost รวมกันไหม
+    const hasEnoughWithProtection = (() => {
+        if (!activeMaterialsConfig) return false;
+        const combined = new Map<string, number>();
+        [...activeMaterialsConfig.materials, ...protectionCostA, ...protectionCostB].forEach(m => {
+            combined.set(m.id, (combined.get(m.id) || 0) + m.amount);
+        });
+        return Array.from(combined.entries()).every(([id, amount]) => (materials[id] || 0) >= amount);
+    })();
 
     const [resultModal, setResultModal] = useState<{
         isOpen: boolean;
@@ -54,6 +69,8 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
         removedValB: number;
         gainedStatB?: string;
         gainedValB?: number;
+        protectedA?: boolean; // ✅ เพิ่ม
+        protectedB?: boolean; // ✅ เพิ่ม
         message: string;
     } | null>(null);
 
@@ -106,7 +123,8 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                 setIsProcessing(false);
                 setProgress(0);
 
-                const result = useGameStore.getState().transferStats(itemA, targetItemB, selectedStatA, selectedStatB);
+                // ✅ ส่ง protectA, protectB เข้าไปด้วย
+                const result = useGameStore.getState().transferStats(itemA, targetItemB, selectedStatA!, selectedStatB!, protectA, protectB);
 
                 if (!result || !result.success) {
                     setResultModal({
@@ -118,23 +136,25 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                         removedValA: result?.removedValA ?? 0,
                         removedStatB: result?.removedStatB || selectedStatB!,
                         removedValB: result?.removedValB ?? 0,
+                        protectedA: result?.protectedA ?? false, // ✅ เพิ่ม
+                        protectedB: result?.protectedB ?? false, // ✅ เพิ่ม
                         message: result?.message || "Transfer failed"
                     });
                 } else {
                     setResultModal({
                         isOpen: true,
                         isSuccess: true,
-                        itemAName: result.itemAName,
-                        itemBName: result.itemBName,
-                        removedStatA: result.removedStatA,
-                        removedValA: result.removedValA,
-                        gainedStatA: result.gainedStatA,
-                        gainedValA: result.gainedValA,
-                        removedStatB: result.removedStatB,
-                        removedValB: result.removedValB,
-                        gainedStatB: result.gainedStatB,
-                        gainedValB: result.gainedValB,
-                        message: result.message
+                        itemAName: result.itemAName ?? "",
+                        itemBName: result.itemBName ?? "",
+                        removedStatA: result.removedStatA ?? "",
+                        removedValA: result.removedValA ?? 0,
+                        gainedStatA: result.gainedStatA ?? "",
+                        gainedValA: result.gainedValA ?? 0,
+                        removedStatB: result.removedStatB ?? "",
+                        removedValB: result.removedValB ?? 0,
+                        gainedStatB: result.gainedStatB ?? "",
+                        gainedValB: result.gainedValB ?? 0,
+                        message: result.message ?? ""
                     });
                 }
             }
@@ -163,9 +183,14 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
 
         // เช็คว่าชื่อไอเทมมีคำที่พิมพ์ไหม หรือมี Stat ไหนที่ชื่อตรงกับคำที่พิมพ์ไหม
         const matchesText = item.name.toLowerCase().includes(keyword) ||
-            Object.keys(item.stats).some(stat => stat.toLowerCase().includes(keyword) && item.stats[stat] > 0);
+            Object.keys(item.stats).some(stat =>
+                stat.toLowerCase().includes(keyword) &&
+                (item.stats[stat as keyof typeof item.stats] ?? 0) > 0
+            );
 
-        const matchesStat = statSearchFilter === 'ALL' || (item.stats[statSearchFilter] && item.stats[statSearchFilter] > 0);
+        const matchesStat = statSearchFilter === 'ALL' ||
+            ((item.stats[statSearchFilter as keyof typeof item.stats] ?? 0) > 0);
+
 
         return matchesText && matchesStat;
     }).sort((a, b) => {
@@ -175,8 +200,7 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
 
     return (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-60 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border border-violet-700 p-6 rounded-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                {/* Header ที่โชว์ชื่อ */}
+            <div className="bg-slate-900 border border-violet-700 p-6 rounded-2xl w-full max-w-3xl" onClick={e => e.stopPropagation()}>                {/* Header ที่โชว์ชื่อ */}
                 <h2 className="text-white font-bold text-lg mb-6 text-center uppercase tracking-wider">
                     {getHeaderText()}
                 </h2>
@@ -278,10 +302,10 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
 
                 {/* STEP 3: เลือก Stat ปลายทางใน B (จัดระเบียบเป็น Grid 2 คอลัมน์) */}
                 {step === 'SELECT_STAT_B' && targetItemB && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
 
                         {/* 📌 คอลัมน์ซ้าย: Success Rate, Materials & Warning */}
-                        <div className="space-y-3">
+                        <div className="space-y-3 md:col-span-2">
                             {/* ส่วนแสดงค่าสถานะ (Success Rate & Materials Cost List) */}
                             <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 space-y-2 text-xs">
                                 <div className="flex justify-between items-center">
@@ -292,55 +316,126 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                                 </div>
 
                                 <div>
-                                    <span className="text-slate-400 block mb-1 font-medium">Required Materials :</span>
+                                    <span className="text-slate-400 block mb-1 font-medium">
+                                        Required Materials {(protectA || protectB) && <span className="text-sky-400">(Includes protection cost)</span>} :
+                                    </span>
                                     <div className="grid grid-cols-1 gap-1">
-                                        {activeMaterialsConfig?.materials.map(req => {
-                                            const currentAmount = materials[req.id] || 0;
-                                            const isEnoughMat = currentAmount >= req.amount;
-                                            return (
-                                                <div key={req.id} className="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800/50">
-                                                    <span className="text-slate-300 uppercase text-[11px] font-mono tracking-wider">
-                                                        {req.id.replace('_', ' ')}
-                                                    </span>
-                                                    <span className={`font-bold font-mono text-[11px] ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
-                                                        {currentAmount} / {req.amount}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
+                                        {(() => {
+                                            // ✅ รวม transfer cost + protection cost ของทั้ง 2 ฝั่งเป็น map เดียว (บวกจำนวนถ้า id ซ้ำกัน)
+                                            const combined = new Map<string, number>();
+                                            (activeMaterialsConfig?.materials || []).forEach(m => {
+                                                combined.set(m.id, (combined.get(m.id) || 0) + m.amount);
+                                            });
+                                            protectionCostA.forEach(m => {
+                                                combined.set(m.id, (combined.get(m.id) || 0) + m.amount);
+                                            });
+                                            protectionCostB.forEach(m => {
+                                                combined.set(m.id, (combined.get(m.id) || 0) + m.amount);
+                                            });
+
+                                            return Array.from(combined.entries()).map(([id, amount]) => {
+                                                const currentAmount = materials[id] || 0;
+                                                const isEnoughMat = currentAmount >= amount;
+                                                // เช็คว่า material นี้มาจาก protection ล้วนๆ (ไม่ได้อยู่ใน transfer cost เดิม) เพื่อ badge แยกให้เห็นชัด
+                                                const isFromProtectionOnly = !(activeMaterialsConfig?.materials || []).some(m => m.id === id);
+
+                                                return (
+                                                    <div key={id} className="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800/50">
+                                                        <span className="text-slate-300 uppercase text-[11px] font-mono tracking-wider flex items-center gap-1">
+                                                            {id.replace('_', ' ')}
+                                                            {isFromProtectionOnly && <span className="text-sky-400 text-[9px]"></span>}
+                                                        </span>
+                                                        <span className={`font-bold font-mono text-[11px] ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
+                                                            {currentAmount} / {amount}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* กล่อง Warning */}
+                            {/* ✅ กล่อง Protection ใหม่ */}
+                            <div className="bg-slate-800/60 p-3 rounded-lg border border-sky-700/40 space-y-2">
+                                <div className="text-xs font-semibold text-sky-300 mb-1">Protection (Optional):</div>
+
+                                <label className="flex items-start justify-between text-xs cursor-pointer gap-2">
+                                    <span className="text-slate-300 flex-1">
+                                        Protect {itemA.name}
+                                        <span className="block text-slate-500 text-[10px] mt-0.5">
+                                            {protectionCostA.length > 0
+                                                ? protectionCostA.map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')
+                                                : (PROTECTION_COSTS[itemA.rarity.toLowerCase()] || []).map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')}
+                                        </span>
+                                    </span>
+                                    <input type="checkbox" checked={protectA} onChange={(e) => setProtectA(e.target.checked)} className="mt-1" />
+                                </label>
+
+                                <label className="flex items-start justify-between text-xs cursor-pointer gap-2">
+                                    <span className="text-slate-300 flex-1">
+                                        Protect {targetItemB.name}
+                                        <span className="block text-slate-500 text-[10px] mt-0.5">
+                                            {protectionCostB.length > 0
+                                                ? protectionCostB.map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')
+                                                : (PROTECTION_COSTS[targetItemB.rarity.toLowerCase()] || []).map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')}
+                                        </span>
+                                    </span>
+                                    <input type="checkbox" checked={protectB} onChange={(e) => setProtectB(e.target.checked)} className="mt-1" />
+                                </label>
+                            </div>
+
+                            {/* กล่อง Warning — ✅ แก้ให้ตอบสนองตาม protectA/protectB */}
                             <div className="bg-red-950/20 p-3 rounded-lg border border-red-500/30 flex items-start gap-2.5 shadow-lg">
                                 <div className="text-amber-500 text-base flex-shrink-0 mt-0.5">⚠️</div>
                                 <div className="text-[11px] text-slate-300 leading-relaxed flex-1">
                                     <strong className="text-red-400 uppercase tracking-wide mr-1">
                                         Critical Warning:
                                     </strong>
-                                    If the transfer{" "}
-                                    <span className="text-red-400 font-bold underline">fails</span>,
-                                    both{" "}
-                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
-                                        {selectedStatA ? selectedStatA.toUpperCase() : 'STAT A'}
-                                    </strong>{" "}
-                                    and{" "}
-                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
-                                        {selectedStatB ? selectedStatB.toUpperCase() : 'SELECTED STAT'}
-                                    </strong>{" "}
-                                    will be{" "}
-                                    <strong className="text-red-400 font-bold uppercase">
-                                        lost permanently
-                                    </strong>.
+                                    If the transfer <span className="text-red-400 font-bold underline">fails</span>,{" "}
+                                    {protectA && protectB ? (
+                                        <span className="text-emerald-400 font-bold">
+                                            Both stats have been protected. No stats will be lost despite the failed transfer.
+                                        </span>
+                                    ) : (
+                                        <>
+                                            {!protectA && (
+                                                <>
+                                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                                        {selectedStatA ? selectedStatA.toUpperCase() : 'STAT A'}
+                                                    </strong>{" "}
+                                                    will be <strong className="text-red-400 font-bold uppercase">lost permanently</strong>.{" "}
+                                                </>
+                                            )}
+                                            {protectA && (
+                                                <span className="text-emerald-400 font-semibold">
+                                                    {selectedStatA?.toUpperCase()} is protected.{" "}
+                                                </span>
+                                            )}
+                                            {!protectB && (
+                                                <>
+                                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                                        {selectedStatB ? selectedStatB.toUpperCase() : 'SELECTED STAT'}
+                                                    </strong>{" "}
+                                                    will be <strong className="text-red-400 font-bold uppercase">lost permanently</strong>.
+                                                </>
+                                            )}
+                                            {protectB && (
+                                                <span className="text-emerald-400 font-semibold">
+                                                    {selectedStatB?.toUpperCase()} is protected.
+                                                </span>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </div>
+
+
                         </div>
 
                         {/* 📌 คอลัมน์ขวา: รายการ Stat ปลายทาง (จัดเรียงเป็น 2 คอลัมน์ย่อยด้านใน) */}
-                        <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-700 flex flex-col h-full">
-                            <span className="text-xs text-slate-400 font-medium mb-2 block">Select Stat to Overwrite :</span>
-                            <div className="grid grid-cols-2 gap-2 content-start">
+                        <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-700 flex flex-col h-full md:col-span-3">                            <span className="text-xs text-slate-400 font-medium mb-2 block">Select Stat to Overwrite :</span>
+                            <div className="grid grid-cols-3 gap-2 content-start">
                                 {Object.entries(targetItemB.stats).filter(([_, v]) => v > 0).map(([stat, val]) => (
                                     <button key={stat}
                                         onClick={() => setSelectedStatB(stat)}
@@ -361,11 +456,11 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                 {/* ปุ่ม Action ด้านล่าง */}
                 <button
                     onClick={handleBottomAction}
-                    disabled={(step === 'SELECT_STAT_B' && (!selectedStatB || !hasEnough)) || isProcessing}
+                    disabled={(step === 'SELECT_STAT_B' && (!selectedStatB || !hasEnoughWithProtection)) || isProcessing}
                     className={`w-full mt-6 py-3 rounded-lg font-bold transition-all relative overflow-hidden ${isProcessing
                         ? 'bg-slate-800 text-slate-400 cursor-wait'
                         : (step === 'SELECT_STAT_B' && selectedStatB
-                            ? (hasEnough ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-900 text-red-300 cursor-not-allowed')
+                            ? (hasEnoughWithProtection ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-900 text-red-300 cursor-not-allowed')
                             : 'bg-slate-700 hover:bg-slate-600 text-slate-400'
                         )
                         }`}
@@ -380,7 +475,7 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                         </>
                     ) : (
                         <span>
-                            {!hasEnough && step === 'SELECT_STAT_B' ? 'INSUFFICIENT MATERIALS' :
+                            {!hasEnoughWithProtection && step === 'SELECT_STAT_B' ? 'INSUFFICIENT MATERIALS' :
                                 (step === 'SELECT_STAT_A' ? 'CLOSE' :
                                     step === 'SELECT_TARGET_B' ? 'BACK' :
                                         selectedStatB ? 'CONFIRM TRANSFER' : 'SELECT STAT TO OVERWRITE')}
@@ -401,13 +496,20 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                         <div className="text-slate-300 space-y-3 mb-6">
                             <p className="font-semibold text-base">{resultModal.message}</p>
 
-                            {/* ฝั่ง Item A */}
+                            {/* ฝั่ง Item A — ✅ แก้ให้เช็ค protectedA */}
                             <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 space-y-1">
                                 <div className="text-xs text-slate-400 mb-1 truncate">{resultModal.itemAName}</div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="uppercase font-bold text-red-400">- {resultModal.removedStatA}</span>
-                                    <span className="text-slate-500 line-through">{resultModal.removedValA}</span>
-                                </div>
+                                {!resultModal.isSuccess && resultModal.protectedA ? (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="uppercase font-bold text-sky-400">{resultModal.removedStatA} PROTECTED</span>
+                                        <span className="text-sky-400">{resultModal.removedValA}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="uppercase font-bold text-red-400">- {resultModal.removedStatA}</span>
+                                        <span className="text-slate-500 line-through">{resultModal.removedValA}</span>
+                                    </div>
+                                )}
                                 {resultModal.isSuccess && (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="uppercase font-bold text-emerald-400">+ {resultModal.gainedStatA}</span>
@@ -416,13 +518,20 @@ export const TransferModal = ({ itemA, inventory, onClose, onConfirmTransfer, ge
                                 )}
                             </div>
 
-                            {/* ฝั่ง Item B */}
+                            {/* ฝั่ง Item B — ✅ แก้ให้เช็ค protectedB */}
                             <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 space-y-1">
                                 <div className="text-xs text-slate-400 mb-1 truncate">{resultModal.itemBName}</div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="uppercase font-bold text-red-400">- {resultModal.removedStatB}</span>
-                                    <span className="text-slate-500 line-through">{resultModal.removedValB}</span>
-                                </div>
+                                {!resultModal.isSuccess && resultModal.protectedB ? (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="uppercase font-bold text-sky-400">{resultModal.removedStatB} PROTECTED</span>
+                                        <span className="text-sky-400">{resultModal.removedValB}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="uppercase font-bold text-red-400">- {resultModal.removedStatB}</span>
+                                        <span className="text-slate-500 line-through">{resultModal.removedValB}</span>
+                                    </div>
+                                )}
                                 {resultModal.isSuccess && (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="uppercase font-bold text-emerald-400">+ {resultModal.gainedStatB}</span>

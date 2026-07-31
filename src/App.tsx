@@ -36,7 +36,10 @@ function App() {
 
   // 🟢 3. เพิ่ม Heartbeat Effect สำหรับอัปเดตสถานะออนไลน์ของผู้เล่นคนนี้
   useEffect(() => {
-    if (!userProfile?.uid) return;
+    // 🛑 ป้องกันเด็ดขาด: ถ้าไม่มี userProfile, ไม่มี uid, หรือไม่มี Firebase User จริง (นับเป็น Guest ทั้งหมด) ให้ตัดจบทันที
+    if (!userProfile?.uid || !user || userProfile.uid.startsWith('guest_')) {
+      return;
+    }
 
     const userPresenceRef = doc(db, 'presences', userProfile.uid);
 
@@ -45,23 +48,20 @@ function App() {
         await setDoc(userPresenceRef, {
           uid: userProfile.uid,
           username: userProfile.username || 'ผู้เล่น',
-          lastActive: Date.now(), // 🟢 บันทึกเป็นตัวเลขมิลลิวินาทีตรงๆ ไปเลย จะได้เทียบง่ายและแม่นยำ
+          lastActive: Date.now(),
         }, { merge: true });
       } catch (err) {
         console.error("Error updating presence:", err);
       }
     };
 
-    // อัปเดตทันทีเมื่อเข้าเกม
     updatePresence();
-
-    // วนลูปอัปเดตทุกๆ 20 วินาที เพื่อบอกเซิร์ฟเวอร์ว่ายังออนไลน์อยู่
     const interval = setInterval(updatePresence, 20000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [userProfile]);
+  }, [userProfile, user]); // เพิ่ม user เข้าไปใน dependency array เพื่อให้เช็คสถานะการล็อกอินที่แท้จริง
 
   if (isLoading) {
     return (

@@ -198,6 +198,11 @@ export const useChatStore = create<ChatState>((set) => ({
 
             snapshot.forEach((doc) => {
                 const data = doc.data();
+
+                if (data.uid && data.uid.startsWith('guest_')) {
+                    return;
+                }
+
                 let lastActiveTime = 0;
 
                 // 🟢 รองรับเวลาได้ทุกรูปแบบ (กันข้อมูลเก่าตีกัน)

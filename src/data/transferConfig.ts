@@ -39,3 +39,23 @@ export const TRANSFER_COSTS = {
         ]
     }
 };
+
+// ต้นทุนแร่สำหรับ "ป้องกัน" ไม่ให้ stat หายตอน transfer ล้มเหลว — จ่ายเพิ่มต่างหากจากต้นทุน transfer ปกติ
+// ตั้งใจใช้ ancient_rune เป็นแกนหลักตั้งแต่ rare ขึ้นไป เพราะปัจจุบันแทบไม่มีใครใช้แร่ตัวนี้เลยนอกจาก legendary transfer
+export const PROTECTION_COSTS: Record<string, { id: string; amount: number }[]> = {
+    common: [
+        { id: 'leather', amount: 15 },
+    ],
+    rare: [
+        { id: 'mithril', amount: 20 },
+        { id: 'ancient_rune', amount: 3 },
+    ],
+    epic: [
+        { id: 'dragon_scale', amount: 5 },
+        { id: 'ancient_rune', amount: 8 },
+    ],
+    legendary: [
+        { id: 'ancient_rune', amount: 20 },
+        { id: 'primordial_essence', amount: 5 },
+    ],
+};

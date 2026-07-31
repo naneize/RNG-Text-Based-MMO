@@ -9,8 +9,13 @@ interface StatLimitModalProps {
 export const StatLimitModal = ({ onClose }: StatLimitModalProps) => {
 
     const conversionRules = [
-        { name: 'CRIT RATE', cap: STAT_CAPS.critRate, effect: 'Excess converted to +0.3% Crit Dmg per 1.' },
+        // ปรับเรตให้ตรงกับโค้ดจริงที่ใช้คูณ `1.0`
+        { name: 'CRIT RATE', cap: STAT_CAPS.critRate, effect: 'Excess converted to +1 Crit Dmg per 1.' },
+
+        // อันนี้ตรงตามโค้ดเดิม (excess * 0.2 ATK และ * 0.1 HIT)
         { name: 'CRIT DMG', cap: STAT_CAPS.critDmg, effect: 'Excess converted to +0.2 ATK and +0.1 HIT.' },
+
+        // เพิ่มกฎของ FLEE และ HIT ให้ครบตามที่คุณตั้งใจไว้ในระบบแปลงค่าส่วนเกิน
         { name: 'FLEE', cap: STAT_CAPS.flee, effect: 'Excess converted to +0.2 RES and +0.1 M.RES.' },
         { name: 'HIT', cap: STAT_CAPS.hit, effect: 'Excess converted to +0.2 ATK.' },
     ];

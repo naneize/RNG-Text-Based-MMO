@@ -240,6 +240,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     };
 
     const VARIATION_PERCENT = 0.05;
+
     const getStatWithVariation = (base: number, rarityMult: number, level: number, levelScale: number) => {
         const baseVal = getStat(base, rarityMult, level, levelScale);
         const variation = Math.floor(baseVal * VARIATION_PERCENT * (Math.random() * 2 - 1));
@@ -277,41 +278,41 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
-        stats.atk = getStatWithVariation(12, baseMult, itemLevel, 1);
-        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
+        stats.atk = getStatWithVariation(8, baseMult, itemLevel, 1);
+        stats.hit = getStatWithVariation(5, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
         baseStatsSet.add('atk');
         baseStatsSet.add('hit');
     }
     else if (template.slot === 'helm') {
-        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 10);
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1.5);
+        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 10);
         stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');
         baseStatsSet.add('hit');
     }
     else if (['armor', 'shield'].includes(template.slot)) {
-        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 3);
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 1.5);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 2);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');
     }
     else if (template.slot === 'boots') {
-        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
-        stats.flee = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(6, baseMult, itemLevel, 0.5);
+        stats.flee = getStatWithVariation(6, baseMult, itemLevel, 0.2);
         baseStatsSet.add('def');
         baseStatsSet.add('flee');
     }
     else if (template.slot === 'cloak') {
-        stats.int = getStatWithVariation(12, baseMult, itemLevel, 1);
-        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.int = getStatWithVariation(8, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(5, baseMult, itemLevel, 0.5);
         baseStatsSet.add('int');
         baseStatsSet.add('def');
     }
 
     // DEBUG: ดูว่า stat ไหนถูก lock เป็นค่าเบสไปแล้วบ้างสำหรับไอเทมชิ้นนี้
     const baseStatsValues = Array.from(baseStatsSet).reduce((acc, statKey) => {
-        acc[statKey] = stats[statKey];
+        acc[statKey] = stats[statKey]!;
         return acc;
     }, {} as Record<string, number>);
 
@@ -350,7 +351,6 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     const [minBonus, maxBonus] = config.count;
     const numBonus = Math.floor(Math.random() * (maxBonus - minBonus + 1)) + minBonus;
 
-    const bonusMult = Math.sqrt(config.mult) * (1 + Math.log10(itemLevel + 1));
 
     // สุ่ม Bonus แบบถ่วงน้ำหนัก
     // ลูปสุ่ม Bonus ที่ปลอดภัยและกระจายตัวดี
@@ -366,7 +366,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         }
 
         // 2. เลือก Pool ที่จะสุ่ม
-        let isRareRoll = Math.random() < 0.04;
+        let isRareRoll = Math.random() < 0.01;
 
         // ถ้าสุ่มได้ Rare แต่ไม่มี Stat เหลือใน Rare Pool แล้ว ให้ไปสุ่ม Common แทน
         if (isRareRoll && availableRare.length === 0) isRareRoll = false;
@@ -383,33 +383,35 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
         let val: number;
         if (isCrit) {
-            val = Math.round((Math.random() * 4 + 2) * config.mult);
+            if (stat === 'critRate') {
+                // Crit Rate: สุ่มชิ้นละ 8% ถึง 15% (รวม 8 ชิ้น มีโอกาสไต่ไปถึง ~95% พอดีกับ Cap)
+                val = Math.floor(Math.random() * 8) + 8;
+            } else {
+                // ฐานกลางอยู่ที่ 30, ผันผวน ±15 (จะได้เรนจ์ประมาณ 15 - 45 ต่อชิ้น)
+                const baseCritDmg = Math.floor(itemLevel * 0.05) + 30;
+                const variation = Math.floor(Math.random() * 31) - 15; // ผันผวน ±15
+                val = Math.max(10, baseCritDmg + variation);
+            }
         } else {
-            // ใช้ฟังก์ชัน getStat เข้ามาช่วยคำนวณฐานตาม itemLevel 
-            const baseBonusVal = getStat(8, config.mult, itemLevel, 0.15);
-            const varPerc = 0.20; // ความผันผวน ±20%
-            const variation = Math.floor(baseBonusVal * varPerc * (Math.random() * 2 - 1));
+            // สเตตัสปกติ: ใช้สูตรฐานเดียวกัน แต่ขยายช่วงความผันผวน (Spread) ให้กว้างขึ้นตามเลเวล
+            const baseBonusVal = Math.floor((8 + itemLevel * 0.15) * config.mult);
+
+            // 🟢 เปลี่ยนจาก 0.20 (20%) เป็น 0.35 หรือ 0.40 (35-40%) เพื่อให้เรนจ์กว้างและลุ้นสนุกขึ้น
+            const spread = Math.floor(baseBonusVal * 0.35);
+            const variation = Math.floor(Math.random() * (spread * 2 + 1)) - spread;
+
             val = Math.max(1, baseBonusVal + variation);
         }
 
         stats[stat] = (stats[stat] || 0) + val;
         statsLog.push({ statKey: stat, value: val });
 
-        // DEBUG: log ทุก bonus stat ที่สุ่มได้ พร้อมเช็คว่าไปชนกับ baseStatsSet ไหม (ไม่ควรชนอีกต่อไปหลังแก้)
         console.log(
-            `[generateRandomItem] bonus #${i}: stat=${stat} val=${val}`,
-            baseStatsSet.has(stat) ? '⚠️ ชนกับ base stat! (ไม่ควรเกิดขึ้นแล้วหลัง fix)' : '(ok, แยกจาก base)'
+            `[generateRandomItemSpecific] bonus #${i}: stat=${stat} val=${val}`,
+            baseStatsSet.has(stat) ? '⚠️ ชนกับ base stat!' : '(ok)'
         );
     }
 
-    /* ปิดการใช้งาน Clamp รอบสุดท้าย เพื่อให้สเตตัสวิ่งไปตามจริงได้เต็มที่
-    for (const stat of PERCENT_STATS) {
-        if (stats[stat] !== undefined) {
-            const cap = STAT_CAPS[stat] ?? 100;
-            stats[stat] = Math.min(stats[stat], cap);
-        }
-    }
-    */
 
     // DEBUG: สรุปผลลัพธ์สุดท้ายของไอเทมชิ้นนี้
     console.log(`[generateRandomItem] ผลลัพธ์สุดท้าย:`, {
@@ -468,9 +470,9 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         rarity: config.name as any,
         stats,
         statsLog,
-        itemLevel,        // <--- เพิ่มข้อมูลเลเวลลงไป
-        elementBonus,
-        raceBonus,
+        itemLevel,
+        elementBonus: elementBonus as { type: "Fire" | "Water" | "Earth" | "Wind" | "Dark" | "Holy" | "Neutral"; value: number; } | undefined,
+        raceBonus: raceBonus as { type: "DemiHuman" | "Plant" | "Brute" | "Undead" | "Demon" | "Angel" | "Dragon"; value: number; } | undefined,
         type: 'equipment'
     };
 }; // generateRandomItemSpecific
@@ -530,34 +532,34 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
-        stats.atk = getStatWithVariation(12, baseMult, itemLevel, 1);
-        stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
+        stats.atk = getStatWithVariation(8, baseMult, itemLevel, 1);
+        stats.hit = getStatWithVariation(5, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
         baseStatsSet.add('atk');
         baseStatsSet.add('hit');
     }
     else if (template.slot === 'helm') {
-        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 10);
+        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1.5);
+        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 10);
         stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');
         baseStatsSet.add('hit');
     }
     else if (['armor', 'shield'].includes(template.slot)) {
-        stats.def = getStatWithVariation(15, baseMult, itemLevel, 2);
-        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 3);
+        stats.def = getStatWithVariation(15, baseMult, itemLevel, 1.5);
+        stats.maxHp = getStatWithVariation(100, baseMult, itemLevel, 2);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');
     }
     else if (template.slot === 'boots') {
-        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
-        stats.flee = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(6, baseMult, itemLevel, 0.5);
+        stats.flee = getStatWithVariation(6, baseMult, itemLevel, 0.2);
         baseStatsSet.add('def');
         baseStatsSet.add('flee');
     }
     else if (template.slot === 'cloak') {
-        stats.int = getStatWithVariation(12, baseMult, itemLevel, 1);
-        stats.def = getStatWithVariation(10, baseMult, itemLevel, 1);
+        stats.int = getStatWithVariation(8, baseMult, itemLevel, 1);
+        stats.def = getStatWithVariation(5, baseMult, itemLevel, 0.5);
         baseStatsSet.add('int');
         baseStatsSet.add('def');
     }
@@ -591,7 +593,6 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     const [minBonus, maxBonus] = config.count;
     const numBonus = Math.floor(Math.random() * (maxBonus - minBonus + 1)) + minBonus;
 
-    const bonusMult = Math.sqrt(config.mult) * (1 + Math.log10(itemLevel + 1));
 
     for (let i = 0; i < numBonus; i++) {
         const availableCommon = COMMON_POOL.filter(s => !rolledStats.has(s));
@@ -602,7 +603,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
             break;
         }
 
-        let isRareRoll = Math.random() < 0.04;
+        let isRareRoll = Math.random() < 0.01;
         if (isRareRoll && availableRare.length === 0) isRareRoll = false;
         if (!isRareRoll && availableCommon.length === 0) isRareRoll = true;
 
@@ -615,12 +616,23 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
 
         let val: number;
         if (isCrit) {
-            val = Math.round((Math.random() * 4 + 2) * config.mult);
+            if (stat === 'critRate') {
+                // Crit Rate: สุ่มชิ้นละ 8% ถึง 15% (รวม 8 ชิ้น มีโอกาสไต่ไปถึง ~95% พอดีกับ Cap)
+                val = Math.floor(Math.random() * 8) + 8;
+            } else {
+                // ฐานกลางอยู่ที่ 30, ผันผวน ±15 (จะได้เรนจ์ประมาณ 15 - 45 ต่อชิ้น)
+                const baseCritDmg = Math.floor(itemLevel * 0.05) + 30;
+                const variation = Math.floor(Math.random() * 31) - 15; // ผันผวน ±15
+                val = Math.max(10, baseCritDmg + variation);
+            }
         } else {
-            // ใช้ฟังก์ชัน getStat เข้ามาช่วยคำนวณฐานตาม itemLevel 
-            const baseBonusVal = getStat(8, config.mult, itemLevel, 0.15);
-            const varPerc = 0.20; // ความผันผวน ±20%
-            const variation = Math.floor(baseBonusVal * varPerc * (Math.random() * 2 - 1));
+            // สเตตัสปกติ: ใช้สูตรฐานเดียวกัน แต่ขยายช่วงความผันผวน (Spread) ให้กว้างขึ้นตามเลเวล
+            const baseBonusVal = Math.floor((8 + itemLevel * 0.15) * config.mult);
+
+            // 🟢 เปลี่ยนจาก 0.20 (20%) เป็น 0.35 หรือ 0.40 (35-40%) เพื่อให้เรนจ์กว้างและลุ้นสนุกขึ้น
+            const spread = Math.floor(baseBonusVal * 0.35);
+            const variation = Math.floor(Math.random() * (spread * 2 + 1)) - spread;
+
             val = Math.max(1, baseBonusVal + variation);
         }
 
@@ -633,14 +645,6 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         );
     }
 
-    /* ปิดการใช้งาน Clamp รอบสุดท้าย เพื่อให้สเตตัสวิ่งไปตามจริงได้เต็มที่
-     for (const stat of PERCENT_STATS) {
-         if (stats[stat] !== undefined) {
-             const cap = STAT_CAPS[stat] ?? 100;
-             stats[stat] = Math.min(stats[stat], cap);
-         }
-     }
-     */
 
     console.log(`[generateRandomItemSpecific] ผลลัพธ์สุดท้าย:`, {
         name: `${config.name} ${template.name}`,

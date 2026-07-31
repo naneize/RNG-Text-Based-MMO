@@ -4,7 +4,7 @@ import type { Player, Stats, Item, CollectionRecord, Boss } from '../types/game'
 import { PITY_CONFIG } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { getTotalStats } from '../utils/combat';
-import { TRANSFER_COSTS } from '../data/transferConfig';
+import { TRANSFER_COSTS, PROTECTION_COSTS } from '../data/transferConfig';
 import { calculateBossDrops } from '../utils/dropLogic';
 import { useAchievementStore } from './achievementStore';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -67,6 +67,8 @@ interface TransferResult {
     gainedValA?: number;
     removedStatB?: string;
     removedValB?: number;
+    protectedA?: boolean;
+    protectedB?: boolean;
     gainedStatB?: string;
     gainedValB?: number;
     message: string;
@@ -91,7 +93,7 @@ interface GameState {
     collectionData: CollectionRecord[];
     unlockItem: (item: Item) => void;
     updateInventoryItem: (uid: string, updatedItem: Item) => void;
-    transferStats: (itemA: any, itemB: any, statA: string, statB: string) => TransferResult;
+    transferStats: (itemA: any, itemB: any, statA: string, statB: string, protectA?: boolean, protectB?: boolean) => TransferResult;
     handleBossDefeated: (boss: Boss) => { type: 'item' | 'material', id: string, amount?: number, itemData?: Item }[];
     isProcessingReward: boolean; // เพิ่มตัวนี้
     setProcessingReward: (status: boolean) => void;
@@ -641,12 +643,12 @@ export const useGameStore = create<GameState>()(
                 }
             })),
 
-            transferStats: (itemAInput, itemBInput, statA, statB) => {
+            transferStats: (itemAInput, itemBInput, statA, statB, protectA = false, protectB = false) => {
                 const itemA = get().player.inventory.find(i => i.uid === itemAInput.uid);
                 const itemB = get().player.inventory.find(i => i.uid === itemBInput.uid);
 
                 if (!itemA || !itemB) {
-                    return { success: false, message: "ไม่พบไอเทม" };
+                    return { success: false, message: "Item not found" };
                 }
 
                 const costA = TRANSFER_COSTS[itemA.rarity.toLowerCase() as keyof typeof TRANSFER_COSTS];
@@ -656,43 +658,55 @@ export const useGameStore = create<GameState>()(
                     return { success: false, message: "Invalid rarity configuration" };
                 }
 
-                // เลือกเรตวัตถุดิบตัวที่ใช้จำนวนรวมชิ้นแรกเยอะกว่า (หรือจะเลือกจากไอเทมที่มีเกรดสูงกว่าก็ได้)
                 const selectedCost = (costA.materials[0]?.amount || 0) >= (costB.materials[0]?.amount || 0) ? costA : costB;
                 const finalSuccessRate = Math.min(costA.successRate, costB.successRate);
 
+                const protectionCostA = protectA ? (PROTECTION_COSTS[itemA.rarity.toLowerCase()] || []) : [];
+                const protectionCostB = protectB ? (PROTECTION_COSTS[itemB.rarity.toLowerCase()] || []) : [];
+
+                const allRequiredMaterials = new Map<string, number>();
+                [...selectedCost.materials, ...protectionCostA, ...protectionCostB].forEach(mat => {
+                    allRequiredMaterials.set(mat.id, (allRequiredMaterials.get(mat.id) || 0) + mat.amount);
+                });
+
                 const currentMaterials = get().player.materials || {};
 
-                // 1. ตรวจสอบว่าวัตถุดิบแต่ละชนิดพอไหม
-                for (const mat of selectedCost.materials) {
-                    const playerHas = currentMaterials[mat.id] || 0;
-                    if (playerHas < mat.amount) {
+                for (const [matId, amount] of allRequiredMaterials.entries()) {
+                    const playerHas = currentMaterials[matId] || 0;
+                    if (playerHas < amount) {
                         return {
                             success: false,
-                            message: `ต้องการ ${mat.id} เพิ่มอีก ${mat.amount - playerHas} ชิ้น (มีอยู่ ${playerHas})`
+                            message: `Need ${matId} more ${amount - playerHas} pieces (have ${playerHas})`
                         };
                     }
                 }
 
-                // 2. หักวัตถุดิบทั้งหมดออกจากตัวผู้เล่น
-                for (const mat of selectedCost.materials) {
-                    get().removeMaterial(mat.id, mat.amount);
+                for (const [matId, amount] of allRequiredMaterials.entries()) {
+                    get().removeMaterial(matId, amount);
                 }
 
                 const isSuccess = Math.random() * 100 <= finalSuccessRate;
-                const valA = itemA.stats[statA] || 0;
-                const valB = itemB.stats[statB] || 0;
+
+                // ✅ cast statA/statB เป็น keyof Stats ตรงนี้ครั้งเดียว ใช้ตัวแปรนี้ต่อทั้งฟังก์ชัน
+                const statAKey = statA as keyof Stats;
+                const statBKey = statB as keyof Stats;
+
+                const valA = itemA.stats[statAKey] || 0;
+                const valB = itemB.stats[statBKey] || 0;
 
                 if (isSuccess) {
                     const newStatsA = { ...itemA.stats };
-                    delete newStatsA[statA];
-                    newStatsA[statB] = valB;
+                    delete newStatsA[statAKey];
+                    newStatsA[statBKey] = valB;
 
                     const newStatsB = { ...itemB.stats };
-                    delete newStatsB[statB];
-                    newStatsB[statA] = valA;
+                    delete newStatsB[statBKey];
+                    newStatsB[statAKey] = valA;
 
                     get().updateInventoryItem(itemA.uid, { ...itemA, stats: newStatsA });
                     get().updateInventoryItem(itemB.uid, { ...itemB, stats: newStatsB });
+
+                    get().saveUserData();
 
                     return {
                         success: true,
@@ -706,26 +720,36 @@ export const useGameStore = create<GameState>()(
                     };
                 } else {
                     const newStatsA = { ...itemA.stats };
-                    delete newStatsA[statA];
+                    if (!protectA) {
+                        delete newStatsA[statAKey];
+                    }
+
                     const newStatsB = { ...itemB.stats };
-                    delete newStatsB[statB];
+                    if (!protectB) {
+                        delete newStatsB[statBKey];
+                    }
 
                     get().updateInventoryItem(itemA.uid, { ...itemA, stats: newStatsA });
                     get().updateInventoryItem(itemB.uid, { ...itemB, stats: newStatsB });
 
                     get().saveUserData();
 
+                    const protectedMsgParts: string[] = [];
+                    if (protectA) protectedMsgParts.push(itemA.name);
+                    if (protectB) protectedMsgParts.push(itemB.name);
                     return {
                         success: false,
                         itemAName: itemA.name,
                         itemBName: itemB.name,
                         removedStatA: statA, removedValA: valA,
                         removedStatB: statB, removedValB: valB,
-                        message: "Transfer failed! Both stats lost."
+                        protectedA: protectA,
+                        protectedB: protectB,
+                        message: protectedMsgParts.length > 0
+                            ? `Transfer failed! ${protectedMsgParts.join(' and ')} ${protectedMsgParts.length > 1 ? 'were' : 'was'} protected against loss.`
+                            : "Transfer failed! Both stats lost."
                     };
-
                 }
-
             },
 
             rerollStat: (uid, statKey, useSafetyLock = false, useUniversal = false) => {
