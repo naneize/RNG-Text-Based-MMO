@@ -45,6 +45,8 @@ export const CharacterDashboard = () => {
 
                 {/* 📌 คอลัมน์ที่ 1: CharacterStats + ปุ่ม World Chat (รวมอยู่ในกล่องเดียว) */}
                 <div className="flex flex-col gap-4">
+
+
                     <CharacterStats
                         player={player}
                         finalStats={finalStats}
@@ -152,7 +154,7 @@ export const CharacterDashboard = () => {
                     getRarityColor={getRarityColor}
                     onClose={() => setIsTransferModalOpen(false)}
                     onConfirmTransfer={(itemB, statA, statB) => {
-                        transferItemStat(itemA!, itemB, statA, statB);
+                        transferItemStat(itemA!, itemB, statA as keyof typeof player.baseStats, statB as keyof typeof player.baseStats);
                         setIsTransferModalOpen(false);
                     }}
                 />

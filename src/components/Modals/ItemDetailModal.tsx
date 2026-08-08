@@ -361,7 +361,7 @@ export const ItemDetailModal = ({
                                     }}
                                     className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2 rounded font-bold text-white transition-all text-xs cursor-pointer shadow-lg shadow-indigo-900/30"
                                 >
-                                    REROLL
+                                    STATS REROLL
                                 </button>
                             )}
 

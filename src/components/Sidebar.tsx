@@ -2,14 +2,15 @@ import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 
 
-type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace';
+type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
     const { user, userProfile, logout } = useAuthStore();
 
-    const menu: { id: PageType; label: string }[] = [
+    const menu: { id: PageType; label: string; icon?: string }[] = [
         { id: 'home', label: 'Main' },
+        { id: 'profile', label: 'Player Profile' },
         { id: 'adventure', label: 'Boss Lobby' },
         { id: 'collection', label: 'Items Collection' },
         { id: 'achievement', label: 'Achievements' },
@@ -27,11 +28,12 @@ export const Sidebar = () => {
                 <button
                     key={item.id}
                     onClick={() => setCurrentPage(item.id)}
-                    className={`p-3 rounded-lg text-left transition ${currentPage === item.id
+                    className={`p-3 rounded-lg text-left transition flex items-center gap-3 ${currentPage === item.id
                         ? 'bg-emerald-900 text-white'
                         : 'text-slate-400 hover:bg-slate-900'
                         }`}
                 >
+                    {item.icon && <span className="text-lg">{item.icon}</span>}
                     {item.label}
                 </button>
             ))}

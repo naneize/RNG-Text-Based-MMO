@@ -27,6 +27,8 @@ interface UserProfile {
     email: string | null;
     username: string;
     role?: 'developer' | 'player'; // 🟢 เพิ่มฟิลด์เก็บยศ
+    equippedTitle?: string;          // 🟢 ฉายาที่กำลังใส่
+    unlockedTitles?: string[];       // 🟢 รายการฉายาที่มีทั้งหมด
 }
 
 interface AuthState {
@@ -40,6 +42,8 @@ interface AuthState {
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
     clearError: () => void;
+
+    setEquippedTitle: (title: string) => void;
 
     checkUsernameExists: (username: string) => Promise<boolean>;
     saveUsername: (username: string) => Promise<boolean>;
@@ -224,6 +228,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ error: 'Failed to save username. Please try again.' });
             return false;
         }
+    },
+
+    setEquippedTitle: async (title: string) => {
+        // อัปเดตลง State และบันทึกลง Database (เช่น Firebase Firestore) ตามโครงสร้างโปรเจกต์ของคุณ
+        set((state) => ({
+            userProfile: state.userProfile ? { ...state.userProfile, equippedTitle: title } : null
+        }));
     }
 }));
 

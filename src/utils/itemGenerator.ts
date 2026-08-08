@@ -1,6 +1,7 @@
 import type { Item, Stats, WeaponType } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { SKILL_POOL } from '../data/skills';
+import { rollWithVariation } from './statVariation';
 
 
 export const rarityConfig = [
@@ -239,12 +240,8 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         return Math.floor((base + (level * levelScale)) * rarityMult);
     };
 
-    const VARIATION_PERCENT = 0.05;
-
     const getStatWithVariation = (base: number, rarityMult: number, level: number, levelScale: number) => {
-        const baseVal = getStat(base, rarityMult, level, levelScale);
-        const variation = Math.floor(baseVal * VARIATION_PERCENT * (Math.random() * 2 - 1));
-        return Math.max(1, baseVal + variation);
+        return rollWithVariation(getStat(base, rarityMult, level, levelScale));
     };
 
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
@@ -252,29 +249,19 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
     // นำมาปรับใช้กับทุก Slot
     if (template.slot === 'weapon') {
-        // เช็คว่าใช่อาวุธสองมือ หรือ ระยะไกลไหม
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
         const isRanged = template.weaponType ? rangedTypes.includes(template.weaponType) : false;
         const isHeavyOrRanged = isTwoHanded || isRanged;
 
-        // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
-        const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
-        const variationPercent = 0.05; // ±5% ปรับได้ตามต้องการ
-        const atkVariation = Math.floor(baseAtk * variationPercent * (Math.random() * 2 - 1));
-        stats.atk = Math.max(1, baseAtk + atkVariation);
+        stats.atk = getStatWithVariation(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
         baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
-        const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
-        stats.hit = Math.max(1, baseHit + hitVariation);
+        stats.hit = getStatWithVariation(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
         baseStatsSet.add('hit');
 
-        // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(3, baseMult, itemLevel, 1);
-            const strVariation = Math.floor(baseStr * variationPercent * (Math.random() * 2 - 1));
-            stats.str = Math.max(1, baseStr + strVariation);
-            baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
+            stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
+            baseStatsSet.add('str');
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
@@ -325,12 +312,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
 
     const isWeapon = template.slot === 'weapon';
 
-    /* const STAT_CAPS: Record<string, number> = {
-        critRate: 10,  // จำกัดไว้ไม่เกิน 50%
-        critDmg: 80,  // จำกัดไว้ไม่เกิน 200%
-        hit: 80,
-        flee: 80
-    }; */
+
 
 
 
@@ -495,40 +477,27 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         return Math.floor((base + (level * levelScale)) * rarityMult);
     };
 
-    const VARIATION_PERCENT = 0.05;
     const getStatWithVariation = (base: number, rarityMult: number, level: number, levelScale: number) => {
-        const baseVal = getStat(base, rarityMult, level, levelScale);
-        const variation = Math.floor(baseVal * VARIATION_PERCENT * (Math.random() * 2 - 1));
-        return Math.max(1, baseVal + variation);
+        return rollWithVariation(getStat(base, rarityMult, level, levelScale));
     };
 
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
     if (template.slot === 'weapon') {
-        // เช็คว่าใช่อาวุธสองมือ หรือ ระยะไกลไหม
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
         const isRanged = template.weaponType ? rangedTypes.includes(template.weaponType) : false;
         const isHeavyOrRanged = isTwoHanded || isRanged;
 
-        // คำนวณ Stat พื้นฐาน (ได้ค่ากลางออกมา)
-        const baseAtk = getStat(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
-        const variationPercent = 0.05; // ±5% ปรับได้ตามต้องการ
-        const atkVariation = Math.floor(baseAtk * variationPercent * (Math.random() * 2 - 1));
-        stats.atk = Math.max(1, baseAtk + atkVariation);
+        stats.atk = getStatWithVariation(isHeavyOrRanged ? 25 : 18, baseMult, itemLevel, 2);
         baseStatsSet.add('atk');
 
-        const baseHit = getStat(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
-        const hitVariation = Math.floor(baseHit * variationPercent * (Math.random() * 2 - 1));
-        stats.hit = Math.max(1, baseHit + hitVariation);
+        stats.hit = getStatWithVariation(isHeavyOrRanged ? 10 : 20, baseMult, itemLevel, 0.5);
         baseStatsSet.add('hit');
 
-        // ให้โบนัสสเตตตามประเภท
         if (isTwoHanded || isRanged) {
-            const baseStr = getStat(3, baseMult, itemLevel, 1);
-            const strVariation = Math.floor(baseStr * variationPercent * (Math.random() * 2 - 1));
-            stats.str = Math.max(1, baseStr + strVariation);
-            baseStatsSet.add('str'); // FIX: lock str ไว้ เฉพาะกรณีอาวุธหนัก/ระยะไกล
+            stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
+            baseStatsSet.add('str');
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
@@ -571,12 +540,6 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
 
     const isWeapon = template.slot === 'weapon';
 
-    /* const STAT_CAPS: Record<string, number> = {
-        critRate: 10,  // จำกัดไว้ไม่เกิน 50%
-        critDmg: 80,  // จำกัดไว้ไม่เกิน 200%
-        hit: 80,
-        flee: 80
-    }; */
 
 
     // ===== FIX #2: เพิ่มเงื่อนไข !baseStatsSet.has(s) =====

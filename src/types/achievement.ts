@@ -17,4 +17,5 @@ export interface AchievementProgress extends AchievementTemplate {
     isClaimed?: boolean;    // <--- เพิ่มบรรทัดนี้ เพื่อเช็กสถานะการกดรับรางวัล
     progress?: number;      // สำหรับเควสต์สะสม (ถ้ามี)
     maxProgress?: number;
+    rewardTitle?: string;   // <--- เพิ่มบรรทัดนี้ เพื่อรับฉายาที่จะได้รับ
 }

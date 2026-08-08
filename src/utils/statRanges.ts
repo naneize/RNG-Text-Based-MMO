@@ -1,5 +1,6 @@
 import type { Stats, WeaponType } from '../types/game';
 import { rarityConfig } from './itemGenerator';
+import { getVariationRange } from './statVariation';
 
 export type StatRange = { min: number; max: number };
 
@@ -9,11 +10,7 @@ const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 const calcBase = (base: number, mult: number, level: number, scale: number) =>
     Math.floor((base + level * scale) * mult);
 
-const VARIATION_PERCENT = 0.05;
-const withVariation = (baseVal: number): StatRange => {
-    const v = Math.max(1, Math.floor(baseVal * VARIATION_PERCENT));
-    return { min: Math.max(1, baseVal - v), max: Math.max(1, baseVal + v) };
-};
+const withVariation = getVariationRange;
 
 /** ช่วงของ base stat ตาม slot — บาง stat แกว่ง ±5, บาง stat ค่าตายตัว (ไม่มีสุ่ม) */
 export function getBaseStatRanges(

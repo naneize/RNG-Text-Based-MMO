@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Item } from '../../types/game';
+import type { Item, Stats } from '../../types/game';
 import { useGameStore } from '../../store/gameStore';
 import { TRANSFER_COSTS, PROTECTION_COSTS } from '../../data/transferConfig';
 
@@ -7,7 +7,7 @@ interface TransferModalProps {
     itemA: Item | null;
     inventory: Item[];
     onClose: () => void;
-    onConfirmTransfer: (itemB: Item, statA: string, statB: string) => void;
+    onConfirmTransfer: (itemB: Item, statA: keyof Stats, statB: keyof Stats) => void;
     getRarityColor: (rarity: string) => string;
 }
 

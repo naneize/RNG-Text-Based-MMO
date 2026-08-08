@@ -16,6 +16,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'First Step into Adventure',
         description: 'Obtain your first equipment item.',
         category: 'collection',
+        rewardTitle: 'First Adventurer',
         reward: [
             { type: 'material', itemId: 'iron_ore', amount: 10 },
             { type: 'material', itemId: 'steel_ingot', amount: 5 }
@@ -28,6 +29,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Common Collector',
         description: 'Equip at least 5 Common items.',
         category: 'collection',
+        rewardTitle: 'Novice Collector',
         reward: [
             { type: 'material', itemId: 'iron_ore', amount: 10 },
             { type: 'material', itemId: 'leather', amount: 5 }
@@ -39,7 +41,8 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'OVERKILL_1000',
         title: 'Overkill',
         description: 'Deal over 1,000 damage in a single turn.',
-        category: 'combat', // อยู่ในหมวดหมู่ต่อสู้
+        category: 'combat',
+        rewardTitle: 'The Destroyer', // 🟢 ฉายาที่จะได้รับ
         reward: [
             { type: 'material', itemId: 'steel_ingot', amount: 10 },
             { type: 'material', itemId: 'magic_dust', amount: 5 }
@@ -168,6 +171,17 @@ export const useAchievementStore = create<AchievementState>()(
                 }
             }
         }),
-        { name: 'player-achievements' }
+        {
+            name: 'achievement-storage', // ชื่อ key เดิม
+
+            // 👉 เอาโค้ด 3 บรรทัดนี้มาแปะไว้ตรงนี้ครับ
+            version: 2,
+            migrate: (persistedState: any, version: number) => {
+                if (version < 2) {
+                    return { achievements: INITIAL_ACHIEVEMENTS };
+                }
+                return persistedState;
+            },
+        }
     )
 );

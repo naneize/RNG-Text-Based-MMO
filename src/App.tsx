@@ -13,12 +13,18 @@ import { UsernameSetupPage } from './pages/UsernameSetupPage';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { MarketplacePage } from './components/Marketplace/MarketplacePage';
+import { PlayerProfile } from './components/character/PlayerProfile';
+import { getTotalStatsWithBreakdown } from './utils/combat';
 import './utils/statSimulator';
+import { useCharacterDashboard } from './hooks/useCharacterDashboard';
 
 function App() {
-  const { currentPage, collectionData } = useGameStore();
+  const { currentPage, collectionData, player } = useGameStore();
   const { user, userProfile, isLoading } = useAuthStore();
   const { subscribeToChat } = useChatStore();
+
+  const { finalStats, breakdown: statBreakdown } = getTotalStatsWithBreakdown(player);
+  const { totalOpens } = useCharacterDashboard();
 
   useEffect(() => {
     initAuthListener();
@@ -85,6 +91,7 @@ function App() {
 
       <main className="flex-1 p-8">
         {currentPage === 'home' && <CharacterDashboard />}
+        {currentPage === 'profile' && <PlayerProfile player={player} finalStats={finalStats} statBreakdown={statBreakdown} totalOpens={totalOpens} />}
         {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}
         {currentPage === 'adventure' && <AdventurePage />}
         {currentPage === 'achievement' && <AchievementPage />}
