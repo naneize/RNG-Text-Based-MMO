@@ -18,7 +18,7 @@ const getRandomValue = (min: number, max: number): number => {
 };
 
 // 🟢 ปรับได้: item level ของไอเทมที่ดรอปจากบอส
-// ขั้นต่ำ = level บอสพอดี (ห้ามต่ำกว่า) / สูงสุด = level บอส x 5
+// ขั้นต่ำ = level บอสพอดี (ห้ามต่ำกว่า) / สูงสุด = level บอส x 3
 const MIN_ITEM_LEVEL_MULT = 1;
 const MAX_ITEM_LEVEL_MULT = 5;
 
@@ -28,36 +28,6 @@ const getRandomItemLevel = (bossLevel: number): number => {
     return getRandomValue(minLevel, maxLevel);
 };
 
-// หมายเหตุ: ฟังก์ชันนี้ยังไม่มีจุดไหนใน calculateBossDrops เรียกใช้
-// ถ้ามีไฟล์อื่น (เช่น RewardModal) เรียกอยู่ ให้คงไว้ ถ้าไม่มีที่ไหนใช้เลยพิจารณาลบทิ้งได้
-export const spawnItem = (
-    itemId: string,
-    statRanges: Partial<Record<keyof Stats, { min: number; max: number }>>,
-    rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary'
-): Item | null => {
-    const template = itemLibrary.find(i => i.id === itemId);
-    if (!template) {
-        console.warn(`[spawnItem] ไม่พบ template สำหรับ itemId="${itemId}" ใน itemLibrary`);
-        return null;
-    }
-
-    const generatedStats: Partial<Stats> = {};
-    for (const [key, range] of Object.entries(statRanges)) {
-        generatedStats[key as keyof Stats] = getRandomValue(range.min, range.max);
-    }
-
-    return {
-        ...template,
-        uid: crypto.randomUUID(),
-        rarity,
-        stats: generatedStats,
-        statsLog: Object.entries(generatedStats).map(([key, val]) => ({
-            statKey: key as keyof Stats,
-            value: val as number
-        })),
-        type: 'equipment'
-    };
-};
 
 export const calculateBossDrops = (boss: Boss, bossLevel: number = 1): RewardResult[] => {
     const rewards: RewardResult[] = [];

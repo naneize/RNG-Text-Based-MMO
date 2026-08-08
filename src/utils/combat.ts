@@ -1,5 +1,5 @@
 import type { Player, Stats } from '../types/game';
-import { calculateSynergyStats } from './synergy';
+import { calculateSynergyStats, SYNERGY_CONFIG } from './synergy';
 import type { Boss } from '../types/game';
 import { finalizeStats, STAT_CAPS } from './statCalculator';
 
@@ -40,33 +40,35 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
     });
 
     // 2. คำนวณ Synergy
-    const equippedSkill = player.equippedItems['skill'] || undefined;
+    const equippedSkill = player.equippedItems.skill1 || player.equippedItems.skill2 || undefined;
     const synergyStats = calculateSynergyStats(rawTotal, equippedSkill);
 
-    // ดึงค่า LUK ทั้งหมดมารวมคำนวณ Synergy Breakdown (Crit Rate, Crit Dmg, Hit, Flee จาก LUK)
-    const totalLuk = synergyStats.luk || rawTotal.luk || 0;
-    if (totalLuk > 0) {
-        const critRateBonus = Math.floor(totalLuk / 20) * 1;
-        if (critRateBonus > 0) addSource('critRate', 'LUK -> CRIT RATE', critRateBonus);
+    SYNERGY_CONFIG.forEach(cfg => {
+        const statVal = rawTotal[cfg.statKey] || 0;
+        if (statVal > 0) {
+            const bonusVal = Math.floor((statVal / cfg.divisor) * cfg.bonus);
+            if (bonusVal > 0) {
+                // ตั้งชื่อ label ตาม config เช่น "LUK -> CRIT RATE" หรือ "LUK -> CRIT DMG"
+                const label = `${(cfg.statKey as string).toUpperCase()} -> ${cfg.label}`;
+                addSource(cfg.targetKey, label, bonusVal);
+            }
+        }
+    });
 
-        const critDmgBonus = Math.floor(totalLuk / 20) * 1;
-        if (critDmgBonus > 0) addSource('critDmg', 'LUK -> CRIT DMG', critDmgBonus);
-    }
-
+    // จัดการ Synergy สเตตัสอื่นๆ ที่ไม่ใช่กรณีพิเศษ (เช่น STR, AGI, INT ฯลฯ ถ้ามี)
     Object.keys(synergyStats).forEach(key => {
         const statKey = key as keyof Stats;
         const baseVal = rawTotal[statKey] || 0;
         const synVal = synergyStats[statKey] || 0;
         const diff = synVal - baseVal;
 
-        // 📌 เพิ่มเงื่อนไขยกเว้น skillPower ไม่ให้เอา Synergy Bonus มาบวกซ้ำซ้อนกับ Effect Power ของสกิล
+        // เช็คว่าไม่ใช่สเตตัสที่จัดการไปแล้วข้างบน และไม่ใช่ skillPower
+        const isHandledByConfig = SYNERGY_CONFIG.some(cfg => cfg.targetKey === statKey);
+
         if (
             diff > 0 &&
-            statKey !== 'critRate' &&
-            statKey !== 'critDmg' &&
-            statKey !== 'hit' &&
-            statKey !== 'flee' &&
-            statKey !== 'skillPower' // <--- เพิ่มตรงนี้เพื่อกันเบิ้ล
+            !isHandledByConfig &&
+            statKey !== 'skillPower'
         ) {
             addSource(statKey, 'Synergy Bonus', diff);
         }
@@ -173,7 +175,7 @@ export const getTotalStats = (player: Player): Stats => {
     });
 
     // 2. คำนวณ Synergy
-    const equippedSkill = player.equippedItems['skill'] || undefined;
+    const equippedSkill = player.equippedItems.skill1 || player.equippedItems.skill2 || undefined;
     const synergyStats = calculateSynergyStats(rawTotal, equippedSkill);
 
     // 3. คำนวณค่า Effective จาก Stat หลัก (STR, DEX, VIT, AGI, INT, LUK) ก่อน
@@ -201,6 +203,8 @@ const STAT_MULTIPLIERS = {
     vitToMRes: 0.4,
     intToSkillPwr: 0.5,
 };
+
+const RES_WEIGHT = 0.3;
 
 
 
@@ -252,8 +256,7 @@ export const getEffectiveStatsInfo = () => [
     { label: 'HIT', bonus: `+${STAT_MULTIPLIERS.lukToHit} HIT`, stat: 'LUK' },
     { label: 'FLEE', bonus: `+${STAT_MULTIPLIERS.agiToFlee} FLEE`, stat: 'AGI' },
     { label: 'FLEE', bonus: `+${STAT_MULTIPLIERS.lukToFlee} FLEE`, stat: 'LUK' },
-    { label: 'RES', bonus: `+${STAT_MULTIPLIERS.intToRes} RES   (Mitigation Max 75%)`, stat: 'INT' },
-    { label: 'M.RES', bonus: `+${STAT_MULTIPLIERS.vitToMRes} M.RES   (Crit Res Max 40%)`, stat: 'VIT' },
+    { label: 'RES', bonus: `+${STAT_MULTIPLIERS.intToRes} RES   (${RES_WEIGHT * 100}% as effective as DEF)`, stat: 'INT' }, { label: 'M.RES', bonus: `+${STAT_MULTIPLIERS.vitToMRes} M.RES   (Crit Res Max 40%)`, stat: 'VIT' },
     { label: 'SKILL PWR', bonus: `+${STAT_MULTIPLIERS.intToSkillPwr} PWR`, stat: 'INT' },
 ];
 
@@ -316,9 +319,9 @@ export const calculateDamage = (
         : (isMagic ? 'magic' : 'physical');
 
     // 📌 ฐานดาเมจจะสลับเป็น skillPower เฉพาะตอนที่สกิลเวททำงานจริงเท่านั้น!
-    const rawBase = activeDamageType === 'magic' ? attacker.skillPower : attacker.atk;
+    const rawBase = (activeDamageType === 'magic' ? attacker.skillPower : attacker.atk) || 0;
 
-    if (isSkillActive) {
+    if (isSkillActive && skill) {
         const baseForSkill = rawBase;
         skillDamageBonus = baseForSkill * (skill.effectPower / 100);
 
@@ -367,12 +370,16 @@ export const calculateDamage = (
     baseDamage *= variance;
 
     // --- 6. นำดาเมจทั้งหมดมาหักลบเกราะ (DEF / RES) เป็นด่านสุดท้าย ---
-    const mitigation = activeDamageType === 'magic' ? defender.mRes : defender.def;
-    const damageReductionFactor = 100 / (100 + mitigation);
+
+    const primaryMitigation = activeDamageType === 'magic' ? defender.mRes : defender.def;
+    const totalMitigation = primaryMitigation + (defender.res * RES_WEIGHT);
+
+    // ✅ ใช้พลังโจมตีของผู้โจมตีเอง (rawBase) เป็นฐานแทนค่าคงที่ 100 ตายตัว
+    // ทำให้ mitigation สเกลสัมพันธ์กับ ATK/DEF ของทั้งสองฝ่ายเสมอ ไม่ว่าตัวเลขจะโตแค่ไหนตามเลเวล
+    const mitigationBase = Math.max(1, rawBase); // กันหารด้วย 0 ถ้า rawBase เป็น 0
+    const damageReductionFactor = mitigationBase / (mitigationBase + totalMitigation);
     let damage = baseDamage * damageReductionFactor;
 
-    const resReduction = Math.min(defender.res / 1000, 0.75);
-    damage *= (1 - resReduction);
 
     const finalDamage = Math.floor(damage);
 

@@ -9,6 +9,7 @@ import { useAchievementStore } from '../store/achievementStore';
 import { PITY_CONFIG } from '../types/game';
 import { MAX_INVENTORY_SLOTS } from '../types/game';
 import { useChatStore } from '../store/chatStore';
+import type { Stats } from '../types/game';
 
 
 export const useCharacterDashboard = () => {
@@ -42,9 +43,13 @@ export const useCharacterDashboard = () => {
 
         // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
 
-        const maxLevel = totalOpens < 1000
+        const ROLL_MAX_ITEM_LEVEL = 250; // ✅ ต่ำกว่า boss loot ceiling (1,000) พอสมควร ให้บอสยังคงเป็นแหล่งของแรงสุด
+
+        const rawMaxLevel = totalOpens < 1000
             ? 1 + Math.floor(totalOpens / 10) * 5
             : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
+
+        const maxLevel = Math.min(rawMaxLevel, ROLL_MAX_ITEM_LEVEL);
 
         // 2. กำหนดให้สุ่มอยู่ในช่วง 70% ถึง 100% ของ maxLevel ปัจจุบัน 
         // (หรือจะปรับสัดส่วน 0.7 ตามความเหมาะสมได้เลยครับ เพื่อไม่ให้เจอของเวล 1 ตอนช่วงท้ายๆ)
@@ -176,24 +181,28 @@ export const useCharacterDashboard = () => {
         };
     };
 
-    const transferItemStat = (itemA: Item, itemB: Item, statA: string, statB: string) => {
+    const transferItemStat = (itemA: Item, itemB: Item, statA: keyof Stats, statB: keyof Stats) => {
+        // 1. ดึงค่าจาก A
         const valFromA = itemA.stats[statA];
 
-        // 1. สร้าง Object Stats ใหม่สำหรับ B
+        // ถ้า A ไม่มีค่านี้ หรือค่าเป็น undefined ให้หยุดทำงาน
+        if (valFromA === undefined) return;
+
+        // 2. สร้าง Object Stats ใหม่สำหรับ B
         const newStatsB = { ...itemB.stats };
 
-        // ลบ Key เก่าออก (เช่น DEX)
+        // ลบ Key เก่าออก (ใช้ as keyof Stats เพื่อความปลอดภัยทาง Type)
         delete newStatsB[statB];
 
-        // เพิ่ม Key ใหม่เข้าไปพร้อมค่าที่โอนมา (เช่น AGI: 130)
-        newStatsB[statA] = valFromA;
+        // เพิ่ม Key ใหม่เข้าไปพร้อมค่าที่โอนมา (ใช้ as any หรือทำการ Cast type เพื่อป้องกัน TypeScript เตือนเรื่อง Index signature)
+        (newStatsB as Record<string, any>)[statA] = valFromA;
 
         const updatedItemB = {
             ...itemB,
             stats: newStatsB
         };
 
-        // 2. อัปเดต Item A (ลบค่าที่โอนออกไปแล้ว)
+        // 3. อัปเดต Item A (ลบค่าที่โอนออกไปแล้ว)
         const newStatsA = { ...itemA.stats };
         delete newStatsA[statA]; // ลบ statA ออกจาก A
 
@@ -325,8 +334,8 @@ export const useCharacterDashboard = () => {
         }
     };
 
-    const equippedInSlot = selectedItem ? player.equippedItems[selectedItem.slot] : null;
-
+    const slotKey = selectedItem?.slot === 'skill' ? 'skill1' : selectedItem?.slot;
+    const equippedInSlot = (selectedItem && slotKey) ? player.equippedItems[slotKey as keyof typeof player.equippedItems] : null;
 
 
     return {

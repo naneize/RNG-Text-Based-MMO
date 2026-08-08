@@ -60,14 +60,16 @@ export const useBattle = (
             const totalRacePercent = (bonuses.racePercent / 100);
 
             // 2. จัดการสกิล
-            const equippedSingleSkill = player.equippedItems['skill'];
             const skill1 = player.equippedItems.skill1;
             const skill2 = player.equippedItems.skill2;
 
-            let activeSkill = equippedSingleSkill || skill1 || skill2;
+            let activeSkill = skill1 || skill2;
             if (skill1 && skill2) {
                 activeSkill = Math.random() < 0.5 ? skill1 : skill2;
             }
+
+
+
 
             const skillElementBonusPercent = activeSkill?.skillCondition?.elementBonusPercent || 0;
             const targetElementAgainst = activeSkill?.skillCondition?.elementBonusAgainst;

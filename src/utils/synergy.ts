@@ -1,9 +1,9 @@
 // synergy.ts
 import type { Stats } from "../types/game";
 
-const SYNERGY_CONFIG = [
-    { label: 'CRIT RATE', bonus: 1, divisor: 20, statKey: 'luk' as keyof Stats, targetKey: 'critRate' as keyof Stats, isPercent: true },
-    { label: 'CRIT DMG', bonus: 1, divisor: 20, statKey: 'luk' as keyof Stats, targetKey: 'critDmg' as keyof Stats },
+export const SYNERGY_CONFIG = [
+    { label: 'CRIT RATE', bonus: 0.5, divisor: 100, statKey: 'luk' as keyof Stats, targetKey: 'critRate' as keyof Stats, isPercent: true },
+    { label: 'CRIT DMG', bonus: 0.5, divisor: 50, statKey: 'luk' as keyof Stats, targetKey: 'critDmg' as keyof Stats },
 ];
 
 export const calculateSynergyStats = (baseStats: Stats, equippedSkill?: any): Stats => {

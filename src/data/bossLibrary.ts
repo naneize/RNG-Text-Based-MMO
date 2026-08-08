@@ -43,6 +43,9 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         hpMod = 1.0; atkMod = 1.0; defMod = 1.0; agiMod = 1.0; hitMod = 1.0;
     }
 
+    const defScale = 1 + (level - 5) * 0.08 + Math.pow((level - 5) / 40, 2);
+    const resScale = 1 + (level - 5) * 0.03 + Math.pow((level - 5) / 60, 2);
+
     const stats = {
         // กลุ่มสเตตัสหลัก (คูณตัวคูณเลเวล + คูณ Mod เฉพาะตัวเข้าไป)
         str: Math.floor(baseStats.str * levelMultiplier * atkMod),
@@ -61,9 +64,9 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         atk: Math.floor(baseStats.atk * combatMultiplier * atkMod),
 
         // กลุ่มป้องกันและแม่นยำ
-        def: Math.floor(baseStats.def * (1 + (level - 5) * 0.08) * defMod),
-        res: Math.floor(baseStats.res * (1 + (level - 5) * 0.03)),
-        mRes: Math.floor(baseStats.mRes * (1 + (level - 5) * 0.03)),
+        def: Math.floor(baseStats.def * defScale * defMod),
+        res: Math.floor(baseStats.res * resScale),
+        mRes: Math.floor(baseStats.mRes * resScale),
         hit: Math.floor((baseStats.hit + level * 5) * hitMod), // คูณ Mod ความแม่นยำตรงนี้
         flee: Math.floor((baseStats.flee + level * 5) * agiMod)
     };
@@ -105,15 +108,15 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         weakness: currentDrops.weakness,
         stats,
         dropTable: [
-            { itemId: currentDrops.item1.id, type: 'item', dropChance: commonChance, fixedRarity: 'Common' },
-            { itemId: currentDrops.item1.id, type: 'item', dropChance: rareChance, fixedRarity: 'Rare' },
-            { itemId: currentDrops.item1.id, type: 'item', dropChance: epicChance, fixedRarity: 'Epic' },
-            { itemId: currentDrops.item1.id, type: 'item', dropChance: legendaryChance, fixedRarity: 'Legendary' },
+            { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: commonChance, fixedRarity: 'Common' },
+            { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: rareChance, fixedRarity: 'Rare' },
+            { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: epicChance, fixedRarity: 'Epic' },
+            { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: legendaryChance, fixedRarity: 'Legendary' },
 
-            { itemId: currentDrops.item2.id, type: 'item', dropChance: commonChance, fixedRarity: 'Common' },
-            { itemId: currentDrops.item2.id, type: 'item', dropChance: rareChance, fixedRarity: 'Rare' },
-            { itemId: currentDrops.item2.id, type: 'item', dropChance: epicChance, fixedRarity: 'Epic' },
-            { itemId: currentDrops.item2.id, type: 'item', dropChance: legendaryChance, fixedRarity: 'Legendary' },
+            { itemId: currentDrops.item2?.id || '', type: 'item', dropChance: commonChance, fixedRarity: 'Common' },
+            { itemId: currentDrops.item2?.id || '', type: 'item', dropChance: rareChance, fixedRarity: 'Rare' },
+            { itemId: currentDrops.item2?.id || '', type: 'item', dropChance: epicChance, fixedRarity: 'Epic' },
+            { itemId: currentDrops.item2?.id || '', type: 'item', dropChance: legendaryChance, fixedRarity: 'Legendary' },
 
             ...(currentDrops.item3 ? [
                 { itemId: currentDrops.item3.id, type: 'item', dropChance: commonChance, fixedRarity: 'Common' },

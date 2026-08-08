@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Player } from '../../types/game';
 import { STAT_CAPS } from '../../utils/statCalculator';
 import { StatLimitModal } from '../Modals/StatLimitModal';
@@ -20,8 +20,11 @@ interface CharacterStatsProps {
 export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShowBonusModal, hideExtraButtons = false, hideBreakdown = false }: CharacterStatsProps) => {
     const [showLimitModal, setShowLimitModal] = useState(false);
 
+
+
     return (
         <div className="space-y-4">
+
 
             {!hideExtraButtons && (
                 <>
@@ -39,6 +42,9 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                         >
                             STAT LIMITS
                         </button>
+
+
+
                     </div>
 
                     {showLimitModal && (
@@ -72,7 +78,8 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
 
                             // 📌 ดึงข้อมูลที่มาของสเตตัสตัวนี้
                             const sources = statBreakdown[key] || [];
-                            const totalSum = sources.reduce((sum, src) => sum + src.value, 0);
+                            const rawSum = sources.reduce((sum, src) => sum + src.value, 0);
+                            const totalSum = isCapped ? rawSum : value;
 
                             // 📌 เช็กว่าเป็นสเตตัสฝั่งขวาหรือไม่ (เพื่อให้ Tooltip เด้งไปทางซ้าย ไม่ล้นจอ)
                             const isRightSide = ['atk', 'hit', 'critRate', 'str', 'agi', 'int', 'res', 'skillPower'].includes(key);
@@ -97,7 +104,7 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                     </span>
 
 
-                                    {/* 📌 เพิ่มเงื่อนไข !hideBreakdown เข้าไปตรงนี้ด้วย เพื่อบล็อกไม่ให้เรนเดอร์ Tooltip ออกมาเลย */}
+                                    {/* 📌 ส่วนแสดงผล Breakdown Tooltip */}
                                     {!hideBreakdown && sources.length > 0 && (
                                         <div className={`absolute top-full mt-2 mb-2 hidden group-hover:block w-52 p-2.5 bg-slate-950 text-xs text-slate-200 rounded-md shadow-xl border border-slate-700 z-50 pointer-events-none ${isRightSide ? 'right-0' : 'left-0'}`}>
                                             <div className="font-bold mb-1.5 text-amber-500 border-b border-slate-800 pb-1 uppercase tracking-wider">
@@ -112,10 +119,21 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
                                                 ))}
                                             </div>
 
-                                            <div className="mt-2 pt-1.5 border-t border-slate-800 flex justify-between font-bold text-slate-100">
-                                                <span>Total</span>
-                                                <span className="font-mono text-emerald-400">{totalSum}</span>
+                                            {/* 📌 ช่องคำนวณ Total ให้โชว์ผลรวมดิบที่แท้จริง (ก่อนโดน Cap) */}
+                                            <div className="mt-2 pt-1.5 border-t border-slate-800 flex justify-between font-bold text-emerald-400">
+                                                <span>Raw Total</span>
+                                                <span className="font-mono text-emerald-400">
+                                                    {key === 'critRate' ? `${Math.floor(totalSum)}%` : Math.floor(totalSum)}
+                                                </span>
                                             </div>
+
+                                            {/* 📌 แจ้งเตือนเพิ่มเติมถ้าชน Cap */}
+                                            {isCapped && cap !== undefined && (
+                                                <div className="mt-1 flex justify-between text-[10px] text-orange-400 font-semibold">
+                                                    <span>Capped At</span>
+                                                    <span className="font-mono">{key === 'critRate' ? `${Math.floor(cap)}%` : Math.floor(cap)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

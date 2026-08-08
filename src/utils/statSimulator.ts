@@ -1,6 +1,8 @@
 import { generateRandomItem } from './itemGenerator';
 import { BOSS_LIBRARY } from '../data/bossLibrary';       // ✅ เพิ่ม
 import { calculateBossDrops } from './dropLogic';          // ✅ เพิ่ม
+import { PITY_CONFIG } from '../types/game';
+import { getEffectiveStats, calculateDamage } from './combat';
 
 /**
  * จำลองการสุ่มไอเทมจำนวนมาก แล้วสรุปค่า stat และเลเวลแต่ละตัวแยกตาม rarity
@@ -213,4 +215,146 @@ import { calculateBossDrops } from './dropLogic';          // ✅ เพิ่�
  */
 (window as any).listBossIds = () => {
     console.table(BOSS_LIBRARY.map(b => ({ id: b.id, name: b.name, level: b.level, zone: b.zone })));
+};
+
+/**
+ * จำลอง "roll จนถึง item level cap ที่กำหนด" แล้วเทียบว่าสู้บอสที่เลือกไหวไหม
+ * ใช้ pity system + สูตร maxLevel เดียวกับของจริงเป๊ะ (executeSingleRoll ใน useCharacterDashboard.ts)
+ *
+ * วิธีเรียกใช้ใน console:
+ *   simulateRollVsBoss('b-001', 275)              // roll cap = 275, ทดสอบกับบอส b-001
+ *   simulateRollVsBoss('b-001', 275, 50)           // จำลอง 50 รอบ (เพิ่มความแม่นยำของค่าเฉลี่ย)
+ */
+(window as any).simulateRollVsBoss = (
+    bossId: string = 'b-001',
+    rollCap: number = 275,
+    trials: number = 30
+) => {
+    const boss = BOSS_LIBRARY.find(b => b.id === bossId);
+    if (!boss) {
+        console.warn(`ไม่พบบอส id="${bossId}" — เช็ครายชื่อด้วย listBossIds()`);
+        return;
+    }
+
+    const scoreItem = (item: any): number => {
+        if (!item.stats) return 0;
+        return Object.values(item.stats).reduce((sum: any, v: any) => sum + (v || 0), 0) as number;
+    };
+
+    // ✅ จำลองการ roll จนกว่า item level จะแตะ cap ที่กำหนด (ใช้สูตร pity เดียวกับของจริงเป๊ะ)
+    const simulateRollSession = () => {
+        let totalOpens = 0;
+        let epicPity = 0;
+        let legendPity = 0;
+        const equipped: Record<string, any> = {};
+        const maxRolls = 800; // เพดานกันลูปไม่รู้จบ
+
+        for (let i = 0; i < maxRolls; i++) {
+            totalOpens++;
+
+            const rawMaxLevel = totalOpens < 1000
+                ? 1 + Math.floor(totalOpens / 10) * 5
+                : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
+            const maxLevel = Math.min(rawMaxLevel, rollCap);
+            const minLevel = Math.max(1, Math.floor(maxLevel * 0.7));
+            const randomLevel = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+
+            let newItem: any;
+            if (legendPity >= PITY_CONFIG.LEGEND) {
+                newItem = generateRandomItem('legendary', randomLevel);
+                legendPity = 0; epicPity = 0;
+            } else if (epicPity >= PITY_CONFIG.EPIC) {
+                newItem = generateRandomItem('epic', randomLevel);
+                epicPity = 0; legendPity++;
+            } else {
+                newItem = generateRandomItem(undefined, randomLevel);
+                if (newItem.rarity === 'Legendary') { legendPity = 0; epicPity = 0; }
+                else if (newItem.rarity === 'Epic') { epicPity = 0; legendPity++; }
+                else {
+                    if (legendPity < PITY_CONFIG.LEGEND) legendPity++;
+                    if (epicPity < PITY_CONFIG.EPIC) epicPity++;
+                }
+            }
+
+            if (newItem.type === 'equipment') {
+                const slot = newItem.slot;
+                if (!equipped[slot] || scoreItem(newItem) > scoreItem(equipped[slot])) {
+                    equipped[slot] = newItem;
+                }
+            }
+
+            // หยุดเมื่อ level คงที่ที่ cap แล้ว และ roll เก็บของมาพอสมควร (กันของขาด slot)
+            if (maxLevel >= rollCap && totalOpens >= 300) break;
+        }
+
+        return { totalOpens, equipped };
+    };
+
+    // รวม stat จากอุปกรณ์ที่ equip ได้ทั้งหมด (ไม่รวม player baseStats เพราะเล็กมากเทียบกับ gear ที่ itemLevel หลักร้อย)
+    const buildPlayerStats = (equipped: Record<string, any>) => {
+        const rawTotal: any = {
+            str: 0, agi: 0, vit: 0, int: 0, dex: 0, luk: 0,
+            critRate: 0, critDmg: 0, atk: 0, def: 0, maxHp: 0, hit: 0, flee: 0, res: 0, mRes: 0
+        };
+        Object.values(equipped).forEach((item: any) => {
+            if (!item?.stats) return;
+            Object.entries(item.stats).forEach(([k, v]: [string, any]) => {
+                rawTotal[k] = (rawTotal[k] || 0) + (v || 0);
+            });
+        });
+        return getEffectiveStats(rawTotal);
+    };
+
+    const bossEffectiveStats = getEffectiveStats(boss.stats);
+
+    let totalHitsToKillBoss = 0;
+    let totalHitsPlayerSurvives = 0;
+    let sampleTotalOpens = 0;
+    let sampleEquippedCount = 0;
+
+    for (let t = 0; t < trials; t++) {
+        const { totalOpens, equipped } = simulateRollSession();
+        const playerStats = buildPlayerStats(equipped);
+
+        sampleTotalOpens += totalOpens;
+        sampleEquippedCount += Object.keys(equipped).length;
+
+        // จำลองตีบอสจนตาย (นับจำนวนครั้ง ไม่สนใจ miss เพื่อความเร็วในการซิม)
+        let bossHp = bossEffectiveStats.maxHp;
+        let hits = 0;
+        while (bossHp > 0 && hits < 500) {
+            const result = calculateDamage(playerStats, bossEffectiveStats);
+            if (!result.isMiss) bossHp -= result.damage;
+            hits++;
+        }
+        totalHitsToKillBoss += hits;
+
+        // จำลองผู้เล่นโดนบอสตีจนตาย (นับว่าทนได้กี่ครั้ง)
+        let playerHp = playerStats.maxHp || 1;
+        let survivedHits = 0;
+        while (playerHp > 0 && survivedHits < 500) {
+            const result = calculateDamage(bossEffectiveStats, playerStats);
+            if (!result.isMiss) playerHp -= result.damage;
+            survivedHits++;
+        }
+        totalHitsPlayerSurvives += survivedHits;
+    }
+
+    const avgHitsToKill = Math.round(totalHitsToKillBoss / trials);
+    const avgHitsSurvive = Math.round(totalHitsPlayerSurvives / trials);
+    const avgTotalOpens = Math.round(sampleTotalOpens / trials);
+    const avgSlotsFilled = (sampleEquippedCount / trials).toFixed(1);
+
+    console.log(`--- จำลอง Roll (cap=${rollCap}) vs บอส "${boss.name}" (level ${boss.level}) — ${trials} รอบ ---`);
+    console.table({
+        'จำนวน Roll เฉลี่ยที่ใช้ถึง cap': avgTotalOpens,
+        'จำนวน slot ที่ equip ได้เฉลี่ย': `${avgSlotsFilled} / 10`,
+        'ตีบอสตายใช้กี่ครั้ง (เฉลี่ย)': avgHitsToKill,
+        'ผู้เล่นทนโดนตีได้กี่ครั้ง (เฉลี่ย)': avgHitsSurvive,
+        'สรุป': avgHitsSurvive > avgHitsToKill * 1.5
+            ? '✅ ไหวสบาย (ทนได้มากกว่าที่ต้องใช้ตีบอสตายเยอะ)'
+            : avgHitsSurvive > avgHitsToKill
+                ? '⚠️ พอไหวแต่ตึงมือ (ทนได้พอๆ กับจำนวนครั้งที่ต้องตี)'
+                : '❌ ไม่น่าไหว (ตายก่อนบอสตาย โดยเฉลี่ย)'
+    });
 };

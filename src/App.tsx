@@ -89,6 +89,7 @@ function App() {
         {currentPage === 'adventure' && <AdventurePage />}
         {currentPage === 'achievement' && <AchievementPage />}
         {currentPage === 'marketplace' && <MarketplacePage />}
+
       </main>
 
       <AchievementPopup />

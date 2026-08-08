@@ -7,7 +7,7 @@ import { useGameStore } from '../store/gameStore'; // ดึง store มาใ�
 
 interface BattleScreenProps {
     player: Player;
-    selectedBoss: Boss;
+    selectedBoss: Boss | null;
     finalStats: Stats;
     onBack: () => void;
     onGameOver: () => void;
@@ -21,6 +21,16 @@ export const BattleScreen = ({ player, selectedBoss, finalStats, onBack, onGameO
 
     const [isVictory, setIsVictory] = useState(false);
 
+    if (!selectedBoss) {
+        return (
+            <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 max-w-2xl mx-auto text-white text-center">
+                <p className="text-red-400 mb-4">No boss selected!</p>
+                <button onClick={onBack} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold">
+                    ← Back
+                </button>
+            </div>
+        );
+    }
 
 
     const bossEffectiveStats = useMemo(
