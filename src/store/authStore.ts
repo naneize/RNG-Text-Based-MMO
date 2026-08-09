@@ -28,7 +28,9 @@ interface UserProfile {
     username: string;
     role?: 'developer' | 'player'; // 🟢 เพิ่มฟิลด์เก็บยศ
     equippedTitle?: string;          // 🟢 ฉายาที่กำลังใส่
-    unlockedTitles?: string[];       // 🟢 รายการฉายาที่มีทั้งหมด
+    unlockedTitles?: string[];   // 🟢 รายการฉายาที่มีทั้งหมด
+    avatar?: string;
+    frame?: string;
 }
 
 interface AuthState {
@@ -44,6 +46,8 @@ interface AuthState {
     clearError: () => void;
 
     setEquippedTitle: (title: string) => void;
+    setAvatar: (avatarPath: string) => Promise<void>;
+    setFrame: (framePath: string) => Promise<void>;
 
     checkUsernameExists: (username: string) => Promise<boolean>;
     saveUsername: (username: string) => Promise<boolean>;
@@ -235,7 +239,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set((state) => ({
             userProfile: state.userProfile ? { ...state.userProfile, equippedTitle: title } : null
         }));
-    }
+    },
+    // 🟢 3. เพิ่มฟังก์ชันสำหรับอัปเดตและบันทึก Avatar ลง Firestore
+    setAvatar: async (avatarPath: string) => {
+        const currentUser = get().user;
+        const currentProfile = get().userProfile;
+
+        // อัปเดตลง State ในเครื่องก่อนทันที (เพื่อให้ UI เปลี่ยนไวๆ)
+        set((state) => ({
+            userProfile: state.userProfile ? { ...state.userProfile, avatar: avatarPath } : null
+        }));
+
+        // ถ้าเป็น User จริง (ไม่ใช่ Guest) ให้บันทึกลง Firestore ด้วย
+        if (currentUser && currentProfile) {
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                await setDoc(userRef, { avatar: avatarPath }, { merge: true });
+            } catch (err) {
+                console.error("Failed to save avatar to Firestore:", err);
+            }
+        }
+    },
+    // 🟢 เพิ่มฟังก์ชันสำหรับอัปเดตและบันทึก Frame ลง Firestore
+    setFrame: async (framePath: string) => {
+        const currentUser = get().user;
+        const currentProfile = get().userProfile;
+
+        // อัปเดตลง State ในเครื่องทันที
+        set((state) => ({
+            userProfile: state.userProfile ? { ...state.userProfile, frame: framePath } : null
+        }));
+
+        // บันทึกลง Firestore (ถ้ามี)
+        if (currentUser && currentProfile) {
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                await setDoc(userRef, { frame: framePath }, { merge: true });
+            } catch (err) {
+                console.error("Failed to save frame to Firestore:", err);
+            }
+        }
+    },
 }));
 
 // แปล error code ของ Firebase ให้อ่านง่ายขึ้น (ภาษาอังกฤษ)

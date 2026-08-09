@@ -4,6 +4,8 @@ import { calculateCombatPower, getCPRating, getCPBreakdown } from '../../utils/c
 import { STAT_CAPS } from '../../utils/statCalculator';
 import { useAchievementStore } from '../../store/achievementStore';
 import { useAuthStore } from '../../store/authStore';
+import { AVATAR_FILES } from '../constants/avatars';
+import { FRAME_FILES } from '../constants/frames';
 
 interface PlayerProfileProps {
     player: Player;
@@ -14,19 +16,22 @@ interface PlayerProfileProps {
 
 export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileProps) => {
     const [activeTab, setActiveTab] = useState<'equipment' | 'stats' | 'achievements'>('equipment');
-    const { user, userProfile, setEquippedTitle } = useAuthStore();
+    const { user, userProfile, setEquippedTitle, setAvatar, setFrame } = useAuthStore() as any; // สมมติว่ามีฟังก์ชัน setAvatar สำหรับบันทึกรูป
     const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    const [isFrameModalOpen, setIsFrameModalOpen] = useState(false);
     const combatPower = calculateCombatPower(finalStats);
     const cpRating = getCPRating(combatPower);
     const cpBreakdown = getCPBreakdown(finalStats);
     const achievementsRecord = useAchievementStore((state) => state.achievements);
-    const claimReward = useAchievementStore((state) => state.claimReward);
     const achievementsList = Object.values(achievementsRecord);
     const [hoveredItem, setHoveredItem] = useState<any>(null);
 
     const unlockedTitles = achievementsList.filter(
         (ach) => ach.isUnlocked && ach.rewardTitle
     );
+
+
 
     const getRarityColor = (rarity: string) => {
         switch (rarity) {
@@ -39,7 +44,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
 
     const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'shield', 'helm', 'cloak', 'necklace', 'ring', 'boots'];
 
-    // Map EquipmentSlot to actual equippedItems key (handle 'helm' -> 'helmet' mapping)
     const getEquippedItem = (slot: EquipmentSlot) => {
         if (slot === 'helm') return player.equippedItems.helmet;
         return player.equippedItems[slot as keyof typeof player.equippedItems];
@@ -70,6 +74,10 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
         ],
     };
 
+    // ดึงรูป Avatar ปัจจุบัน (ใช้จาก userProfile หรือ fallback เป็นรูปแรกใน AVATAR_FILES)
+    const currentAvatar = userProfile?.avatar || AVATAR_FILES?.[0] || '';
+    const currentFrame = userProfile?.frame || FRAME_FILES[0];
+
     return (
         <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-7xl mx-auto overflow-hidden relative">
             {/* Header */}
@@ -79,11 +87,45 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
 
             <div className="flex flex-col lg:flex-row h-[calc(100vh-200px)]">
                 {/* Left Side - Character Preview */}
-                <div className="lg:w-1/3 p-6 bg-linear-to-b from-slate-800/30 to-slate-900/50 border-r border-slate-700 flex flex-col items-center">
+                <div className="lg:w-1/3 p-6 bg-linear-to-b from-slate-800/30 to-slate-900/50 border-r border-slate-700 flex flex-col items-center overflow-y-auto max-h-[calc(100vh-150px)]">
+                    {/* Avatar & Frame Display */}
                     <div className="flex flex-col items-center mb-6">
-                        <div className="relative w-24 h-24 bg-slate-800 rounded-full border-4 border-slate-600 flex items-center justify-center mb-2 shadow-xl">
-                            <div className="text-6xl">🎎</div>
+                        {/* กล่องห่อหุ้มขนาดใหญ่ขึ้นเพื่อรองรับกรอบที่ล้นออกมาชัดเจน */}
+                        <div className="relative w-[130px] h-[130px] flex items-center justify-center mb-1">
+
+                            {/* 1. รูป Avatar ด้านใน (ขนาดปกติ 96px อยู่ตรงกลางเป๊ะ) */}
+                            <div
+                                onClick={() => setIsAvatarModalOpen(true)}
+                                className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center shadow-xl overflow-hidden cursor-pointer group hover:ring-2 hover:ring-emerald-500 transition-all z-0 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                            >
+                                {currentAvatar ? (
+                                    <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="text-4xl">🎎</div>
+                                )}
+
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[10px] text-white font-bold z-10">
+                                    Change Avatar
+                                </div>
+                            </div>
+
+                            {/* 2. กรอบรูป (Frame) - กำหนดขนาด 130px เต็มกล่องแม่ ทับขอบเทาแน่นอน */}
+                            {userProfile?.frame && (
+                                <img
+                                    src={userProfile.frame}
+                                    alt="Frame"
+                                    className="absolute inset-0 w-full h-full pointer-events-none object-contain z-30"
+                                />
+                            )}
                         </div>
+
+                        {/* ปุ่มเปลี่ยนกรอบ */}
+                        <button
+                            onClick={() => setIsFrameModalOpen(true)}
+                            className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-0.5 rounded-full transition-colors mb-2"
+                        >
+                            Change Frame
+                        </button>
 
                         {/* ชื่อผู้เล่น */}
                         {(userProfile || user) && (
@@ -92,7 +134,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                             </span>
                         )}
 
-                        {/* ส่วนแสดงฉายาและปุ่มเปลี่ยน (เรียงลงมาในแนวตั้ง) */}
+                        {/* ส่วนฉายา */}
                         <div className="flex flex-col items-center gap-1 mb-2">
                             {userProfile?.equippedTitle ? (
                                 <span className="text-xs px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold uppercase tracking-wider">
@@ -109,42 +151,40 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                 Change Title
                             </button>
                         </div>
-
-
                     </div>
-
-
 
                     {/* Combat Power Display */}
-                    <div className="w-full bg-slate-800/50 rounded-xl p-4 border border-slate-700 mb-4">
-                        <div className="text-center mb-3">
-                            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Combat Power</p>
-                            <div className="flex items-center justify-center gap-3">
-                                <span className={`text-4xl font-bold ${cpRating.color}`}>{combatPower.toLocaleString()}</span>
-                                <span className={`text-2xl font-bold ${cpRating.color}`}>{cpRating.rank}</span>
+                    {/* 🟢 Combat Power Display (แบบกระชับ) */}
+                    <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700 mb-2"> {/* ลด padding และ margin */}
+                        <div className="text-center mb-1"> {/* ลด margin */}
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Combat Power</p>
+
+                            {/* 🟢 บีบอัดเลข CP ให้อยู่บรรทัดเดียวกัน ตัวเล็กลงนิดหน่อย */}
+                            <div className="flex items-baseline justify-center gap-2">
+                                <span className={`text-3xl font-bold ${cpRating.color}`}>{combatPower.toLocaleString()}</span>
+                                <span className={`text-xl font-bold ${cpRating.color}`}>{cpRating.rank}</span>
                             </div>
-                            <p className={`text-xs mt-1 ${cpRating.color}`}>{cpRating.description}</p>
+                            {/* เอา description ออกเพื่อประหยัดที่ หรือย้ายไปไว้ที่อื่น */}
                         </div>
 
-                        {/* CP Breakdown */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="bg-slate-900/50 rounded p-2">
-                                <p className="text-[10px] text-slate-400 uppercase">Offense</p>
-                                <p className="text-sm font-bold text-rose-400">{cpBreakdown.offensive}</p>
+                        {/* 🟢 ลดขนาด Breakdown */}
+                        <div className="grid grid-cols-3 gap-1.5 text-center"> {/* ลด gap */}
+                            <div className="bg-slate-900/50 rounded px-1 py-0.5">
+                                <p className="text-[9px] text-slate-400 uppercase">Offense</p>
+                                <p className="text-xs font-bold text-rose-400">{cpBreakdown.offensive}</p>
                             </div>
-                            <div className="bg-slate-900/50 rounded p-2">
-                                <p className="text-[10px] text-slate-400 uppercase">Defense</p>
-                                <p className="text-sm font-bold text-blue-400">{cpBreakdown.defensive}</p>
+                            <div className="bg-slate-900/50 rounded px-1 py-0.5">
+                                <p className="text-[9px] text-slate-400 uppercase">Defense</p>
+                                <p className="text-xs font-bold text-blue-400">{cpBreakdown.defensive}</p>
                             </div>
-                            <div className="bg-slate-900/50 rounded p-2">
-                                <p className="text-[10px] text-slate-400 uppercase">Core</p>
-                                <p className="text-sm font-bold text-emerald-400">{cpBreakdown.core}</p>
+                            <div className="bg-slate-900/50 rounded px-1 py-0.5">
+                                <p className="text-[9px] text-slate-400 uppercase">Core</p>
+                                <p className="text-xs font-bold text-emerald-400">{cpBreakdown.core}</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="w-full space-y-2">
+                    <div className="w-full space-y-2 pb-2">
                         <div className="flex justify-between items-center bg-slate-900/50 p-2.5 rounded-lg border border-slate-700">
                             <span className="text-slate-400 text-xs font-mono tracking-wider uppercase">Total Rolls</span>
                             <span className="text-slate-200 font-bold font-mono text-sm">{totalOpens ?? 0}</span>
@@ -154,7 +194,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
 
                 {/* Right Side - Tabs Content */}
                 <div className="lg:w-2/3 flex flex-col">
-                    {/* Tab Navigation */}
                     <div className="flex border-b border-slate-700 bg-slate-800/30">
                         {[
                             { id: 'equipment' as const, label: 'Equipment' },
@@ -174,7 +213,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                         ))}
                     </div>
 
-                    {/* Tab Content */}
                     <div className="flex-1 overflow-y-auto p-6">
                         {activeTab === 'equipment' && (
                             <div>
@@ -202,7 +240,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                                         <span className="text-emerald-400 text-[10px] truncate block text-center mt-1">
                                                             {equippedItem.name}
                                                         </span>
-
                                                     </>
                                                 ) : (
                                                     <div className="flex items-center justify-center h-full">
@@ -219,8 +256,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                         {activeTab === 'stats' && (
                             <div>
                                 <h4 className="text-lg font-bold text-slate-200 mb-4">Stats Overview</h4>
-
-                                {/* Offensive Stats */}
                                 <div className="mb-6">
                                     <h5 className="text-sm font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                         <span className="w-2 h-2 bg-rose-400 rounded-full"></span>
@@ -233,10 +268,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                             const isCapped = cap !== undefined && value >= cap;
 
                                             return (
-                                                <div
-                                                    key={key}
-                                                    className="bg-slate-800/50 p-3 rounded-lg border border-slate-700 transition-colors"
-                                                >
+                                                <div key={key} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-slate-400 text-sm font-medium">{label}</span>
                                                         <div className="flex items-center gap-2">
@@ -256,7 +288,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                     </div>
                                 </div>
 
-                                {/* Defensive Stats */}
                                 <div className="mb-6">
                                     <h5 className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                         <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -269,10 +300,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                             const isCapped = cap !== undefined && value >= cap;
 
                                             return (
-                                                <div
-                                                    key={key}
-                                                    className="bg-slate-800/50 p-3 rounded-lg border border-slate-700 transition-colors"
-                                                >
+                                                <div key={key} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-slate-400 text-sm font-medium">{label}</span>
                                                         <div className="flex items-center gap-2">
@@ -292,7 +320,6 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                     </div>
                                 </div>
 
-                                {/* Core Attributes */}
                                 <div>
                                     <h5 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                         <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
@@ -301,12 +328,8 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                         {statGroups.core.map(({ key, label }) => {
                                             const value = finalStats[key] || 0;
-
                                             return (
-                                                <div
-                                                    key={key}
-                                                    className="bg-slate-800/50 p-3 rounded-lg border border-slate-700 transition-colors"
-                                                >
+                                                <div key={key} className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-slate-400 text-sm font-medium">{label}</span>
                                                         <span className="font-mono font-bold text-emerald-400">{Math.floor(value)}</span>
@@ -334,14 +357,9 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                         .map((achievement) => (
                                             <div
                                                 key={achievement.id}
-                                                className="p-3.5 rounded-lg border bg-slate-800/50 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.1)] transition-all flex items-center justify-between"
+                                                className="p-3.5 rounded-lg border bg-slate-800/50 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.1)] flex items-center justify-between"
                                             >
-                                                {/* ชื่อความสำเร็จ */}
-                                                <span className="font-bold text-amber-400 text-sm">
-                                                    {achievement.title}
-                                                </span>
-
-                                                {/* สถานะ Unlocked ด้านหลัง */}
+                                                <span className="font-bold text-amber-400 text-sm">{achievement.title}</span>
                                                 <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-bold tracking-wider">
                                                     ✓ UNLOCKED
                                                 </span>
@@ -360,92 +378,200 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                 </div>
             </div>
 
-            {/* Centered Modal Overlay on Hover */}
-            {hoveredItem && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-none">
-                    <div className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <div className="font-bold text-slate-200 text-lg mb-1">{hoveredItem.name}</div>
-                        <div className="text-xs text-slate-400 mb-3">{hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}</div>
+            {/* Hover Tooltip Item */}
+            {
+                hoveredItem && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-none">
+                        <div className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
+                            <div className="font-bold text-slate-200 text-lg mb-1">{hoveredItem.name}</div>
+                            <div className="text-xs text-slate-400 mb-3">{hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}</div>
 
-                        {/* กรองเฉพาะสเตตัสที่มีค่ามากกว่า 0 เท่านั้นถึงจะแสดง */}
-                        {Object.entries(hoveredItem.stats || {}).filter(([_, value]) => Number(value) > 0).length > 0 && (
-                            <div className="space-y-1 mb-3">
-                                {Object.entries(hoveredItem.stats)
-                                    .filter(([_, value]) => Number(value) > 0)
-                                    .map(([stat, value]) => (
-                                        <div key={stat} className="flex justify-between text-xs">
-                                            <span className="text-slate-400 uppercase">{stat}</span>
-                                            <span className="text-emerald-400 font-mono">+{value as number}</span>
-                                        </div>
-                                    ))}
-                            </div>
-                        )}
-
-                        {hoveredItem.elementBonus && hoveredItem.elementBonus.value > 0 && (
-                            <div className="mt-2 pt-2 border-t border-slate-800 text-xs">
-                                <span className="text-slate-400">Element: </span>
-                                <span className="text-amber-400">{hoveredItem.elementBonus.type} +{hoveredItem.elementBonus.value}%</span>
-                            </div>
-                        )}
-
-                        {hoveredItem.raceBonus && hoveredItem.raceBonus.value > 0 && (
-                            <div className="mt-1 text-xs">
-                                <span className="text-slate-400">Race: </span>
-                                <span className="text-amber-400">{hoveredItem.raceBonus.type} +{hoveredItem.raceBonus.value}%</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* 🟢 Modal สำหรับเลือกฉายา */}
-            {isTitleModalOpen && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
-                        <h3 className="text-slate-200 font-bold text-lg mb-4">Select Your Title</h3>
-
-                        <div className="space-y-2 max-h-60 overflow-y-auto mb-4 pr-1">
-                            {/* ปุ่มถอดฉายาออก */}
-                            <button
-                                onClick={() => {
-                                    setEquippedTitle?.('');
-                                    setIsTitleModalOpen(false);
-                                }}
-                                className="w-full text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded transition-colors"
-                            >
-                                - No Title -
-                            </button>
-
-                            {/* รายการฉายาที่ปลดล็อคแล้ว */}
-                            {unlockedTitles.length > 0 ? (
-                                unlockedTitles.map((ach) => (
-                                    <button
-                                        key={ach.id}
-                                        onClick={() => {
-                                            setEquippedTitle?.(ach.rewardTitle!);
-                                            setIsTitleModalOpen(false);
-                                        }}
-                                        className="w-full text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs rounded font-semibold flex flex-col gap-0.5 transition-colors"
-                                    >
-                                        <span>{ach.rewardTitle}</span>
-                                        <span className="text-slate-400 text-[10px] font-normal">Unlocked from: {ach.title}</span>
-                                    </button>
-                                ))
-                            ) : (
-                                <p className="text-xs text-slate-500 text-center py-4">No titles unlocked yet (Complete achievements first)</p>
+                            {Object.entries(hoveredItem.stats || {}).filter(([_, value]) => Number(value) > 0).length > 0 && (
+                                <div className="space-y-1 mb-3">
+                                    {Object.entries(hoveredItem.stats)
+                                        .filter(([_, value]) => Number(value) > 0)
+                                        .map(([stat, value]) => (
+                                            <div key={stat} className="flex justify-between text-xs">
+                                                <span className="text-slate-400 uppercase">{stat}</span>
+                                                <span className="text-emerald-400 font-mono">+{value as number}</span>
+                                            </div>
+                                        ))}
+                                </div>
                             )}
                         </div>
-
-                        <button
-                            onClick={() => setIsTitleModalOpen(false)}
-                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded transition-colors"
-                        >
-                            Close
-                        </button>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
 
+            {/* Modal เลือกฉายา */}
+            {
+                isTitleModalOpen && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                            <h3 className="text-slate-200 font-bold text-lg mb-4">Select Your Title</h3>
+                            <div className="space-y-2 max-h-60 overflow-y-auto mb-4 pr-1">
+                                <button
+                                    onClick={() => {
+                                        setEquippedTitle?.('');
+                                        setIsTitleModalOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded transition-colors"
+                                >
+                                    - No Title -
+                                </button>
+
+                                {unlockedTitles.length > 0 ? (
+                                    unlockedTitles.map((ach) => (
+                                        <button
+                                            key={ach.id}
+                                            onClick={() => {
+                                                setEquippedTitle?.(ach.rewardTitle!);
+                                                setIsTitleModalOpen(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs rounded font-semibold flex flex-col gap-0.5"
+                                        >
+                                            <span>{ach.rewardTitle}</span>
+                                            <span className="text-slate-400 text-[10px] font-normal">Unlocked from: {ach.title}</span>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-slate-500 text-center py-4">No titles unlocked yet</p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setIsTitleModalOpen(false)}
+                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Modal เลือก Avatar */}
+            {
+                isAvatarModalOpen && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                            <h3 className="text-slate-200 font-bold text-lg mb-4">Select Avatar</h3>
+
+                            {/* ปุ่มอัปโหลดรูปจากคอมพิวเตอร์พร้อมระบบย่อขนาดอัตโนมัติ */}
+                            <div className="mb-4">
+                                <label className="flex items-center justify-center w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-md">
+                                    <span>Upload Custom Image (Auto-Resize)</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const img = new Image();
+                                                    img.onload = () => {
+                                                        const canvas = document.createElement('canvas');
+                                                        const MAX_SIZE = 150; // กำหนดขนาดสูงสุด (กว้าง/สูง 150px สำหรับรูป Avatar)
+                                                        let width = img.width;
+                                                        let height = img.height;
+
+                                                        if (width > height) {
+                                                            if (width > MAX_SIZE) {
+                                                                height *= MAX_SIZE / width;
+                                                                width = MAX_SIZE;
+                                                            }
+                                                        } else {
+                                                            if (height > MAX_SIZE) {
+                                                                width *= MAX_SIZE / height;
+                                                                height = MAX_SIZE;
+                                                            }
+                                                        }
+
+                                                        canvas.width = width;
+                                                        canvas.height = height;
+
+                                                        const ctx = canvas.getContext('2d');
+                                                        ctx?.drawImage(img, 0, 0, width, height);
+
+                                                        // แปลงเป็น Base64 (บีบอัดคุณภาพเหลือ 85% เป็น JPEG เพื่อให้ไฟล์เล็กจิ๋ว)
+                                                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+                                                        setAvatar?.(compressedBase64);
+                                                        setIsAvatarModalOpen(false);
+                                                    };
+                                                    img.src = event.target?.result as string;
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="text-xs text-slate-400 mb-2 font-medium">choose from presets:</div>
+
+                            {/* รายการ Avatar สำเร็จรูป */}
+                            <div className="grid grid-cols-4 gap-3 max-h-48 overflow-y-auto mb-4 p-1">
+                                {AVATAR_FILES && AVATAR_FILES.map((avatarSrc: string, index: number) => (
+                                    <div
+                                        key={index}
+                                        onClick={() => {
+                                            setAvatar?.(avatarSrc);
+                                            setIsAvatarModalOpen(false);
+                                        }}
+                                        className={`w-16 h-16 rounded-full overflow-hidden border-2 cursor-pointer transition-all hover:scale-105 ${currentAvatar === avatarSrc ? 'border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-slate-700'
+                                            }`}
+                                    >
+                                        <img src={avatarSrc} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={() => setIsAvatarModalOpen(false)}
+                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                isFrameModalOpen && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                            <h3 className="text-slate-200 font-bold text-lg mb-4">Select Frame</h3>
+
+                            <div className="text-xs text-slate-400 mb-2 font-medium">choose from frames:</div>
+
+                            <div className="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto mb-4 p-1">
+                                {FRAME_FILES && FRAME_FILES.map((frameSrc: string, index: number) => (
+                                    <div
+                                        key={index}
+                                        onClick={() => {
+                                            setFrame?.(frameSrc);
+                                            setIsFrameModalOpen(false);
+                                        }}
+                                        className={`relative w-20 h-20 bg-slate-950 rounded-lg p-2 border-2 cursor-pointer flex items-center justify-center transition-all hover:scale-105 ${userProfile?.frame === frameSrc ? 'border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-slate-700'}`}
+                                    >
+                                        <img src={frameSrc} alt={`Frame ${index}`} className="w-full h-full object-contain" />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={() => setIsFrameModalOpen(false)}
+                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };

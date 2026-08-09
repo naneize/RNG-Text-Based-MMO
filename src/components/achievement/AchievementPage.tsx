@@ -125,7 +125,7 @@ export const AchievementPage: React.FC = () => {
                                 {/* 🟢 เพิ่มส่วนแสดงฉายาที่จะได้รับตรงนี้ */}
                                 {ach.rewardTitle && (
                                     <div className="mt-2 flex items-center gap-1.5">
-                                        <span className="text-[10px] text-slate-400 uppercase font-medium">Title Reward :</span>
+                                        <span className="text-[10px] text-emerald-400 uppercase font-medium">✒️ Title Reward :</span>
                                         <span className={`text-xs px-2 py-0.5 rounded font-bold tracking-wider ${ach.isUnlocked
                                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                             : 'bg-slate-800 text-slate-500 border border-slate-700'
