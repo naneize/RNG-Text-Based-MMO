@@ -39,10 +39,10 @@ export const bossArchetypes: BossArchetype[] = [
             { weakness: 'axe', item1: { id: 'burning_cape' }, item2: { id: 'dragon_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'steel_ingot' }, material2: { id: 'dragon_scale' } },
             { weakness: 'hammer', item1: { id: 'ruby_ring' }, item2: { id: 'chain_mail' }, skill: { id: 'holy_smite' }, material1: { id: 'leather' }, material2: { id: 'gold_ore' } },
             { weakness: 'fist', item1: { id: 'throwing_knives' }, item2: { id: 'heavy_boots' }, skill: { id: 'berserk_rage' }, material1: { id: 'magic_dust' }, material2: { id: 'ancient_rune' } },
-            { weakness: 'staff', item1: { id: 'tiara' }, item2: { id: 'magic_staff' }, item3: { id: 'silver_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
-            { weakness: 'sword', item1: { id: 'great_sword' }, item2: { id: 'winged_helm' }, item3: { id: 'iron_greaves' }, skill: { id: 'berserk_rage' }, material1: { id: 'mithril' }, material2: { id: 'celestial_shard' } },
+            { weakness: 'two-hand sword', item1: { id: 'tiara' }, item2: { id: 'magic_staff' }, item3: { id: 'silver_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
+            { weakness: 'sling', item1: { id: 'great_sword' }, item2: { id: 'winged_helm' }, item3: { id: 'iron_greaves' }, skill: { id: 'berserk_rage' }, material1: { id: 'mithril' }, material2: { id: 'celestial_shard' } },
             { weakness: 'staff', item1: { id: 'battle_bow' }, item2: { id: 'silk_mantle' }, item3: { id: 'sling' }, skill: { id: 'fire_burst' }, material1: { id: 'ancient_rune' }, material2: { id: 'dragon_scale' } },
-            { weakness: 'mace', item1: { id: 'plate_helm' }, item2: { id: 'blessed_boots' }, item3: { id: 'mailed_fist' }, skill: { id: 'poison_slash' }, material1: { id: 'dragon_scale' }, material2: { id: 'primordial_essence' } }
+            { weakness: 'throwing', item1: { id: 'plate_helm' }, item2: { id: 'blessed_boots' }, item3: { id: 'mailed_fist' }, skill: { id: 'poison_slash' }, material1: { id: 'dragon_scale' }, material2: { id: 'primordial_essence' } }
 
         ]
     },

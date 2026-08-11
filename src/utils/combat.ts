@@ -3,10 +3,13 @@ import { calculateSynergyStats, SYNERGY_CONFIG } from './synergy';
 import type { Boss } from '../types/game';
 import { finalizeStats, STAT_CAPS } from './statCalculator';
 
+
 export interface StatSource {
     label: string;
     value: number;
 }
+
+
 
 export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats; breakdown: Record<string, StatSource[]> } => {
     const breakdown: Record<string, StatSource[]> = {};
@@ -269,6 +272,7 @@ export const calculateDamage = (
         elementPercent?: number;
         racePercent?: number;
         weaponWeaknessPercent?: number;
+        armorPiercePercent?: number;
     } = {},
     isMagic: boolean = false,
     skill?: {
@@ -296,6 +300,7 @@ export const calculateDamage = (
     const elementPercent = bonusDamage.elementPercent || 0;
     const racePercent = bonusDamage.racePercent || 0;
     const weaponWeaknessPercent = bonusDamage.weaponWeaknessPercent || 0;
+    const armorPiercePercent = Math.min(100, Math.max(0, bonusDamage.armorPiercePercent || 0)); // ✅ เพิ่มบรรทัดนี้ (clamp กันค่าเกิน 0-100)
 
     // 2. คำนวณ Hit/Miss
     let hitChance = 80 + (attacker.hit - defender.flee);
@@ -371,8 +376,10 @@ export const calculateDamage = (
 
     // --- 6. นำดาเมจทั้งหมดมาหักลบเกราะ (DEF / RES) เป็นด่านสุดท้าย ---
 
-    const primaryMitigation = activeDamageType === 'magic' ? defender.mRes : defender.def;
-    const totalMitigation = primaryMitigation + (defender.res * RES_WEIGHT);
+    const pierceFactor = 1 - armorPiercePercent / 100; // ✅ เพิ่มบรรทัดนี้ — 0% pierce = 1.0 (ไม่ลด), 100% pierce = 0 (ทะลุหมด)
+    const primaryMitigation = (activeDamageType === 'magic' ? defender.mRes : defender.def) * pierceFactor; // ✅ คูณ pierceFactor
+    const totalMitigation = primaryMitigation + (defender.res * RES_WEIGHT * pierceFactor); // ✅ คูณ pierceFactor
+
 
     // ✅ ใช้พลังโจมตีของผู้โจมตีเอง (rawBase) เป็นฐานแทนค่าคงที่ 100 ตายตัว
     // ทำให้ mitigation สเกลสัมพันธ์กับ ATK/DEF ของทั้งสองฝ่ายเสมอ ไม่ว่าตัวเลขจะโตแค่ไหนตามเลเวล

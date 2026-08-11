@@ -56,6 +56,7 @@ export const CharacterStats = ({ player, finalStats, statBreakdown = {}, setShow
             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
                 <div className="flex flex-wrap gap-3">
                     {Object.entries(finalStats)
+                        .filter(([key]) => !['effectPower'].includes(key))
                         .sort(([a], [b]) => {
                             const order: Record<string, number> = {
                                 'maxHp': 1, 'atk': 2, 'def': 3, 'hit': 4, 'flee': 5,

@@ -37,23 +37,27 @@ export const SALVAGE_MATERIALS: Record<string, SalvageMaterialTable> = {
     },
     epic: {
         success: [
-            { id: 'dark_crystal', min: 1, max: 2 },
+            { id: 'dark_crystal', min: 1, max: 3 },
             { id: 'dragon_scale', min: 1, max: 3 },
             { id: 'gold_ore', min: 2, max: 4 },
         ],
         fail: [
             { id: 'dark_crystal', min: 1, max: 1 },
-            { id: 'gold_ore', min: 1, max: 1 },
+            { id: 'gold_ore', min: 1, max: 2 },
         ],
     },
     legendary: {
         success: [
-            { id: 'void_essence', min: 1, max: 1 },
-            { id: 'celestial_shard', min: 1, max: 2 },
-            { id: 'ancient_rune', min: 1, max: 1 },
-            { id: 'primordial_essence', min: 1, max: 1 },
+            { id: 'void_essence', min: 1, max: 3 },
+            { id: 'celestial_shard', min: 1, max: 3 },
+            { id: 'ancient_rune', min: 1, max: 2 },
+            { id: 'primordial_essence', min: 1, max: 2 },
         ],
-        fail: [{ id: 'celestial_shard', min: 1, max: 1 }],
+        fail: [
+            { id: 'celestial_shard', min: 1, max: 1 },
+            { id: 'void_essence', min: 1, max: 1 },
+
+        ],
     },
 };
 

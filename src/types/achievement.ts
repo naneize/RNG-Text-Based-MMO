@@ -18,4 +18,5 @@ export interface AchievementProgress extends AchievementTemplate {
     progress?: number;      // สำหรับเควสต์สะสม (ถ้ามี)
     maxProgress?: number;
     rewardTitle?: string;   // <--- เพิ่มบรรทัดนี้ เพื่อรับฉายาที่จะได้รับ
+    rewardFrame?: string;   // <--- เพิ่มบรรทัดนี้ เพื่อรับเฟรมที่จะได้รับ
 }

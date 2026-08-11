@@ -1,4 +1,5 @@
 import type { Item } from '../../types/game';
+import { WEAPON_ABILITY_POOL } from '../../data/weaponAbilities'; // ✅ เพิ่มบรรทัดนี้
 
 interface LootedModalProps {
     lootedItem: Item;
@@ -99,6 +100,19 @@ export const LootModal = ({
                                     <div className="text-[10px] text-emerald-300 font-semibold uppercase tracking-wider text-center break-words max-w-[200px]">
                                         WEAPON: {lootedItem.weaponType.replace(/-/g, ' ')}
                                     </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* ✅ เพิ่ม block นี้ — แสดง Weapon Ability ถ้าไอเทมที่ดรอปมามีติด */}
+                        {(lootedItem as any).weaponAbilityId && (() => {
+                            const ability = WEAPON_ABILITY_POOL.find(a => a.id === (lootedItem as any).weaponAbilityId);
+                            if (!ability) return null;
+                            return (
+                                <div className="bg-indigo-950/30 border border-indigo-700/50 p-2.5 rounded-lg mb-3 space-y-1">
+                                    <div className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider">Weapon Ability</div>
+                                    <div className="text-xs font-bold text-white">{ability.name}</div>
+                                    <p className="text-[10px] text-slate-300">{ability.description}</p>
                                 </div>
                             );
                         })()}

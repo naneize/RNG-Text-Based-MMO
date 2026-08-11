@@ -22,8 +22,12 @@ export const EquippedGear = ({
             <h3 className="font-bold text-slate-300 border-b border-slate-700 pb-2">EQUIPPED GEAR</h3>
             <div className="grid grid-cols-2 gap-2">
                 {slots.map((slot) => {
-                    const equippedItem = player.equippedItems[slot];
+                    // 🟢 แปลง slot ให้วิ่งไปดึง key 'helmet' ถ้าเจอ 'helm'
+                    const itemKey = slot === 'helm' ? 'helmet' : slot;
+                    const equippedItem = player.equippedItems[itemKey as keyof typeof player.equippedItems];
+
                     const borderStyle = equippedItem ? getRarityColor(equippedItem.rarity) : 'border-slate-700';
+
                     return (
                         <div key={slot} className={`relative h-16 bg-slate-800 border-2 ${borderStyle} flex flex-col items-center justify-center rounded p-1 group transition-colors`}>
                             <span className="capitalize text-[10px] text-slate-500 font-bold">{slot}</span>
@@ -31,9 +35,15 @@ export const EquippedGear = ({
                                 <>
                                     <img src={equippedItem.icon} alt={equippedItem.name} className="w-6 h-6 object-contain" />
                                     <span className="text-emerald-400 text-[10px] truncate w-full text-center px-1">{equippedItem.name}</span>
-                                    <button onClick={() => unequipItem(equippedItem)}
-                                        className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10">X</button>
-                                </>
+                                    <button
+                                        onClick={() => {
+                                            // ไม่ต้องประกาศ targetSlot แล้ว เพราะเราไปแก้ logic การหา slot ใน gameStore.ts แทน
+                                            unequipItem(equippedItem);
+                                        }}
+                                        className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
+                                    >
+                                        X
+                                    </button>                              </>
                             ) : <span className="text-[10px] text-slate-700">Empty</span>}
                         </div>
                     );

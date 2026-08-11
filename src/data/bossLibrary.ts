@@ -1,6 +1,7 @@
 import type { Boss } from '../types/game';
 import { bossArchetypes } from './bossArchetypes';
 import { bossImages, baseStats, materialTiers } from './bossAssets';
+import { calculateCombatPower } from '../utils/combatPower';
 
 
 
@@ -107,6 +108,7 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
         zone,
         weakness: currentDrops.weakness,
         stats,
+        recommendedCP: calculateCombatPower(stats),
         dropTable: [
             { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: commonChance, fixedRarity: 'Common' },
             { itemId: currentDrops.item1?.id || '', type: 'item', dropChance: rareChance, fixedRarity: 'Rare' },

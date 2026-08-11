@@ -92,6 +92,8 @@ export interface Item extends ItemTemplate {
 
     // เงื่อนไขพิเศษสำหรับสกิล
     skillCondition?: SkillCondition;
+    requiredWeaponType?: WeaponType;
+    weaponAbilityId?: string;
 
     elementBonus?: {
         type: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
@@ -174,6 +176,7 @@ export interface Boss {
     // ตารางดรอปของ
     dropTable: DropItem[];
     guaranteedMaterials?: { itemId: string; amount: number }[];
+    recommendedCP?: number;
 }
 
 export interface MaterialTemplate {

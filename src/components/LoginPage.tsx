@@ -150,7 +150,7 @@ export const LoginPage = () => {
                                 </h1>
                                 <div className="flex items-center justify-center gap-2 mt-1">
                                     <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-mono">
-                                        Version : 0.0.3
+                                        Version : 0.0.4
                                     </span>
                                     <p className="text-slate-400 text-sm">
                                         {mode === 'login' ? 'Sign In' : 'Create Account'}

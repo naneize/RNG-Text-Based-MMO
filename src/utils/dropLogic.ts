@@ -19,12 +19,17 @@ const getRandomValue = (min: number, max: number): number => {
 
 // 🟢 ปรับได้: item level ของไอเทมที่ดรอปจากบอส
 // ขั้นต่ำ = level บอสพอดี (ห้ามต่ำกว่า) / สูงสุด = level บอส x 3
-const MIN_ITEM_LEVEL_MULT = 1;
+
 const MAX_ITEM_LEVEL_MULT = 5;
 
 const getRandomItemLevel = (bossLevel: number): number => {
-    const minLevel = Math.max(1, Math.floor(bossLevel * MIN_ITEM_LEVEL_MULT));
+    // 1. คำนวณ maxLevel (เลเวลบอส x 5)
     const maxLevel = Math.floor(bossLevel * MAX_ITEM_LEVEL_MULT);
+
+    // 2. คำนวณ minLevel (70% ของ maxLevel)
+    const minLevel = Math.max(1, Math.floor(maxLevel * 0.7));
+
+    // 3. สุ่มเลเวลในช่วง [minLevel, maxLevel]
     return getRandomValue(minLevel, maxLevel);
 };
 

@@ -2,6 +2,7 @@ import type { Item, Stats, WeaponType } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { SKILL_POOL } from '../data/skills';
 import { rollWithVariation } from './statVariation';
+import { getRandomWeaponAbility } from '../data/weaponAbilities';
 
 
 export const rarityConfig = [
@@ -51,25 +52,53 @@ export const generateRandomSkill = (): Item => {
         if (config.name === 'Legendary') minAffixes = 4;
 
         // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
+        // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้ (ปรับให้เรนต์เปอร์เซ็นต์สเกลตาม Rarity)
         const possibleAffixes = [
+            // 1. ธาตุ (Element)
             () => {
                 enhancedCondition.elementBonusAgainst = elementPool[Math.floor(Math.random() * elementPool.length)];
-                enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 5;
+
+                // 📌 ปรับเรนต์ตาม Rarity
+                if (config.name === 'Legendary') {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 16) + 15; // 15% - 30%
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 10; // 10% - 20%
+                } else {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 6) + 5;   // 5% - 10% (Rare)
+                }
             },
+            // 2. เผ่า (Race)
             () => {
                 enhancedCondition.raceBonusAgainst = racePool[Math.floor(Math.random() * racePool.length)];
-                enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 5;
+
+                // 📌 ปรับเรนต์ตาม Rarity
+                if (config.name === 'Legendary') {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 16) + 15; // 15% - 30%
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 10; // 10% - 20%
+                } else {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 6) + 5;   // 5% - 10% (Rare)
+                }
             },
+            // 3. สเกลสเตตัส (Scaling Stat)
             () => {
                 enhancedCondition.scalingStat = statPool[Math.floor(Math.random() * statPool.length)];
-                enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
+
+                // 📌 ปรับตัวคูณตาม Rarity ด้วยก็ได้เพื่อให้เข้ากัน
+                if (config.name === 'Legendary') {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.5).toFixed(2)); // 0.50 - 0.80
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.2 + 0.3).toFixed(2)); // 0.30 - 0.50
+                } else {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.2 + 0.2).toFixed(2)); // 0.20 - 0.40
+                }
             },
+            // 4. เงื่อนไขเลือดต่ำ (Low HP Bonus)
             () => {
                 enhancedCondition.requiresLowHp = true;
-                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // สุ่ม Threshold ในช่วง 20% - 50%
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // 20% - 50% (อันนี้ปล่อยไว้หรือปรับให้เลือดสูงขึ้นเพื่อให้เงื่อนไขง่ายขึ้นก็ได้ครับ)
             }
         ];
-
         // สุ่มหยิบออฟชันมาใส่ให้ครบตามจำนวนขั้นต่ำ (และมีโอกาสสุ่มเพิ่มได้อีกตามดวง)
         // สลับตำแหน่งอาเรย์เพื่อความสุ่ม
         const shuffled = possibleAffixes.sort(() => 0.5 - Math.random());
@@ -143,24 +172,51 @@ export const generateRandomSkillSpecific = (
         if (config.name === 'Epic') minAffixes = 3;
         if (config.name === 'Legendary') minAffixes = 4;
 
-        // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้
+        // สร้างลิสต์ออฟชันทั้งหมดที่มีโอกาสสุ่มได้ (ปรับให้เรนต์เปอร์เซ็นต์สเกลตาม Rarity)
         const possibleAffixes = [
+            // 1. ธาตุ (Element)
             () => {
                 enhancedCondition.elementBonusAgainst = elementPool[Math.floor(Math.random() * elementPool.length)];
-                enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 5;
+
+                // 📌 ปรับเรนต์ตาม Rarity
+                if (config.name === 'Legendary') {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 16) + 15; // 15% - 30%
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 11) + 10; // 10% - 20%
+                } else {
+                    enhancedCondition.elementBonusPercent = Math.floor(Math.random() * 6) + 5;   // 5% - 10% (Rare)
+                }
             },
+            // 2. เผ่า (Race)
             () => {
                 enhancedCondition.raceBonusAgainst = racePool[Math.floor(Math.random() * racePool.length)];
-                enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 5;
+
+                // 📌 ปรับเรนต์ตาม Rarity
+                if (config.name === 'Legendary') {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 16) + 15; // 15% - 30%
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 11) + 10; // 10% - 20%
+                } else {
+                    enhancedCondition.raceBonusPercent = Math.floor(Math.random() * 6) + 5;   // 5% - 10% (Rare)
+                }
             },
+            // 3. สเกลสเตตัส (Scaling Stat)
             () => {
                 enhancedCondition.scalingStat = statPool[Math.floor(Math.random() * statPool.length)];
-                enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.2).toFixed(2));
+
+                // 📌 ปรับตัวคูณตาม Rarity ด้วยก็ได้เพื่อให้เข้ากัน
+                if (config.name === 'Legendary') {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.3 + 0.5).toFixed(2)); // 0.50 - 0.80
+                } else if (config.name === 'Epic') {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.2 + 0.3).toFixed(2)); // 0.30 - 0.50
+                } else {
+                    enhancedCondition.scalingMultiplier = Number((Math.random() * 0.2 + 0.2).toFixed(2)); // 0.20 - 0.40
+                }
             },
+            // 4. เงื่อนไขเลือดต่ำ (Low HP Bonus)
             () => {
                 enhancedCondition.requiresLowHp = true;
-                enhancedCondition.requiresHighHp = !enhancedCondition.requiresLowHp;
-                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // สุ่ม Threshold ในช่วง 20% - 50%
+                enhancedCondition.hpThreshold = Math.floor(Math.random() * 31) + 20; // 20% - 50% (อันนี้ปล่อยไว้หรือปรับให้เลือดสูงขึ้นเพื่อให้เงื่อนไขง่ายขึ้นก็ได้ครับ)
             }
         ];
 
@@ -248,6 +304,8 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
     // นำมาปรับใช้กับทุก Slot
+    let weaponAbilityId: string | undefined;
+
     if (template.slot === 'weapon') {
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
         const isRanged = template.weaponType ? rangedTypes.includes(template.weaponType) : false;
@@ -262,6 +320,22 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         if (isTwoHanded || isRanged) {
             stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
             baseStatsSet.add('str');
+        }
+
+        // 🟢 เปลี่ยนจาก Record<Item['rarity'], number> เป็น Record<string, number>
+        const ABILITY_CHANCE_BY_RARITY: Record<string, number> = {
+            Common: 0.15,
+            Rare: 0.40,
+            Epic: 0.65,
+            Legendary: 1.0,
+        };
+
+        // ตอนนี้ใช้ config.name ได้โดยไม่ต้อง Cast Type แล้ว
+        const traitChance = ABILITY_CHANCE_BY_RARITY[config.name] ?? 0.25;
+
+        if (Math.random() < traitChance) {
+            const ability = getRandomWeaponAbility(config.name);
+            weaponAbilityId = ability?.id;
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
@@ -455,6 +529,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         itemLevel,
         elementBonus: elementBonus as { type: "Fire" | "Water" | "Earth" | "Wind" | "Dark" | "Holy" | "Neutral"; value: number; } | undefined,
         raceBonus: raceBonus as { type: "DemiHuman" | "Plant" | "Brute" | "Undead" | "Demon" | "Angel" | "Dragon"; value: number; } | undefined,
+        weaponAbilityId,
         type: 'equipment'
     };
 }; // generateRandomItemSpecific
@@ -484,6 +559,8 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
+    let weaponAbilityId: string | undefined;
+
     if (template.slot === 'weapon') {
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
         const isRanged = template.weaponType ? rangedTypes.includes(template.weaponType) : false;
@@ -498,6 +575,22 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         if (isTwoHanded || isRanged) {
             stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
             baseStatsSet.add('str');
+        }
+
+        // 🟢 เปลี่ยนจาก Record<Item['rarity'], number> เป็น Record<string, number>
+        const ABILITY_CHANCE_BY_RARITY: Record<string, number> = {
+            Common: 0.15,
+            Rare: 0.40,
+            Epic: 0.65,
+            Legendary: 1.0,
+        };
+
+        // ตอนนี้ใช้ config.name ได้โดยไม่ต้อง Cast Type แล้ว
+        const traitChance = ABILITY_CHANCE_BY_RARITY[config.name] ?? 0.25;
+
+        if (Math.random() < traitChance) {
+            const ability = getRandomWeaponAbility(config.name);
+            weaponAbilityId = ability?.id;
         }
 
     } else if (['necklace', 'ring'].includes(template.slot)) {
@@ -663,8 +756,9 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         stats,
         statsLog,
         itemLevel,
-        elementBonus,
-        raceBonus,
+        elementBonus: elementBonus as { type: "Fire" | "Water" | "Earth" | "Wind" | "Dark" | "Holy" | "Neutral"; value: number; } | undefined,
+        raceBonus: raceBonus as { type: "DemiHuman" | "Plant" | "Brute" | "Undead" | "Demon" | "Angel" | "Dragon"; value: number; } | undefined,
+        weaponAbilityId,
         type: 'equipment'
     };
 };

@@ -43,7 +43,7 @@ export const useCharacterDashboard = () => {
 
         // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
 
-        const ROLL_MAX_ITEM_LEVEL = 250; // ✅ ต่ำกว่า boss loot ceiling (1,000) พอสมควร ให้บอสยังคงเป็นแหล่งของแรงสุด
+        const ROLL_MAX_ITEM_LEVEL = 300; // ✅ ต่ำกว่า boss loot ceiling (1,000) พอสมควร ให้บอสยังคงเป็นแหล่งของแรงสุด
 
         const rawMaxLevel = totalOpens < 1000
             ? 1 + Math.floor(totalOpens / 10) * 5
@@ -65,17 +65,19 @@ export const useCharacterDashboard = () => {
 
         // 3. ตรวจสอบเงื่อนไข Pity แบบป้องกันการเลยเพดาน
         if (currentLegendPity >= PITY_CONFIG.LEGEND) {
-            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Legendary (ไม่เอา material)
+            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Legendary
             newItem = generateRandomItem('legendary', randomLevel);
-            while (newItem.type === 'material') {
+            // ✅ เพิ่มเงื่อนไขดักประเภท skill เข้าไป (และประเภทอื่นที่ไม่ต้องการ)
+            while (newItem.type === 'material' || newItem.type === 'skill') {
                 newItem = generateRandomItem('legendary', randomLevel);
             }
             resetLegendPity();
             resetEpicPity();
         } else if (currentEpicPity >= PITY_CONFIG.EPIC) {
-            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Epic (ไม่เอา material)
+            // บังคับสุ่มเฉพาะอุปกรณ์ระดับ Epic
             newItem = generateRandomItem('epic', randomLevel);
-            while (newItem.type === 'material') {
+            // ✅ เพิ่มเงื่อนไขดักประเภท skill เข้าไปเช่นกัน
+            while (newItem.type === 'material' || newItem.type === 'skill') {
                 newItem = generateRandomItem('epic', randomLevel);
             }
             resetEpicPity();

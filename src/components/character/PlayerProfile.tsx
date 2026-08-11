@@ -45,7 +45,10 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
     const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'shield', 'helm', 'cloak', 'necklace', 'ring', 'boots'];
 
     const getEquippedItem = (slot: EquipmentSlot) => {
-        if (slot === 'helm') return player.equippedItems.helmet;
+        // 🟢 ถ้า slot เป็น 'helm' ให้ดึงจาก player.equippedItems.helmet โดยตรง
+        if (slot === 'helm') {
+            return player.equippedItems.helmet;
+        }
         return player.equippedItems[slot as keyof typeof player.equippedItems];
     };
 
@@ -76,7 +79,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
 
     // ดึงรูป Avatar ปัจจุบัน (ใช้จาก userProfile หรือ fallback เป็นรูปแรกใน AVATAR_FILES)
     const currentAvatar = userProfile?.avatar || AVATAR_FILES?.[0] || '';
-    const currentFrame = userProfile?.frame || FRAME_FILES[0];
+
 
     return (
         <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-7xl mx-auto overflow-hidden relative">
@@ -153,22 +156,24 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                         </div>
                     </div>
 
-                    {/* Combat Power Display */}
-                    {/* 🟢 Combat Power Display (แบบกระชับ) */}
-                    <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700 mb-2"> {/* ลด padding และ margin */}
-                        <div className="text-center mb-1"> {/* ลด margin */}
+
+                    {/* 🟢 Combat Power Display (เอาฉายามาไว้ด้านหน้าตัวเลขแรงค์) */}
+                    <div className="w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700 mb-2">
+                        <div className="text-center mb-1">
                             <p className="text-[10px] text-slate-400 uppercase tracking-wider">Combat Power</p>
 
-                            {/* 🟢 บีบอัดเลข CP ให้อยู่บรรทัดเดียวกัน ตัวเล็กลงนิดหน่อย */}
-                            <div className="flex items-baseline justify-center gap-2">
+                            {/* 🟢 วางฉายาไว้ด้านหน้า หรือจัดเรียงใหม่ตามชอบ */}
+                            <div className="flex items-center justify-center gap-2 mt-1">
+                                <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-900/80 rounded-md border border-slate-700 ${cpRating.color}`}>
+                                    {cpRating.description}
+                                </span>
                                 <span className={`text-3xl font-bold ${cpRating.color}`}>{combatPower.toLocaleString()}</span>
                                 <span className={`text-xl font-bold ${cpRating.color}`}>{cpRating.rank}</span>
                             </div>
-                            {/* เอา description ออกเพื่อประหยัดที่ หรือย้ายไปไว้ที่อื่น */}
                         </div>
 
                         {/* 🟢 ลดขนาด Breakdown */}
-                        <div className="grid grid-cols-3 gap-1.5 text-center"> {/* ลด gap */}
+                        <div className="grid grid-cols-3 gap-1.5 text-center">
                             <div className="bg-slate-900/50 rounded px-1 py-0.5">
                                 <p className="text-[9px] text-slate-400 uppercase">Offense</p>
                                 <p className="text-xs font-bold text-rose-400">{cpBreakdown.offensive}</p>
@@ -220,6 +225,10 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {equipmentSlots.map((slot) => {
                                         const equippedItem = getEquippedItem(slot);
+
+                                        // 🟢 แก้จาก 'item' เป็น 'equippedItem' ให้ถูกต้อง
+                                        console.log(`Slot: ${slot}, Item:`, equippedItem);
+
                                         const borderStyle = equippedItem ? getRarityColor(equippedItem.rarity) : 'border-slate-700';
 
                                         return (
@@ -379,29 +388,28 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
             </div>
 
             {/* Hover Tooltip Item */}
-            {
-                hoveredItem && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-none">
-                        <div className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
-                            <div className="font-bold text-slate-200 text-lg mb-1">{hoveredItem.name}</div>
-                            <div className="text-xs text-slate-400 mb-3">{hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}</div>
+            {hoveredItem && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-none">
+                    <div className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
+                        <div className="font-bold text-slate-200 text-lg mb-1">{hoveredItem.name}</div>
+                        <div className="text-xs text-slate-400 mb-3 pb-2 border-b border-slate-800">{hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}</div>
 
-                            {Object.entries(hoveredItem.stats || {}).filter(([_, value]) => Number(value) > 0).length > 0 && (
-                                <div className="space-y-1 mb-3">
-                                    {Object.entries(hoveredItem.stats)
-                                        .filter(([_, value]) => Number(value) > 0)
-                                        .map(([stat, value]) => (
-                                            <div key={stat} className="flex justify-between text-xs">
-                                                <span className="text-slate-400 uppercase">{stat}</span>
-                                                <span className="text-emerald-400 font-mono">+{value as number}</span>
-                                            </div>
-                                        ))}
-                                </div>
-                            )}
-                        </div>
+                        {Object.entries(hoveredItem.stats || {}).filter(([_, value]) => Number(value) > 0).length > 0 && (
+                            <div className="space-y-1.5 mb-3">
+                                {Object.entries(hoveredItem.stats)
+                                    .filter(([_, value]) => Number(value) > 0)
+                                    .map(([stat, value]) => (
+                                        // 🟢 เพิ่ม border-b และ py-1 เพื่อให้มีเส้นคั่นและมีพื้นที่หายใจระหว่างแถว
+                                        <div key={stat} className="flex justify-between text-xs py-1 border-b border-slate-800/60 last:border-b-0">
+                                            <span className="text-slate-400 uppercase">{stat}</span>
+                                            <span className="text-emerald-400 font-mono">+{value as number}</span>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Modal เลือกฉายา */}
             {
@@ -539,39 +547,55 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                 )
             }
 
-            {
-                isFrameModalOpen && (
-                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
-                            <h3 className="text-slate-200 font-bold text-lg mb-4">Select Frame</h3>
+            {isFrameModalOpen && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <h3 className="text-slate-200 font-bold text-lg mb-4">Select Frame</h3>
 
-                            <div className="text-xs text-slate-400 mb-2 font-medium">choose from frames:</div>
+                        <div className="text-xs text-slate-400 mb-2 font-medium">Unlocked Frames:</div>
 
-                            <div className="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto mb-4 p-1">
-                                {FRAME_FILES && FRAME_FILES.map((frameSrc: string, index: number) => (
-                                    <div
-                                        key={index}
-                                        onClick={() => {
-                                            setFrame?.(frameSrc);
-                                            setIsFrameModalOpen(false);
-                                        }}
-                                        className={`relative w-20 h-20 bg-slate-950 rounded-lg p-2 border-2 cursor-pointer flex items-center justify-center transition-all hover:scale-105 ${userProfile?.frame === frameSrc ? 'border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-slate-700'}`}
-                                    >
-                                        <img src={frameSrc} alt={`Frame ${index}`} className="w-full h-full object-contain" />
-                                    </div>
-                                ))}
-                            </div>
+                        <div className="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto mb-4 p-1">
+                            {/* 🟢 กรองเฉพาะ achievement ที่ปลดล็อกและกดรับรางวัล (isClaimed) ที่มี rewardFrame */}
+                            {achievementsList
+                                .filter((ach) => ach.isClaimed && ach.rewardFrame)
+                                .map((ach, index) => {
+                                    const frameSrc = ach.rewardFrame!;
+                                    const isSelected = userProfile?.frame === frameSrc;
 
-                            <button
-                                onClick={() => setIsFrameModalOpen(false)}
-                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
-                            >
-                                Close
-                            </button>
+                                    return (
+                                        <div
+                                            key={index}
+                                            onClick={() => {
+                                                setFrame?.(frameSrc);
+                                                setIsFrameModalOpen(false);
+                                            }}
+                                            className={`relative w-20 h-20 bg-slate-950 rounded-lg p-2 border-2 cursor-pointer flex items-center justify-center transition-all hover:scale-105 ${isSelected
+                                                ? 'border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
+                                                : 'border-slate-700'
+                                                }`}
+                                        >
+                                            <img src={frameSrc} alt={ach.title} className="w-full h-full object-contain" />
+                                        </div>
+                                    );
+                                })}
+
+                            {/* (ทางเลือก) กรณีที่ยังไม่มีกรอบที่ปลดล็อกเลย */}
+                            {achievementsList.filter((ach) => ach.isClaimed && ach.rewardFrame).length === 0 && (
+                                <div className="col-span-3 text-center py-6 text-slate-500 text-xs italic">
+                                    No frames unlocked yet. Complete achievements to unlock!
+                                </div>
+                            )}
                         </div>
+
+                        <button
+                            onClick={() => setIsFrameModalOpen(false)}
+                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
+                        >
+                            Close
+                        </button>
                     </div>
-                )
-            }
+                </div>
+            )}
         </div >
     );
 };

@@ -303,7 +303,7 @@ export const InventorySection = ({
                     <div className="relative w-full overflow-hidden rounded-lg border border-emerald-500/50 shadow-md">
                         {(isLooting || isAutoActive) && (
                             <div
-                                className={`absolute top-0 left-0 h-full transition-all duration-75 ease-linear pointer-events-none ${isAutoActive ? 'bg-amber-400/40' : 'bg-emerald-400/40'
+                                className={`absolute top-0 left-0 h-full transition-all duration-75 ease-linear pointer-events-none ${isAutoActive ? 'bg-emerald-400' : 'bg-emerald-400/40'
                                     }`}
                                 style={{ width: `${progress}%` }}
                             />
@@ -316,7 +316,7 @@ export const InventorySection = ({
                 ${player.inventory.length >= MAX_INVENTORY_SLOTS
                                     ? 'bg-red-950 text-red-400 cursor-not-allowed border-red-800'
                                     : isAutoActive
-                                        ? 'bg-amber-900/40 text-amber-300 font-mono'
+                                        ? 'bg-amber-900/40 text-white'
                                         : isLooting
                                             ? 'bg-emerald-900/50 text-emerald-200 font-mono'
                                             : 'bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg active:scale-[0.98]'
@@ -352,8 +352,7 @@ export const InventorySection = ({
                         className={`px-4 py-4 rounded-lg font-bold text-xs uppercase border transition-all h-[54px] ${player.inventory.length >= MAX_INVENTORY_SLOTS
                             ? 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
                             : isAutoActive
-                                ? 'bg-amber-600 border-amber-400 text-white animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.6)]'
-                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 active:scale-95'
+                                ? 'bg-emerald-400 border-emerald-600 text-white animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.8)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 active:scale-95'
                             }`}
                     >
                         {isAutoActive ? 'AUTO ROLL : ON' : 'AUTO ROLL : OFF'}

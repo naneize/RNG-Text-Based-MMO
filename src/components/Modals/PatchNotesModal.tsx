@@ -6,18 +6,33 @@ export const PatchNotesModal = () => {
                     Latest Updates & Patch Notes
                 </h2>
                 <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
-                    v0.0.3
+                    v0.0.4
                 </span>
             </div>
 
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[450px] text-xs">
-                {/* Update 5 (ใหม่ล่าสุด) */}
+                {/* Update 1 (ใหม่ล่าสุดวันนี้) */}
+                <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                        <span className="font-bold text-white text-sm">Player Profile & Weapon Ability System</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400 font-mono">11 Aug 2026</span>
+                            <span className="text-[10px] text-emerald-400 font-mono">New</span>
+                        </div>
+                    </div>
+                    <ul className="text-slate-400 leading-relaxed text-xs list-disc list-inside space-y-1">
+                        <li><strong className="text-slate-200">Player Profile Page:</strong> Added dedicated profile interface to track account stats, achievements, and player progress.</li>
+                        <li><strong className="text-slate-200">Weapon Abilities:</strong> Weapon items now feature unique innate skills and ability passives to enhance combat strategy.</li>
+                    </ul>
+                </div>
+
+                {/* Update 2 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">Transfer Protection System</span>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
-                            <span className="text-[10px] text-emerald-400 font-mono">New</span>
+                            <span className="text-[10px] text-blue-400 font-mono">Enhancement</span>
                         </div>
                     </div>
                     <p className="text-slate-400 leading-relaxed">
@@ -25,7 +40,7 @@ export const PatchNotesModal = () => {
                     </p>
                 </div>
 
-                {/* Update 6 */}
+                {/* Update 3 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">Stat Range Display</span>
@@ -39,39 +54,43 @@ export const PatchNotesModal = () => {
                     </p>
                 </div>
 
-                {/* Update 7 */}
+                {/* Update 4 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
-                        <span className="font-bold text-white text-sm">Boss Loot Fixes</span>
+                        <span className="font-bold text-white text-sm">Item Level & Boss Loot Rebalance</span>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
-                            <span className="text-[10px] text-amber-400 font-mono">Fix</span>
+                            <span className="text-[10px] text-amber-400 font-mono">Balance / Fix</span>
                         </div>
                     </div>
-                    <p className="text-slate-400 leading-relaxed">
-                        Fixed a bug where a single boss kill could drop multiple rarity tiers of the same item at once. Item level dropped from bosses now scales into a range above the boss's own level, rewarding tougher fights with a chance at significantly stronger gear.
-                    </p>
+                    <ul className="text-slate-400 leading-relaxed text-xs list-disc list-inside space-y-1">
+                        <li><strong className="text-slate-200">Boss Loot Buff:</strong> Boss drops now scale up to <span className="text-cyan-400 font-mono">iLv. 1,000</span> (5x Boss Level), making boss hunting the ultimate endgame progression.</li>
+                        <li><strong className="text-slate-200">Box Roll Cap:</strong> Standard item rolls are now capped at <span className="text-amber-400 font-mono">iLv. 300</span> to preserve boss farming value.</li>
+                        <li><strong className="text-slate-200">Bad Luck Protection:</strong> All item rolls now guarantee a minimum of <span className="text-emerald-400 font-mono">70%</span> of the current max level range.</li>
+                        <li><strong className="text-slate-200">Drop Bug Fix:</strong> Fixed a bug where a single boss kill could yield multiple rarity tiers for the same item.</li>
+                    </ul>
                 </div>
 
-                {/* Update 1 */}
+                {/* Update 5 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">Marketplace System</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">30 Jul 2026</span>
+                            <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
                             <span className="text-[10px] text-emerald-400 font-mono">New</span>
                         </div>
                     </div>
                     <p className="text-slate-400 leading-relaxed">
-                        Introduced the Player Marketplace system, allowing users to safely trade items, list gear, and acquire resources. (Note: You must log in with a real account to view and access the marketplace.)                    </p>
+                        Introduced the Player Marketplace system, allowing users to safely trade items, list gear, and acquire resources. (Note: You must log in with a real account to view and access the marketplace.)
+                    </p>
                 </div>
 
-                {/* Update 2 */}
+                {/* Update 6 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">Item Reroll System</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">30 Jul 2026</span>
+                            <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
                             <span className="text-[10px] text-emerald-400 font-mono">New</span>
                         </div>
                     </div>
@@ -80,12 +99,12 @@ export const PatchNotesModal = () => {
                     </p>
                 </div>
 
-                {/* Update 3 */}
+                {/* Update 7 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">Random Item Rebalance</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">30 Jul 2026</span>
+                            <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
                             <span className="text-[10px] text-amber-400 font-mono">Balance</span>
                         </div>
                     </div>
@@ -94,12 +113,12 @@ export const PatchNotesModal = () => {
                     </p>
                 </div>
 
-                {/* Update 4 */}
+                {/* Update 8 */}
                 <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-800 space-y-1.5">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-white text-sm">UI/UX Layout Improvements</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">30 Jul 2026</span>
+                            <span className="text-[10px] text-slate-400 font-mono">31 Jul 2026</span>
                             <span className="text-[10px] text-blue-400 font-mono">Enhancement</span>
                         </div>
                     </div>

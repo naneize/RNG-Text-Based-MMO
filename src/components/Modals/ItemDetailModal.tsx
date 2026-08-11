@@ -1,5 +1,6 @@
 import type { Item } from '../../types/game';
 import { getFullStatRanges, getSpecialBonusRange } from '../../utils/statRanges';
+import { WEAPON_ABILITY_POOL } from '../../data/weaponAbilities';
 
 interface ItemDetailModalProps {
     selectedItem: Item;
@@ -38,7 +39,12 @@ export const ItemDetailModal = ({
         rarity: selectedItem.rarity,
         itemLevel: selectedItem.itemLevel,
     });
+
     const specialRange = getSpecialBonusRange(selectedItem.rarity);
+    const weaponAbility = selectedItem.weaponAbilityId
+        ? WEAPON_ABILITY_POOL.find(a => a.id === selectedItem.weaponAbilityId)
+        : undefined; // ✅ เพิ่มบรรทัดนี้
+
 
 
     return (
@@ -102,20 +108,51 @@ export const ItemDetailModal = ({
                                 DROP CHANCE : <span className="text-yellow-600">{getDropChance(selectedItem.rarity)}%</span>
                             </div>
                         )}
+
+                        {/* 🌟 Weapon Ability Box (Centered & Balanced) */}
+
+                        {/* 🌟 Weapon Trait: จัดชิดเข้าหากัน + เปลี่ยนสีแยกประเภท */}
+                        {weaponAbility && (
+                            <div className="w-full text-left space-y-1.5 mt-2 pt-3 border-t border-slate-700/60">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[10px] text-indigo-400 font-extrabold uppercase tracking-widest">
+                                        Weapon Trait
+                                    </span>
+                                    <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-wider">
+                                        {weaponAbility.type.replace('_', ' ')}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <div className="text-sm font-extrabold text-white tracking-wide">
+                                        {weaponAbility.name}
+                                    </div>
+                                    <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+                                        {weaponAbility.description}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
 
                 {/* คอลัมน์ขวา: รายละเอียด, Stats และปุ่ม */}
                 <div className="flex-1 flex flex-col">
-                    {equippedInSlot && (
-                        <div className="text-[10px] text-amber-500 text-center mb-4 font-bold border-b border-slate-700 pb-2">EQUIPPED: {equippedInSlot.name}</div>
-                    )}
+                    {/* 🟢 ใช้ targetSlotKey ดึงข้อมูลชิ้นที่สวมใส่อยู่จริง */}
+                    {(() => {
+                        return equippedInSlot ? (
+                            <div className="text-[10px] text-amber-500 text-center mb-4 font-bold border-b border-slate-700 pb-2">EQUIPPED: {equippedInSlot.name}</div>
+                        ) : null;
+                    })()}
 
                     {selectedItem.description && (
                         <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700 mb-4">
                             <p className="text-slate-300 text-[11px] italic text-center">"{selectedItem.description}"</p>
                         </div>
                     )}
+
+
 
                     {selectedItem.type === 'skill' && (
                         <div className="space-y-3 mb-4">
@@ -193,13 +230,14 @@ export const ItemDetailModal = ({
 
                     {/* ส่วน Stats Gained + เปรียบเทียบ */}
                     {(selectedItem.type !== 'skill' && selectedItem.slot !== 'skill' && selectedItem.stats && Object.keys(selectedItem.stats).length > 0) && (
-                        <div className="space-y-4 flex-grow">
+                        <div className="space-y-4 grow">
                             <div>
                                 <div className="text-[9px] text-emerald-500 font-bold mb-1 uppercase tracking-wider">
                                     {equippedInSlot ? "Stats Comparison" : "Stats Gained"}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                    {/* 1. ส่วน Element Bonus */}
                                     {(selectedItem.elementBonus || equippedInSlot?.elementBonus) && (() => {
                                         const newVal = selectedItem.elementBonus?.value || 0;
                                         const oldVal = equippedInSlot?.elementBonus?.value || 0;
@@ -207,38 +245,30 @@ export const ItemDetailModal = ({
                                         const isMax = newVal >= specialRange.max;
 
                                         return (
-                                            <div className="col-span-2 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex justify-between items-center">
-                                                <span className="text-[9px] text-blue-400 font-bold uppercase">
-                                                    Element: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
+                                            <div className="col-span-1 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex flex-col justify-between text-center">
+                                                {/* 🟢 ใส่คำว่า Element กำกับไว้ด้านบนชัดเจน */}
+                                                <span className="text-[8px] text-blue-400 font-extrabold uppercase tracking-wider">
+                                                    ELEMENT: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
                                                 </span>
-                                                <div className="flex flex-col items-end">
-                                                    <div className="flex items-center gap-2">
-                                                        {equippedInSlot?.elementBonus && (
-                                                            <span className="text-[10px] text-slate-500">{equippedInSlot.elementBonus.value}%</span>
-                                                        )}
-                                                        {equippedInSlot?.elementBonus && <span className="text-[10px] text-slate-600">→</span>}
-                                                        <span className="text-emerald-400 font-bold text-[11px]">
-                                                            + {newVal}%
-                                                            {isMax && (
-                                                                <span className="text-[9px] ml-1 text-amber-400 font-bold align-middle">
-                                                                    MAX
-                                                                </span>
-                                                            )}
-                                                            {equippedInSlot && diff !== 0 && (
-                                                                <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                    ({diff > 0 ? '+' : ''}{diff})
-                                                                </span>
-                                                            )}
+                                                <div className="my-1">
+                                                    <span className="text-emerald-400 font-bold text-xs">
+                                                        +{newVal}%
+                                                    </span>
+                                                    {equippedInSlot && diff !== 0 && (
+                                                        <span className={`text-[9px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                            ({diff > 0 ? '+' : ''}{diff})
                                                         </span>
-                                                    </div>
-                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
-                                                        {specialRange.min}–{specialRange.max}%
-                                                    </div>
+                                                    )}
+                                                    {isMax && <span className="text-[9px] ml-1 text-amber-400 font-bold">MAX</span>}
+                                                </div>
+                                                <div className={`text-[9px] px-1 py-0.5 rounded font-medium mx-auto ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
+                                                    {specialRange.min}–{specialRange.max}%
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
+                                    {/* 2. ส่วน Race Bonus */}
                                     {(selectedItem.raceBonus || equippedInSlot?.raceBonus) && (() => {
                                         const newVal = selectedItem.raceBonus?.value || 0;
                                         const oldVal = equippedInSlot?.raceBonus?.value || 0;
@@ -246,47 +276,40 @@ export const ItemDetailModal = ({
                                         const isMax = newVal >= specialRange.max;
 
                                         return (
-                                            <div className="col-span-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex justify-between items-center">
-                                                <span className="text-[9px] text-amber-400 font-bold uppercase">
-                                                    Race: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
+                                            <div className="col-span-1 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex flex-col justify-between text-center">
+                                                {/* 🟢 ใส่คำว่า Race กำกับไว้ด้านบนชัดเจน */}
+                                                <span className="text-[8px] text-amber-400 font-extrabold uppercase tracking-wider">
+                                                    RACE: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
                                                 </span>
-                                                <div className="flex flex-col items-end">
-                                                    <div className="flex items-center gap-2">
-                                                        {equippedInSlot?.raceBonus && (
-                                                            <span className="text-[10px] text-slate-500">{equippedInSlot.raceBonus.value}%</span>
-                                                        )}
-                                                        {equippedInSlot?.raceBonus && <span className="text-[10px] text-slate-500">→</span>}
-                                                        <span className="text-emerald-400 font-bold text-[11px]">
-                                                            + {newVal}%
-                                                            {isMax && (
-                                                                <span className="text-[9px] ml-1 text-amber-400 font-bold align-middle">
-                                                                    MAX
-                                                                </span>
-                                                            )}
-                                                            {equippedInSlot && diff !== 0 && (
-                                                                <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                    ({diff > 0 ? '+' : ''}{diff})
-                                                                </span>
-                                                            )}
+                                                <div className="my-1">
+                                                    <span className="text-emerald-400 font-bold text-xs">
+                                                        +{newVal}%
+                                                    </span>
+                                                    {equippedInSlot && diff !== 0 && (
+                                                        <span className={`text-[9px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                            ({diff > 0 ? '+' : ''}{diff})
                                                         </span>
-                                                    </div>
-                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
-                                                        {specialRange.min}–{specialRange.max}%
-                                                    </div>
+                                                    )}
+                                                    {isMax && <span className="text-[9px] ml-1 text-amber-400 font-bold">MAX</span>}
+                                                </div>
+                                                <div className={`text-[9px] px-1 py-0.5 rounded font-medium mx-auto ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
+                                                    {specialRange.min}–{specialRange.max}%
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
-                                    {Array.from(new Set([...Object.keys(selectedItem.stats), ...Object.keys(equippedInSlot?.stats || {})])).map((stat) => {
-                                        const newVal = (selectedItem.stats as any)[stat] || 0;
-                                        const oldVal = equippedInSlot ? (equippedInSlot.stats as any)?.[stat] || 0 : 0;
+                                    {/* 🟢 ใช้ Set รวมคีย์สเตตัสของชิ้นที่ใส่และชิ้นที่เลือกเข้าด้วยกัน เพื่อให้คำนวณ diff ได้ครบถ้วน */}
+                                    {Array.from(new Set([...Object.keys(selectedItem.stats || {}), ...Object.keys(equippedInSlot?.stats || {})])).map((stat) => {
+                                        const statKey = stat as keyof typeof selectedItem.stats;
+                                        const newVal = Number(selectedItem.stats?.[statKey]) || 0;
+                                        const oldVal = equippedInSlot?.stats ? Number((equippedInSlot.stats as any)[statKey]) || 0 : 0;
                                         const diff = newVal - oldVal;
 
                                         if (newVal === 0 && oldVal === 0) return null;
 
                                         const range = statRanges[stat as keyof typeof statRanges];
-                                        const isMax = !!range && newVal >= range.max; // ✅ เช็คว่าค่าชน max ของ range หรือไม่
+                                        const isMax = !!range && newVal >= range.max;
 
                                         return (
                                             <div key={stat} className="bg-slate-800 p-2 rounded text-center">
@@ -298,6 +321,7 @@ export const ItemDetailModal = ({
                                                             MAX
                                                         </span>
                                                     )}
+                                                    {/* 🟢 ตรงนี้แหละที่จะกลับมาคำนวณและโชว์ (+10) หรือ (-5) เทียบกับของที่ใส่อยู่ */}
                                                     {equippedInSlot && diff !== 0 && (
                                                         <span className={`text-[10px] ml-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                                             ({diff > 0 ? '+' : ''}{diff})
@@ -305,8 +329,7 @@ export const ItemDetailModal = ({
                                                     )}
                                                 </div>
                                                 {range && (
-                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'
-                                                        }`}>
+                                                    <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium ${isMax ? 'text-amber-100 bg-amber-700/70' : 'text-slate-100 bg-slate-600/70'}`}>
                                                         {range.min}–{range.max}
                                                     </div>
                                                 )}

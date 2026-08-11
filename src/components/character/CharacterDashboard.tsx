@@ -120,7 +120,11 @@ export const CharacterDashboard = () => {
                     setSelectedItem={setSelectedItem}
                     getRarityColor={getRarityColor}
                     getDropChance={getDropChance}
-                    equippedInSlot={equippedItem}
+                    equippedInSlot={
+                        player.equippedItems[
+                        selectedItem.slot === 'helm' ? 'helmet' : selectedItem.slot as keyof typeof player.equippedItems
+                        ]
+                    }
                     equipItem={equipItem}
                     onTransferClick={() => {
                         setItemA(selectedItem);

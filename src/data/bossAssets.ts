@@ -103,10 +103,10 @@ export const DEFAULT_IMAGE = '/Icons/Monsters/EvilBook.svg';
 export const baseStats = {
     str: 50, agi: 50, vit: 50, int: 50, dex: 50, luk: 50,
     critRate: 20, critDmg: 100,
-    atk: 150,
-    def: 100,
+    atk: 300,
+    def: 150,
     maxHp: 5000,
-    hit: 200, flee: 150, res: 40, mRes: 20
+    hit: 500, flee: 300, res: 50, mRes: 30
 };
 
 

@@ -3,7 +3,8 @@ import { BOSS_LIBRARY } from '../data/bossLibrary';
 import { getEffectiveStats } from '../utils/combat';
 import { SKILL_POOL } from '../data/skills';
 
-export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => void }) => {
+
+export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss: any) => void; playerCP: number }) => {
     const [selectedElement, setSelectedElement] = useState<string>('All');
     const [selectedBossForDrops, setSelectedBossForDrops] = useState<any>(null);
 
@@ -56,6 +57,11 @@ export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => 
                                 iconPath = `/Icons/Equipments/${item.itemId}.svg`;
                             }
 
+                            // 🟢 คำนวณช่วงเลเวลไอเทม (70% ถึง 100% ของ maxLevel)
+                            const bossLevel = boss.level || 1;
+                            const maxLevel = Math.floor(bossLevel * 5);
+                            const minLevel = Math.max(1, Math.floor(maxLevel * 0.7));
+
                             return (
                                 <div key={index} className="flex items-center justify-between p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/80 hover:border-slate-600 transition">
                                     <div className="flex items-center gap-3 min-w-0">
@@ -84,6 +90,15 @@ export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => 
                                                 <span className="text-[9px] text-slate-400 uppercase">
                                                     [{item.type}]
                                                 </span>
+
+                                                {/* 🟢 แสดงช่วง iLv. ตามสูตรใหม่ */}
+                                                {item.type === 'item' && (
+                                                    <span className="text-[9px] font-semibold text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-1.5 rounded">
+                                                        {minLevel === maxLevel ? `iLv.${maxLevel}` : `iLv.${minLevel}-${maxLevel}`}
+                                                    </span>
+                                                )}
+
+
                                                 {item.amountRange && (
                                                     <span className="text-[9px] text-slate-300">
                                                         x{item.amountRange.min}-{item.amountRange.max}
@@ -166,6 +181,8 @@ export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {bosses.map((boss) => {
                             const effectiveStats = getEffectiveStats(boss.stats);
+                            const isReady = playerCP >= (boss.recommendedCP || 0); // ✅ เพิ่มบรรทัดนี้
+
 
                             return (
                                 <button
@@ -195,6 +212,14 @@ export const AdventureLobby = ({ onSelectBoss }: { onSelectBoss: (boss: any) => 
                                                         <span className="px-1.5 py-0.5 bg-amber-900/50 border border-amber-700 rounded text-[10px] text-amber-400 font-bold shrink-0">
                                                             Lv.{boss.level}
                                                         </span>
+                                                        {boss.recommendedCP && (
+                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 border ${isReady
+                                                                ? 'bg-emerald-900/50 border-emerald-700 text-emerald-400'
+                                                                : 'bg-red-900/50 border-red-700 text-red-400'
+                                                                }`}>
+                                                                CP {boss.recommendedCP.toLocaleString()}
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     <button

@@ -125,7 +125,7 @@ export const AchievementPage: React.FC = () => {
                                 {/* 🟢 เพิ่มส่วนแสดงฉายาที่จะได้รับตรงนี้ */}
                                 {ach.rewardTitle && (
                                     <div className="mt-2 flex items-center gap-1.5">
-                                        <span className="text-[10px] text-emerald-400 uppercase font-medium">✒️ Title Reward :</span>
+                                        <span className="text-[10px] text-emerald-400 uppercase font-medium">Title Reward :</span>
                                         <span className={`text-xs px-2 py-0.5 rounded font-bold tracking-wider ${ach.isUnlocked
                                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                             : 'bg-slate-800 text-slate-500 border border-slate-700'
@@ -134,13 +134,26 @@ export const AchievementPage: React.FC = () => {
                                         </span>
                                     </div>
                                 )}
+                                {/* 🟢 เพิ่มส่วนแสดงกรอบรูป (Frame Reward) ตรงนี้ */}
+                                {ach.rewardFrame && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <span className="text-[10px] text-emerald-400 uppercase font-medium">Frame Reward :</span>
+                                        <div className={`w-8 h-8 rounded-md p-0.5 border flex items-center justify-center overflow-hidden ${ach.isUnlocked
+                                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                            : 'bg-slate-800 border-slate-700'
+                                            }`}>
+                                            <img src={ach.rewardFrame} alt="Reward Frame" className="w-full h-full object-contain" />
+                                        </div>
+                                    </div>
+                                )}
+
 
                                 {/* ส่วนแสดงรางวัลและปุ่มกดรับ */}
                                 <div className="mt-3 flex items-center justify-between gap-2">
                                     {/* 📌 แปลงข้อความทั้งหมดให้เป็นตัวพิมพ์ใหญ่ด้วย .toUpperCase() */}
                                     {ach.reward && Array.isArray(ach.reward) && ach.reward.length > 0 && (
                                         <div className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                                            🎁 REWARD : {ach.reward.map((rew) => `${rew.amount} ${(getItemDisplayName(rew.itemId) || rew.type).toUpperCase()}`).join(' , ')}
+                                            REWARD : {ach.reward.map((rew) => `${rew.amount} ${(getItemDisplayName(rew.itemId) || rew.type).toUpperCase()}`).join(' , ')}
                                         </div>
                                     )}
 

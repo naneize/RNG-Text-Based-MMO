@@ -40,12 +40,12 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
             case 'Epic':
                 return {
                     requirements: [
-                        { material: 'void_essence', amount: 25 },     // ปรับจาก 5 เป็น 25
-                        { material: 'dark_crystal', amount: 25 },     // ปรับจาก 5 เป็น 25
-                        { material: 'dragon_scale', amount: 20 },     // ปรับจาก 5 เป็น 20 (สอดคล้องกับบอสดรอปหลักสิบ/ร้อย)
-                        { material: 'celestial_shard', amount: 20 }   // ปรับจาก 5 เป็น 20
+                        { material: 'iron_ore', amount: 150 },
+                        { material: 'steel_ingot', amount: 100 },
+                        { material: 'magic_dust', amount: 30 },
+                        { material: 'mithril', amount: 20 }
                     ],
-                    chance: 20
+                    chance: 100
                 };
             default:
                 return { requirements: [], chance: 0 };

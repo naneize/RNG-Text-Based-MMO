@@ -3,8 +3,8 @@ import type { Stats } from '../types/game';
 
 // จับคู่ stat แต่ละตัวกับแร่ที่รับผิดชอบ reroll กลุ่มนั้น (ไม่ทับซ้อนกันเลย)
 export const STAT_TO_MATERIAL: Partial<Record<keyof Stats, string>> = {
-    atk: 'dragon_scale',    // ย้าย ATK ไปใช้แร่หายาก (เช่น เกล็ดมังกร) จะได้ไม่เกลื่อนเกินไป
-    def: 'iron_ore',        // Iron Ore ใช้กับ DEF แทน
+    atk: 'dragon_scale',
+    def: 'gold_ore',
     hit: 'steel_ingot',
     flee: 'steel_ingot',
     maxHp: 'leather',
@@ -14,10 +14,10 @@ export const STAT_TO_MATERIAL: Partial<Record<keyof Stats, string>> = {
     int: 'magic_dust',
     dex: 'magic_dust',
     luk: 'magic_dust',
-    res: 'iron_ore',        // ใช้ Iron Ore ร่วมกับ DEF ได้
+    res: 'gold_ore',
     mRes: 'mithril',
     critRate: 'dark_crystal',
-    critDmg: 'dragon_scale',
+    critDmg: 'dark_crystal',
 };
 
 // แร่พิเศษสำหรับ reroll elementBonus / raceBonus (ไม่ใช่ Stats key ปกติ)

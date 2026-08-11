@@ -410,7 +410,8 @@ export const useGameStore = create<GameState>()(
                         newEquipped.skill2 = item;
                     }
                 } else {
-                    const slot = item.slot as keyof typeof newEquipped;
+                    const rawSlot = item.slot;
+                    const slot = (rawSlot === 'helm' ? 'helmet' : rawSlot) as keyof typeof newEquipped;
 
                     const twoHandedTypes = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
                     const rangedTypes = ['bow', 'crossbow', 'sling', 'throwing'];
@@ -480,7 +481,10 @@ export const useGameStore = create<GameState>()(
                     }
                 } else {
                     // Handle regular equipment
-                    const slot = item.slot as keyof typeof nextPlayer.equippedItems;
+                    // 🟢 แปลงค่า slot จาก 'helm' ให้เป็น 'helmet' ให้ถูกต้องก่อนนำไปเช็คและถอด
+                    const rawSlot = item.slot;
+                    const slot = (rawSlot === 'helm' ? 'helmet' : rawSlot) as keyof typeof nextPlayer.equippedItems;
+
                     if (nextPlayer.equippedItems[slot]?.uid !== item.uid) return;
 
                     nextPlayer.inventory = [...nextPlayer.inventory, item];

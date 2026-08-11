@@ -17,6 +17,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         description: 'Obtain your first equipment item.',
         category: 'collection',
         rewardTitle: 'First Adventurer',
+        rewardFrame: '/Icons/Frames/frame_01.png',
         reward: [
             { type: 'material', itemId: 'iron_ore', amount: 10 },
             { type: 'material', itemId: 'steel_ingot', amount: 5 }
@@ -37,15 +38,17 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         isUnlocked: false,
         isClaimed: false,
     },
-    'OVERKILL_1000': {
-        id: 'OVERKILL_1000',
+    'OVERKILL_10000': {
+        id: 'OVERKILL_10000',
         title: 'Overkill',
-        description: 'Deal over 1,000 damage in a single turn.',
+        description: 'Deal over 10,000 damage with a single normal attack.',
         category: 'combat',
+        rewardFrame: '/Icons/Frames/frame_03.png',
         rewardTitle: 'The Destroyer', // 🟢 ฉายาที่จะได้รับ
         reward: [
-            { type: 'material', itemId: 'steel_ingot', amount: 10 },
-            { type: 'material', itemId: 'magic_dust', amount: 5 }
+            { type: 'material', itemId: 'ancient_rune', amount: 5 },
+            { type: 'material', itemId: 'void_essence', amount: 5 },
+            { type: 'material', itemId: 'celestial_shard', amount: 5 }
         ],
         isUnlocked: false,
         isClaimed: false,
@@ -56,6 +59,8 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Epic Discovery',
         description: 'Obtain your first Epic item.',
         category: 'collection',
+        rewardTitle: 'Epic Seeker',
+        rewardFrame: '/Icons/Frames/frame_02.png',
         reward: [
             { type: 'material', itemId: 'celestial_shard', amount: 5 },
             { type: 'material', itemId: 'void_essence', amount: 3 }
@@ -69,6 +74,8 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Legend of the Realm',
         description: 'Obtain your first Legendary item.',
         category: 'collection',
+        rewardTitle: 'Legendary Hunter',
+        rewardFrame: '/Icons/Frames/frame_06.png',
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 5 },
             { type: 'material', itemId: 'primordial_essence', amount: 3 }
@@ -107,18 +114,30 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                     }));
 
-                    // 🟢 ตรวจสอบว่ามีรางวัลและเป็น Array หรือไม่
+                    // 🟢 1. ตรวจสอบและแจก Reward ปกติใน Array (Material ฯลฯ)
                     if (current.reward && Array.isArray(current.reward)) {
-                        // 🟢 วนลูปแจกรางวัลทีละชิ้น
                         current.reward.forEach((rew) => {
                             const { type, itemId, amount } = rew;
                             if (type === 'material' && itemId) {
                                 useGameStore.getState().addMaterial(itemId, amount);
                                 console.log(`Reward Claimed: Added ${amount} of ${itemId} to inventory.`);
                             }
-                            // รองรับประเภทอื่น ๆ เพิ่มเติมได้ตรงนี้ (เช่น type === 'item' หรือ 'stat')
                         });
                     }
+
+                    // 🟢 2. เพิ่มเช็ครางวัลพิเศษ (rewardFrame) ตรงนี้
+                    if (current.rewardFrame) {
+                        // ตัวอย่าง: บันทึกลง Store ของผู้เล่นว่าปลดล็อก Frame นี้แล้ว
+                        // (ปรับเปลี่ยนชื่อฟังก์ชันตาม Store ของคุณ เช่น unlockFrame หรืออัปเดต Profile)
+                        // ตัวอย่างเช่น: useAuthStore.getState().unlockFrame(current.rewardFrame);
+                        console.log(`Reward Claimed: Unlocked frame -> ${current.rewardFrame}`);
+                    }
+
+                    // 🟢 3. (แถม) เช็ค rewardTitle เผื่อระบบ Title ใช้เงื่อนไขเดียวกัน
+                    if (current.rewardTitle) {
+                        console.log(`Reward Claimed: Unlocked title -> ${current.rewardTitle}`);
+                    }
+
                 }
             },
 
@@ -145,10 +164,10 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                         break;
 
-                    // 🟢 เช็กเมื่อได้รับไอเทมระดับ Epic (ส่ง data.rarity หรือ data.item มาเช็ก)
+                    // 🟢 เช็กเมื่อได้รับไอเทมระดับ Epic / Legendary
                     case 'OBTAIN_ITEM':
                         if (data?.rarity) {
-                            const rarity = data.rarity.toLowerCase();
+                            const rarity = String(data.rarity).toLowerCase();
 
                             if (rarity === 'epic' && !state.achievements['FIRST_EPIC']?.isUnlocked) {
                                 get().unlockAchievement('FIRST_EPIC');
@@ -160,11 +179,18 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                         break;
 
-                    case 'DEAL_DAMAGE':
-                        if (data?.damage >= 1000 && !state.achievements['OVERKILL_1000']?.isUnlocked) {
-                            get().unlockAchievement('OVERKILL_1000');
+                    case 'DEAL_DAMAGE': {
+                        // 🟢 ดึงค่า damage อย่างปลอดภัย (แก้อ่านค่า NaN)
+                        const rawDamage = typeof data === 'object' && data !== null ? data.damage : data;
+                        const damageVal = Number(rawDamage) || 0;
+
+                        const overkillAch = state.achievements?.['OVERKILL_10000'];
+
+                        if (damageVal >= 10000 && !overkillAch?.isUnlocked) {
+                            get().unlockAchievement('OVERKILL_10000');
                         }
                         break;
+                    }
 
                     default:
                         break;

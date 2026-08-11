@@ -24,12 +24,16 @@ export interface ChatMessage {
     uid: string;
     username: string;
     role?: 'developer' | 'player';
+    avatar?: string;  // 🟢 เพิ่มตรงนี้
+    frame?: string;
     text: string;
     item?: Item;
     playerStats?: {
         uid: string;
         username: string;
         finalStats: Stats;
+        avatar?: string; // 🟢 เพิ่มในนี้ด้วยเผื่อตอนแชร์สเตตัส
+        frame?: string;  // 🟢 เพิ่มในนี้ด้วย
         statBreakdown?: Record<string, { label: string; value: number }[]>;
         equippedItems?: Player['equippedItems'];
     };
@@ -71,7 +75,9 @@ export const useChatStore = create<ChatState>((set) => ({
             await addDoc(collection(db, 'chats'), {
                 uid: userProfile.uid,
                 username: userProfile.username,
-                role: userProfile.role || 'player', // 🟢 แนบยศไปด้วยทุกครั้งที่พิมพ์
+                role: userProfile.role || 'player',
+                avatar: userProfile.avatar || '',  // 🟢 แนบรูป Avatar
+                frame: userProfile.frame || '',    // 🟢 แนบรูป Frame
                 text: text.trim(),
                 item: sanitizedItem,
                 reactions: {},
@@ -86,7 +92,7 @@ export const useChatStore = create<ChatState>((set) => ({
     // 1. ตรงส่วน Interface (ถ้ามีแยกไว้) หรือ type ของ Store ให้ใส่เครื่องหมาย ? หน้า playerData
     shareStatsToChat: async (playerData?: Player) => {
         const authState = useAuthStore.getState();
-        const userProfile = authState.userProfile; // 🟢 ใช้แค่ userProfile
+        const userProfile = authState.userProfile;
 
         if (!userProfile) {
             console.error("User profile not found");
@@ -97,17 +103,24 @@ export const useChatStore = create<ChatState>((set) => ({
 
         try {
             const sanitizedStats = JSON.parse(JSON.stringify({
-                uid: userProfile.uid, // 🟢 ใช้ uid จากโปรไฟล์
+                uid: userProfile.uid,
                 username: userProfile.username,
+                avatar: userProfile.avatar || '',
+                frame: userProfile.frame || '',
                 finalStats: (targetData as any).finalStats || {},
                 statBreakdown: (targetData as any).statBreakdown || {},
                 equippedItems: (targetData as any).equippedItems || {}
             }));
 
             await addDoc(collection(db, 'chats'), {
-                uid: userProfile.uid, // 🟢 ใช้ uid จากโปรไฟล์
+                uid: userProfile.uid,
                 username: userProfile.username,
                 role: userProfile.role || 'player',
+
+                // 🟢 เพิ่ม 2 บรรทัดนี้ที่ระดับนอกสุด เพื่อให้ UI อ่านรูป Avatar/Frame ได้ถูกต้อง
+                avatar: userProfile.avatar || '',
+                frame: userProfile.frame || '',
+
                 text: `shared their character stats!`,
                 playerStats: sanitizedStats,
                 reactions: {},
