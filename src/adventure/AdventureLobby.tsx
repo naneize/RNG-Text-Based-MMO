@@ -191,11 +191,11 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                                     className="p-4 bg-slate-800 hover:bg-slate-700/80 rounded-xl text-left text-white border border-slate-700 hover:border-slate-500 transition flex flex-col sm:flex-row items-center gap-4 shadow-lg group"
                                 >
                                     {/* ส่วนรูปมอนสเตอร์ */}
-                                    <div className="w-20 h-20 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-indigo-500/50 transition">
+                                    <div className="w-32 h-20 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-indigo-500/50 transition">
                                         <img
                                             src={boss.imagePath}
                                             alt={boss.name}
-                                            className="w-14 h-14 object-cover rounded-md"
+                                            className="w-full h-full object-cover object-center"
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = '/Icons/Monsters/Drake.svg';
                                             }}
@@ -203,7 +203,7 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                                     </div>
 
                                     {/* ส่วนรายละเอียดเนื้อหา */}
-                                    <div className="flex-grow flex flex-col gap-2.5 w-full min-w-0">
+                                    <div className="grow flex flex-col gap-2.5 w-full min-w-0">
                                         <div className="flex justify-between items-start">
                                             <div className="w-full">
                                                 <div className="flex items-center justify-between">

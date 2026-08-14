@@ -8,7 +8,7 @@ export const TRANSFER_COSTS = {
         ]
     },
     rare: {
-        successRate: 45,
+        successRate: 50,
         materials: [
             { id: 'magic_dust', amount: 40 },
             { id: 'mithril', amount: 30 },
@@ -16,7 +16,7 @@ export const TRANSFER_COSTS = {
         ]
     },
     epic: {
-        successRate: 20,
+        successRate: 35,
         materials: [
             // เนื่องจาก Epic การันตีทุก 30 ครั้ง (ไวมาก) แร่ขยะทั่วไปและแร่ Epic จึงควรใช้อย่างสมดุล
             { id: 'iron_ore', amount: 100 },
@@ -27,7 +27,7 @@ export const TRANSFER_COSTS = {
         ]
     },
     legendary: {
-        successRate: 10,
+        successRate: 25,
         materials: [
             // 🟢 เพิ่ม iron_ore เข้ามาด้วย เพื่อผลาญแร่ขยะจากระบบ Auto-Salvage ช่วงท้ายเกม
             { id: 'iron_ore', amount: 500 },       // แร่ขยะ Common ตั้งต้น

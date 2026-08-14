@@ -43,7 +43,7 @@ export const ItemDetailModal = ({
     const specialRange = getSpecialBonusRange(selectedItem.rarity);
     const weaponAbility = selectedItem.weaponAbilityId
         ? WEAPON_ABILITY_POOL.find(a => a.id === selectedItem.weaponAbilityId)
-        : undefined; // ✅ เพิ่มบรรทัดนี้
+        : undefined;
 
 
 
@@ -124,7 +124,7 @@ export const ItemDetailModal = ({
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-extrabold text-white tracking-wide">
+                                    <div className="text-sm font-extrabold text-amber-400 tracking-wide">
                                         {weaponAbility.name}
                                     </div>
                                     <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
@@ -248,7 +248,7 @@ export const ItemDetailModal = ({
                                             <div className="col-span-1 p-2 bg-blue-900/20 border border-blue-700/30 rounded flex flex-col justify-between text-center">
                                                 {/* 🟢 ใส่คำว่า Element กำกับไว้ด้านบนชัดเจน */}
                                                 <span className="text-[8px] text-blue-400 font-extrabold uppercase tracking-wider">
-                                                    ELEMENT: {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
+                                                    ELEMENT : {selectedItem.elementBonus?.type || equippedInSlot?.elementBonus?.type}
                                                 </span>
                                                 <div className="my-1">
                                                     <span className="text-emerald-400 font-bold text-xs">
@@ -279,7 +279,7 @@ export const ItemDetailModal = ({
                                             <div className="col-span-1 p-2 bg-amber-900/20 border border-amber-700/30 rounded flex flex-col justify-between text-center">
                                                 {/* 🟢 ใส่คำว่า Race กำกับไว้ด้านบนชัดเจน */}
                                                 <span className="text-[8px] text-amber-400 font-extrabold uppercase tracking-wider">
-                                                    RACE: {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
+                                                    RACE : {selectedItem.raceBonus?.type || equippedInSlot?.raceBonus?.type}
                                                 </span>
                                                 <div className="my-1">
                                                     <span className="text-emerald-400 font-bold text-xs">

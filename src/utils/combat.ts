@@ -9,7 +9,7 @@ export interface StatSource {
     value: number;
 }
 
-
+//#region  [StatsWithBreakdown]
 
 export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats; breakdown: Record<string, StatSource[]> } => {
     const breakdown: Record<string, StatSource[]> = {};
@@ -164,6 +164,8 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
     return { finalStats, breakdown };
 };
 
+//#region  [GetTotalStats]
+
 export const getTotalStats = (player: Player): Stats => {
     const rawTotal: Stats = { ...player.baseStats };
 
@@ -192,6 +194,7 @@ export const getTotalStats = (player: Player): Stats => {
     return finalStats;
 };
 
+//#region  [GetEffectiveStats]
 
 const STAT_MULTIPLIERS = {
     strToAtk: 0.5,
@@ -207,9 +210,9 @@ const STAT_MULTIPLIERS = {
     intToSkillPwr: 0.5,
 };
 
-const RES_WEIGHT = 0.3;
 
 
+export const RES_WEIGHT = 0.3;
 
 export const getEffectiveStats = (stats: Stats): Stats => {
     const str = stats.str || 0;
@@ -263,6 +266,7 @@ export const getEffectiveStatsInfo = () => [
     { label: 'SKILL PWR', bonus: `+${STAT_MULTIPLIERS.intToSkillPwr} PWR`, stat: 'INT' },
 ];
 
+//#region  [CalculateDamage]
 
 export const calculateDamage = (
     attacker: Stats,
@@ -303,8 +307,10 @@ export const calculateDamage = (
     const armorPiercePercent = Math.min(100, Math.max(0, bonusDamage.armorPiercePercent || 0)); // ✅ เพิ่มบรรทัดนี้ (clamp กันค่าเกิน 0-100)
 
     // 2. คำนวณ Hit/Miss
-    let hitChance = 80 + (attacker.hit - defender.flee);
-    hitChance = Math.max(5, Math.min(95, hitChance));
+    // ✅ เปลี่ยนจาก linear + hard wall เป็น diminishing curve — flee ทุกหน่วยยังมีผลเสมอ ไม่มี dead stat
+    const hitBase = Math.max(1, attacker.hit);
+    let hitChance = 95 * (hitBase / (hitBase + defender.flee * 0.5));
+    hitChance = Math.max(3, Math.min(97, hitChance));
 
     if (Math.random() * 100 > hitChance) {
         return { damage: 0, isMiss: true, isCrit: false, isSkillActive: false };

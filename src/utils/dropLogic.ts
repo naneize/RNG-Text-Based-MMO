@@ -18,7 +18,7 @@ const getRandomValue = (min: number, max: number): number => {
 };
 
 // 🟢 ปรับได้: item level ของไอเทมที่ดรอปจากบอส
-// ขั้นต่ำ = level บอสพอดี (ห้ามต่ำกว่า) / สูงสุด = level บอส x 3
+
 
 const MAX_ITEM_LEVEL_MULT = 5;
 

@@ -88,16 +88,25 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
     const material2 = currentDrops.material2?.id || (availableMaterials[1] || availableMaterials[0]);
 
     // 🟢 ปรับสูตรให้จำนวนดรอปพุ่งสูงขึ้นตามเลเวลและความยาก
+    // 🟢 1. คำนวณจำนวนชิ้นสำหรับ Material ทั่วไป
     const minMat1 = 15 + (levelIndex * 5);
     const maxMat1 = 30 + (levelIndex * 8);
 
     const minMat2 = 5 + (levelIndex * 2);
     const maxMat2 = 12 + (levelIndex * 4);
 
-    const legendaryChance = Number((Math.min(0.04, 0.005 + levelIndex * 0.0025)).toFixed(4));
-    const epicChance = Number((Math.min(0.10, 0.015 + levelIndex * 0.0065)).toFixed(4));
-    const rareChance = Number((Math.min(0.30, 0.050 + levelIndex * 0.0200)).toFixed(4));
-    const commonChance = Number((Math.max(0.30, 0.750 - levelIndex * 0.0350)).toFixed(4));
+    // 🟣 2. คำนวณจำนวนชิ้นสำหรับ Rare Materials (Ancient Rune / Primary Essence)
+    // สเกลจำนวนน้อยกว่า แต่เพิ่มขึ้นตามความโหดของบอส
+    const minRune = 1 + Math.floor(levelIndex * 0.5); // บอสแรกได้ 1 ชิ้น, บอสระดับสูงค่อยๆ เพิ่ม
+    const maxRune = 2 + Math.floor(levelIndex * 1);
+
+    const minEssence = 1;
+    const maxEssence = 1 + Math.floor(levelIndex * 0.5);
+
+    const legendaryChance = Number((Math.min(0.08, 0.005 + levelIndex * 0.0040)).toFixed(4)); // ตันที่ 8%
+    const epicChance = Number((Math.min(0.18, 0.015 + levelIndex * 0.0100)).toFixed(4));      // ตันที่ 18%
+    const rareChance = Number((Math.min(0.40, 0.050 + levelIndex * 0.0250)).toFixed(4));      // ตันที่ 40%
+    const commonChance = Number((Math.max(0.10, 0.750 - levelIndex * 0.0500)).toFixed(4));    // ลดลงเหลือต่ำสุด 10%
 
     return {
         id: bossId,
@@ -132,18 +141,33 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
             { itemId: currentDrops.skill.id, type: 'skill', dropChance: epicChance, fixedRarity: 'Epic', statRanges: { effectPower: { min: 40 + levelIndex * 3, max: 55 + levelIndex * 5 } } },
             { itemId: currentDrops.skill.id, type: 'skill', dropChance: legendaryChance, fixedRarity: 'Legendary', statRanges: { effectPower: { min: 60 + levelIndex * 4, max: 80 + levelIndex * 6 } } },
 
+            // --- วัตถุดิบธรรมดา (ดรอปง่าย-จำนวนเยอะ) ---
             {
                 itemId: material1,
                 type: 'material',
                 dropChance: 0.75,
-                amountRange: { min: minMat1, max: maxMat1 } // บอสตัวแรก (เวล 50, levelIndex=0) จะดรอปประมาณ x15 - x30 ชิ้น
+                amountRange: { min: minMat1, max: maxMat1 }
             },
             {
                 itemId: material2,
                 type: 'material',
                 dropChance: 0.20,
-                amountRange: { min: minMat2, max: maxMat2 } // บอสตัวแรก (เวล 50, levelIndex=0) จะดรอปประมาณ x5 - x12 ชิ้น
+                amountRange: { min: minMat2, max: maxMat2 }
             },
+
+            // --- วัตถุดิบหายากระดับสูง (สล็อตใหม่) ---
+            {
+                itemId: 'ancient_rune',
+                type: 'material',
+                dropChance: 0.15 + (levelIndex * 0.02), // โอกาสดรอป 15% (บอสโหดขึ้นโอกาสเพิ่มเล็กน้อย)
+                amountRange: { min: minRune, max: maxRune }
+            },
+            {
+                itemId: 'primordial_essence',
+                type: 'material',
+                dropChance: 0.05 + (levelIndex * 0.01), // โอกาสดรอป 5% (หายากเป็นพิเศษ)
+                amountRange: { min: minEssence, max: maxEssence }
+            }
         ],
         imagePath: randomImage
     } as unknown as Boss;

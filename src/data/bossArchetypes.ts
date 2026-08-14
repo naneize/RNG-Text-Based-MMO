@@ -31,18 +31,18 @@ export const bossArchetypes: BossArchetype[] = [
             'Hellfire Wyrm', 'Lord of the Magma Abyss'
         ],
         fixedDrops: [
-            { weakness: 'spear', item1: { id: 'two_hand_axe' }, item2: { id: 'burning_cape' }, skill: { id: 'fire_burst' }, material1: { id: 'iron_ore' }, material2: { id: 'steel_ingot' } },
-            { weakness: 'sword', item1: { id: 'broad_axe' }, item2: { id: 'ruby_ring' }, skill: { id: 'dodge_counter' }, material1: { id: 'iron_ore' }, material2: { id: 'leather' } },
-            { weakness: 'bow', item1: { id: 'halberd' }, item2: { id: 'rogue_jacket' }, skill: { id: 'holy_smite' }, material1: { id: 'steel_ingot' }, material2: { id: 'magic_dust' } },
-            { weakness: 'dagger', item1: { id: 'claymore' }, item2: { id: 'ruby_necklace' }, skill: { id: 'wind_blade' }, material1: { id: 'leather' }, material2: { id: 'dragon_scale' } },
-            { weakness: 'mace', item1: { id: 'crossbow' }, item2: { id: 'spiked_shield' }, skill: { id: 'lightning_strike' }, material1: { id: 'magic_dust' }, material2: { id: 'mithril' } },
-            { weakness: 'axe', item1: { id: 'burning_cape' }, item2: { id: 'dragon_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'steel_ingot' }, material2: { id: 'dragon_scale' } },
-            { weakness: 'hammer', item1: { id: 'ruby_ring' }, item2: { id: 'chain_mail' }, skill: { id: 'holy_smite' }, material1: { id: 'leather' }, material2: { id: 'gold_ore' } },
-            { weakness: 'fist', item1: { id: 'throwing_knives' }, item2: { id: 'heavy_boots' }, skill: { id: 'berserk_rage' }, material1: { id: 'magic_dust' }, material2: { id: 'ancient_rune' } },
-            { weakness: 'two-hand sword', item1: { id: 'tiara' }, item2: { id: 'magic_staff' }, item3: { id: 'silver_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
+            { weakness: 'spear', item1: { id: 'iron_sword' }, item2: { id: 'tower_shield' }, item3: { id: 'leather_boots' }, skill: { id: 'fire_burst' }, material1: { id: 'iron_ore' }, material2: { id: 'steel_ingot' } },
+            { weakness: 'sword', item1: { id: 'war_hammer' }, item2: { id: 'ruby_ring' }, item3: { id: 'dragon_scale_armor' }, skill: { id: 'dodge_counter' }, material1: { id: 'iron_ore' }, material2: { id: 'leather' } },
+            { weakness: 'bow', item1: { id: 'halberd' }, item2: { id: 'rogue_jacket' }, item3: { id: 'hood_of_shadow' }, skill: { id: 'holy_smite' }, material1: { id: 'steel_ingot' }, material2: { id: 'magic_dust' } },
+            { weakness: 'dagger', item1: { id: 'claymore' }, item2: { id: 'ruby_necklace' }, item3: { id: 'morning_star' }, skill: { id: 'wind_blade' }, material1: { id: 'leather' }, material2: { id: 'dragon_scale' } },
+            { weakness: 'mace', item1: { id: 'crossbow' }, item2: { id: 'spiked_shield' }, item3: { id: 'elven_cape' }, skill: { id: 'lightning_strike' }, material1: { id: 'magic_dust' }, material2: { id: 'mithril' } },
+            { weakness: 'axe', item1: { id: 'gladius' }, item2: { id: 'dragon_amulet' }, item3: { id: 'dark_ring' }, skill: { id: 'wind_blade' }, material1: { id: 'steel_ingot' }, material2: { id: 'dragon_scale' } },
+            { weakness: 'hammer', item1: { id: 'sling' }, item2: { id: 'iron_sword' }, item3: { id: 'pendant_of_luck' }, skill: { id: 'holy_smite' }, material1: { id: 'leather' }, material2: { id: 'gold_ore' } },
+            { weakness: 'fist', item1: { id: 'throwing_knives' }, item2: { id: 'heavy_boots' }, item3: { id: 'steel_cuirass' }, skill: { id: 'berserk_rage' }, material1: { id: 'magic_dust' }, material2: { id: 'void_essence' } },
+            { weakness: 'two-hand sword', item1: { id: 'pike' }, item2: { id: 'magic_staff' }, item3: { id: 'silver_amulet' }, skill: { id: 'wind_blade' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
             { weakness: 'sling', item1: { id: 'great_sword' }, item2: { id: 'winged_helm' }, item3: { id: 'iron_greaves' }, skill: { id: 'berserk_rage' }, material1: { id: 'mithril' }, material2: { id: 'celestial_shard' } },
-            { weakness: 'staff', item1: { id: 'battle_bow' }, item2: { id: 'silk_mantle' }, item3: { id: 'sling' }, skill: { id: 'fire_burst' }, material1: { id: 'ancient_rune' }, material2: { id: 'dragon_scale' } },
-            { weakness: 'throwing', item1: { id: 'plate_helm' }, item2: { id: 'blessed_boots' }, item3: { id: 'mailed_fist' }, skill: { id: 'poison_slash' }, material1: { id: 'dragon_scale' }, material2: { id: 'primordial_essence' } }
+            { weakness: 'staff', item1: { id: 'battle_bow' }, item2: { id: 'silk_mantle' }, item3: { id: 'iron_buckler' }, skill: { id: 'fire_burst' }, material1: { id: 'dragon_scale' }, material2: { id: 'void_essence' } },
+            { weakness: 'throwing', item1: { id: 'mailed_fist' }, item2: { id: 'blessed_boots' }, item3: { id: 'tiara' }, skill: { id: 'poison_slash' }, material1: { id: 'leather' }, material2: { id: 'dark_crystal' } }
 
         ]
     },
@@ -61,13 +61,13 @@ export const bossArchetypes: BossArchetype[] = [
             { weakness: 'sword', item1: { id: 'spear' }, item2: { id: 'sapphire_ring' }, skill: { id: 'dodge_counter' }, material1: { id: 'steel_ingot' }, material2: { id: 'magic_dust' } },
             { weakness: 'bow', item1: { id: 'pike' }, item2: { id: 'star_pendant' }, skill: { id: 'fire_burst' }, material1: { id: 'leather' }, material2: { id: 'dragon_scale' } },
             { weakness: 'dagger', item1: { id: 'sling' }, item2: { id: 'crystal_necklace' }, skill: { id: 'wind_blade' }, material1: { id: 'magic_dust' }, material2: { id: 'mithril' } },
-            { weakness: 'staff', item1: { id: 'rapier' }, item2: { id: 'crystal_necklace' }, skill: { id: 'poison_slash' }, material1: { id: 'steel_ingot' }, material2: { id: 'celestial_shard' } },
+            { weakness: 'staff', item1: { id: 'rapier' }, item2: { id: 'crystal_necklace' }, skill: { id: 'poison_slash' }, material1: { id: 'steel_ingot' }, material2: { id: 'dragon_scale' } },
             { weakness: 'axe', item1: { id: 'magic_shoes' }, item2: { id: 'spear' }, skill: { id: 'ice_shard' }, material1: { id: 'leather' }, material2: { id: 'gold_ore' } },
-            { weakness: 'hammer', item1: { id: 'sapphire_ring' }, item2: { id: 'long_bow' }, skill: { id: 'holy_smite' }, material1: { id: 'magic_dust' }, material2: { id: 'ancient_rune' } },
+            { weakness: 'hammer', item1: { id: 'sapphire_ring' }, item2: { id: 'long_bow' }, skill: { id: 'holy_smite' }, material1: { id: 'magic_dust' }, material2: { id: 'void_essence' } },
             { weakness: 'fist', item1: { id: 'crystal_necklace' }, item2: { id: 'war_hammer' }, skill: { id: 'wind_blade' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
             { weakness: 'spear', item1: { id: 'sapphire_ring' }, item2: { id: 'long_bow' }, skill: { id: 'berserk_rage' }, material1: { id: 'mithril' }, material2: { id: 'celestial_shard' } },
-            { weakness: 'bow', item1: { id: 'war_hammer' }, item2: { id: 'crystal_necklace' }, skill: { id: 'fire_burst' }, material1: { id: 'ancient_rune' }, material2: { id: 'dragon_scale' } },
-            { weakness: 'staff', item1: { id: 'heavy_crossbow' }, item2: { id: 'sapphire_ring' }, skill: { id: 'poison_slash' }, material1: { id: 'dragon_scale' }, material2: { id: 'primordial_essence' } }
+            { weakness: 'bow', item1: { id: 'war_hammer' }, item2: { id: 'crystal_necklace' }, skill: { id: 'fire_burst' }, material1: { id: 'dragon_scale' }, material2: { id: 'void_essence' } },
+            { weakness: 'staff', item1: { id: 'heavy_crossbow' }, item2: { id: 'sapphire_ring' }, skill: { id: 'poison_slash' }, material1: { id: 'leather' }, material2: { id: 'dark_crystal' } }
         ]
     },
     {
@@ -80,18 +80,18 @@ export const bossArchetypes: BossArchetype[] = [
             'Worldbreaker Behemoth', 'Titan of the Core'
         ],
         fixedDrops: [
-            { weakness: 'two-hand sword', item1: { id: 'iron_band' }, item2: { id: 'iron_helm' }, skill: { id: 'stone_skin' } },
-            { weakness: 'crossbow', item1: { id: 'iron_band' }, item2: { id: 'iron_helm' }, skill: { id: 'stone_skin' } },
-            { weakness: 'sword', item1: { id: 'iron_greaves' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' } },
-            { weakness: 'bow', item1: { id: 'iron_greaves' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' } },
-            { weakness: 'dagger', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' } },
-            { weakness: 'staff', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' } },
-            { weakness: 'mace', item1: { id: 'tower_shield' }, item2: { id: 'iron_greaves' }, skill: { id: 'earthquake' } },
-            { weakness: 'axe', item1: { id: 'iron_helm' }, item2: { id: 'heavy_plate' }, skill: { id: 'earthquake' } },
-            { weakness: 'hammer', item1: { id: 'plate_armor' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' } },
-            { weakness: 'fist', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' } },
-            { weakness: 'hammer', item1: { id: 'iron_helm' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' } },
-            { weakness: 'sword', item1: { id: 'tower_shield' }, item2: { id: 'heavy_plate' }, skill: { id: 'stone_skin' } }
+            { weakness: 'two-hand sword', item1: { id: 'iron_band' }, item2: { id: 'iron_helm' }, skill: { id: 'stone_skin' }, material1: { id: 'iron_ore' }, material2: { id: 'steel_ingot' } },
+            { weakness: 'crossbow', item1: { id: 'iron_band' }, item2: { id: 'iron_helm' }, skill: { id: 'stone_skin' }, material1: { id: 'iron_ore' }, material2: { id: 'leather' } },
+            { weakness: 'sword', item1: { id: 'iron_greaves' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' }, material1: { id: 'steel_ingot' }, material2: { id: 'magic_dust' } },
+            { weakness: 'bow', item1: { id: 'iron_greaves' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' }, material1: { id: 'leather' }, material2: { id: 'dragon_scale' } },
+            { weakness: 'dagger', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' }, material1: { id: 'magic_dust' }, material2: { id: 'mithril' } },
+            { weakness: 'staff', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' }, material1: { id: 'steel_ingot' }, material2: { id: 'dragon_scale' } },
+            { weakness: 'mace', item1: { id: 'tower_shield' }, item2: { id: 'iron_greaves' }, skill: { id: 'earthquake' }, material1: { id: 'leather' }, material2: { id: 'gold_ore' } },
+            { weakness: 'axe', item1: { id: 'iron_helm' }, item2: { id: 'heavy_plate' }, skill: { id: 'earthquake' }, material1: { id: 'magic_dust' }, material2: { id: 'void_essence' } },
+            { weakness: 'hammer', item1: { id: 'plate_armor' }, item2: { id: 'tower_shield' }, skill: { id: 'earthquake' }, material1: { id: 'gold_ore' }, material2: { id: 'dark_crystal' } },
+            { weakness: 'fist', item1: { id: 'heavy_plate' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' }, material1: { id: 'mithril' }, material2: { id: 'celestial_shard' } },
+            { weakness: 'hammer', item1: { id: 'iron_helm' }, item2: { id: 'plate_armor' }, skill: { id: 'earthquake' }, material1: { id: 'dragon_scale' }, material2: { id: 'void_essence' } },
+            { weakness: 'sword', item1: { id: 'tower_shield' }, item2: { id: 'heavy_plate' }, skill: { id: 'stone_skin' }, material1: { id: 'leather' }, material2: { id: 'dark_crystal' } }
         ]
     },
     {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CharacterDashboard } from './components/character/CharacterDashboard';
 import { useGameStore } from './store/gameStore';
@@ -17,11 +17,17 @@ import { PlayerProfile } from './components/character/PlayerProfile';
 import { getTotalStatsWithBreakdown } from './utils/combat';
 import './utils/statSimulator';
 import { useCharacterDashboard } from './hooks/useCharacterDashboard';
+import { LoadingScreen } from './components/LoadingScreen';
 
 function App() {
   const { currentPage, collectionData, player } = useGameStore();
-  const { user, userProfile, isLoading } = useAuthStore();
+  const { user, userProfile, isLoading: isAuthLoading } = useAuthStore();
   const { subscribeToChat } = useChatStore();
+
+  const [isGameReady, setIsGameReady] = useState(false);
+
+  // 🎵 Ref สำหรับควบคุม BGM
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { finalStats, breakdown: statBreakdown } = getTotalStatsWithBreakdown(player);
   const { totalOpens } = useCharacterDashboard();
@@ -30,7 +36,24 @@ function App() {
     initAuthListener();
   }, []);
 
-  // ระบบฟังแชทแบบ Real-time
+  // 🎵 เล่นเพลง (เฉพาะตอนที่ยังอยู่ 3 หน้าแรก)
+  const playBGM = () => {
+    if (!isGameReady && audioRef.current && audioRef.current.paused) {
+      audioRef.current.volume = 0.3;
+      audioRef.current.play().catch((err) => {
+        console.log("Audio waiting for user click:", err);
+      });
+    }
+  };
+
+  // 🔇 สั่งหยุดเพลงทันทีเมื่อเข้าสู่หน้า Main Game
+  useEffect(() => {
+    if (isGameReady && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0; // รีเซ็ตเพลงกลับไปเริ่มต้น
+    }
+  }, [isGameReady]);
+
   useEffect(() => {
     if (userProfile) {
       const unsubscribe = subscribeToChat();
@@ -40,15 +63,13 @@ function App() {
     }
   }, [userProfile, subscribeToChat]);
 
-  // 🟢 3. เพิ่ม Heartbeat Effect สำหรับอัปเดตสถานะออนไลน์ของผู้เล่นคนนี้
+  // Heartbeat Effect
   useEffect(() => {
-    // 🛑 ป้องกันเด็ดขาด: ถ้าไม่มี userProfile, ไม่มี uid, หรือไม่มี Firebase User จริง (นับเป็น Guest ทั้งหมด) ให้ตัดจบทันที
     if (!userProfile?.uid || !user || userProfile.uid.startsWith('guest_')) {
       return;
     }
 
     const userPresenceRef = doc(db, 'presences', userProfile.uid);
-
     const updatePresence = async () => {
       try {
         await setDoc(userPresenceRef, {
@@ -63,43 +84,40 @@ function App() {
 
     updatePresence();
     const interval = setInterval(updatePresence, 20000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [userProfile, user]); // เพิ่ม user เข้าไปใน dependency array เพื่อให้เช็คสถานะการล็อกอินที่แท้จริง
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
-        Loading . . .
-      </div>
-    );
-  }
-
-  if (!user && !userProfile) {
-    return <LoginPage />;
-  }
-
-  if (!userProfile) {
-    return <UsernameSetupPage />;
-  }
+    return () => clearInterval(interval);
+  }, [userProfile, user]);
 
   return (
-    <div className="flex bg-slate-950 min-h-screen text-white relative">
-      <Sidebar />
+    <div onClick={playBGM}>
+      {/* 🎶 เครื่องเล่น BGM (จะเล่นเฉพาะ Login, Setup, Loading) */}
+      <audio ref={audioRef} src="/Audio/Forgotten_Throne.mp3" loop preload="auto" />
 
-      <main className="flex-1 p-8">
-        {currentPage === 'home' && <CharacterDashboard />}
-        {currentPage === 'profile' && <PlayerProfile player={player} finalStats={finalStats} statBreakdown={statBreakdown} totalOpens={totalOpens} />}
-        {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}
-        {currentPage === 'adventure' && <AdventurePage />}
-        {currentPage === 'achievement' && <AchievementPage />}
-        {currentPage === 'marketplace' && <MarketplacePage />}
+      {isAuthLoading ? (
+        <LoadingScreen onFinished={() => setIsGameReady(true)} />
+      ) : !user && !userProfile ? (
+        <LoginPage />
+      ) : !userProfile ? (
+        <UsernameSetupPage />
+      ) : !isGameReady ? (
+        <LoadingScreen onFinished={() => setIsGameReady(true)} />
+      ) : (
+        /* 🎮 เข้าสู่ตัวเกมหลัก (จะไม่มีเสียง BGM แล้ว เงียบสงบ) */
+        <div className="flex bg-slate-950 min-h-screen text-white relative">
+          <Sidebar />
 
-      </main>
+          <main className="flex-1 p-8">
+            {currentPage === 'home' && <CharacterDashboard />}
+            {currentPage === 'profile' && <PlayerProfile player={player} finalStats={finalStats} statBreakdown={statBreakdown} totalOpens={totalOpens} />}
+            {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}
+            {currentPage === 'adventure' && <AdventurePage />}
+            {currentPage === 'achievement' && <AchievementPage />}
+            {currentPage === 'marketplace' && <MarketplacePage />}
+          </main>
 
-      <AchievementPopup />
+          <AchievementPopup />
+
+        </div>
+      )}
     </div>
   );
 }

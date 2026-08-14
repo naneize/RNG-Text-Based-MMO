@@ -1,66 +1,21 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { PatchNotesModal } from '../components/Modals/PatchNotesModal';
-
-const BACKGROUND_IMAGES = [
-    '01_stone_corridor.png',
-    '02_throne_room.png',
-    '03_treasure_room.png',
-    '04_prison_cell.png',
-    '05_ancient_library.png',
-    '06_ritual_chamber.png',
-    '07_crystal_cave.png',
-    '08_lava_chamber.png',
-    '09_ancient_crypt.png',
-    '10_boss_room.png',
-];
 
 export const LoginPage = () => {
     const { login, register, loginWithGoogle, loginAsGuest, error, clearError } = useAuthStore();
 
     const [hasStarted, setHasStarted] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
-
-    const [currentBg] = useState(() => {
-        const randomIndex = Math.floor(Math.random() * BACKGROUND_IMAGES.length);
-        return BACKGROUND_IMAGES[randomIndex];
-    });
+    const [currentBg] = useState('Main_BG_1.png');
 
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 🟢 ฟังก์ชันพยายามเล่นเพลง (ถ้ายังไม่เคยเล่น)
-    const triggerAudioPlay = () => {
-        if (audioRef.current && !isPlaying) {
-            audioRef.current.volume = 0.3;
-            audioRef.current.play().then(() => {
-                setIsPlaying(true);
-            }).catch((err) => {
-                console.log("Audio play waiting for interaction:", err);
-            });
-        }
-    };
-
-    // 🟢 ฟังก์ชันกดเริ่มเกม
+    // 🟢 ฟังก์ชันกดเริ่มเกม (กดปุ่ม START ADVENTURE)
     const handleStartAdventure = () => {
-        triggerAudioPlay();
         setHasStarted(true);
-    };
-
-    // 🟢 ฟังก์ชันเปิด/ปิดเสียง (Mute/Unmute)
-    const toggleMute = () => {
-        if (audioRef.current) {
-            // ถ้ายังไม่เคยเล่นเลยแล้วกดปุ่มนี้ ให้สั่งเล่นเพลงด้วย
-            if (!isPlaying) {
-                triggerAudioPlay();
-            }
-            audioRef.current.muted = !isMuted;
-            setIsMuted(!isMuted);
-        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -86,61 +41,52 @@ export const LoginPage = () => {
     };
 
     return (
-        <div
-            className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden cursor-pointer"
-            onClick={triggerAudioPlay} // 🟢 พอกดที่ไหนก็ได้บนจอครั้งแรก จะปลดล็อกเสียงทันที
-        >
+        <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
 
-            {/* 🎵 ไฟล์เสียงพื้นหลัง เล่นยาวต่อเนื่องไม่รีเซ็ต */}
-            <audio ref={audioRef} src="/Audio/Forgotten_Throne.mp3" loop preload="auto" />
+            {/* 🖼️ วิดีโอพื้นหลังเคลื่อนไหว (Live Background / Loop Animation) */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                >
+                    <source src="/Icons/Backgrounds/202608131618.mp4" type="video/mp4" />
+                    <img src={`/Icons/Backgrounds/${currentBg}`} alt="Background Fallback" className="w-full h-full object-cover" />
+                </video>
 
-            {/* 🔊 ปุ่มเปิด/ปิดเสียง (มุมขวาบน) */}
-            <button
-                onClick={(e) => {
-                    e.stopPropagation(); // ป้องกันไม่ให้คลิกทะลุไปโดนตัวDivหลัก
-                    toggleMute();
-                }}
-                className="absolute top-4 right-4 z-50 p-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white rounded-full shadow-lg transition cursor-pointer flex items-center justify-center"
-                title={isMuted ? "Unmute" : "Mute"}
-            >
-                {isMuted ? "🔇" : "🔊"}
-            </button>
-
-            {/* 🖼️ ภาพพื้นหลัง */}
-            <div
-                className="absolute inset-0 bg-cover bg-center z-0 transition-all duration-700"
-                style={{ backgroundImage: `url('/Icons/Backgrounds/${currentBg}')` }}
-            >
-                <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-slate-950/85 backdrop-blur-xs' : 'bg-slate-950/40 backdrop-blur-none'}`} />
+                {/* 🖤 Layer ซ้อนมืดมัว/เบลอ */}
+                <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-slate-950/40 backdrop-blur-xs' : 'bg-slate-950/0 backdrop-blur-none'}`} />
             </div>
 
             {/* 🌟 หน้าแรก (Splash Screen) */}
             {!hasStarted ? (
-                <div className="relative z-10 flex flex-col items-center text-center animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+                <div className="relative z-10 flex flex-col items-center text-center animate-fadeIn">
                     <div className="mb-8">
-                        <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-wider mt-4 drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]">
+                        <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-wider mt-4 drop-shadow-[0_5px_20px_rgba(245,158,11,0.4)]">
                             RNG-TEXT-BASED
                         </h1>
-                        <p className="text-slate-300 text-sm md:text-base mt-2 tracking-wide drop-shadow-md">
+                        <p className="text-amber-100/70 text-sm md:text-base mt-2 tracking-wide drop-shadow-md">
                             Embark on your text-based adventure, roll legendary gear, and conquer the realm.
                         </p>
                     </div>
 
                     <button
                         onClick={handleStartAdventure}
-                        className="group relative px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.7)] transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+                        className="group relative px-10 py-5 bg-gradient-to-b from-rose-950 via-red-950 to-slate-950 hover:from-rose-900 hover:to-red-900 text-amber-200 font-extrabold text-lg tracking-widest rounded-xl border-2 border-amber-500/90 hover:border-amber-300 shadow-[0_0_40px_rgba(220,38,38,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(245,158,11,0.7)] transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
                     >
-                        <span className="flex items-center gap-3">
+                        <span className="flex items-center gap-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             START ADVENTURE
                         </span>
                     </button>
-                    <p className="text-slate-400 text-xs mt-4">
-                        Click anywhere or press the button to start music & enter
+                    <p className="text-amber-200/50 text-xs mt-4">
+                        Click the button to enter
                     </p>
                 </div>
             ) : (
                 /* 🔐 หน้า Login / Register + Patch Notes */
-                <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row gap-6 items-stretch animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+                <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row gap-6 items-stretch animate-fadeIn">
 
                     <div className="w-full lg:w-1/2 p-8 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 shadow-2xl flex flex-col justify-between">
                         <div>

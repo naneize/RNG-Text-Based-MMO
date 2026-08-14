@@ -490,7 +490,7 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                         }`}>
                         <h2 className={`text-xl font-bold mb-4 ${resultModal.isSuccess ? 'text-emerald-400' : 'text-red-400'
                             }`}>
-                            {resultModal.isSuccess ? 'SWAP SUCCESS' : 'SWAP FAILED'}
+                            {resultModal.isSuccess ? 'TRANSFER SUCCESS' : 'TRANSFER FAILED'}
                         </h2>
 
                         <div className="text-slate-300 space-y-3 mb-6">

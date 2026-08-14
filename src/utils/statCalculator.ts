@@ -4,7 +4,7 @@ export const STAT_CAPS: Partial<Record<keyof Stats, number>> = {
     critRate: 95,
     critDmg: 700,
     hit: 3000,
-    flee: 1800
+    flee: 3000
 };
 
 export function finalizeStats(rawStats: Stats): Stats {
