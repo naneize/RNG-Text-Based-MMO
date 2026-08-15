@@ -2,14 +2,23 @@
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 import { useBattleStore } from '../store/battleStore';
-import { BattleWidget } from './BattleWidget'; // 👈 1. นำเข้า BattleWidget ตัวใหม่มาใช้
+import { BattleWidget } from './BattleWidget';
 
 type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
     const { user, userProfile, logout } = useAuthStore();
-    const { selectedBoss, bossEffectiveStats, finalStatsSnapshot } = useBattleStore(); // เช็คแค่ว่ามีบอสอยู่มั้ย
+    const { selectedBoss, bossEffectiveStats, finalStatsSnapshot } = useBattleStore();
+
+    // 🟢 เช็กว่าเกมกำลังรันอยู่บน iframe ของแพลตฟอร์มภายนอก (เช่น CrazyGames) หรือไม่
+    const isEmbedded = (() => {
+        try {
+            return window.self !== window.top || window.location.hostname.includes('crazygames');
+        } catch (e) {
+            return true;
+        }
+    })();
 
     const menu: { id: PageType; label: string; icon?: string }[] = [
         { id: 'home', label: 'Main' },
@@ -17,7 +26,7 @@ export const Sidebar = () => {
         { id: 'adventure', label: 'Boss Lobby' },
         { id: 'collection', label: 'Items Collection' },
         { id: 'achievement', label: 'Achievements' },
-        ...(user ? [{ id: 'marketplace' as PageType, label: 'Marketplace' }] : []),
+        ...(user && !isEmbedded ? [{ id: 'marketplace' as PageType, label: 'Marketplace' }] : []),
     ];
 
     const handleLogout = async () => {
@@ -43,7 +52,7 @@ export const Sidebar = () => {
                 </button>
             ))}
 
-            {/* ดันส่วนผู้เล่น + ปุ่ม Logout ไปอยู่ล่างสุดของ sidebar */}
+            {/* ดันส่วนผู้เล่น + ปุ่ม Logout และ Privacy ไปอยู่ล่างสุดของ sidebar */}
             <div className="mt-auto pt-4 border-t border-slate-800 space-y-3">
 
                 {/* ⚔️ เรียกใช้ BattleWidget แบบฝังใน Sidebar โดยตรง */}
@@ -60,14 +69,28 @@ export const Sidebar = () => {
                     </p>
                 )}
 
-                {/* Logout Button */}
-                <button
-                    node-type="logout"
-                    onClick={handleLogout}
-                    className="w-full p-2.5 rounded-lg text-left text-red-400 hover:bg-red-950/40 transition cursor-pointer text-sm font-medium"
-                >
-                    Logout
-                </button>
+                {/* 🟢 ซ่อนปุ่ม Logout ถ้าเล่นบนเว็บพอร์ทัลภายนอก (CrazyGames) */}
+                {!isEmbedded && (
+                    <button
+                        node-type="logout"
+                        onClick={handleLogout}
+                        className="w-full p-2.5 rounded-lg text-left text-red-400 hover:bg-red-950/40 transition cursor-pointer text-sm font-medium"
+                    >
+                        Logout
+                    </button>
+                )}
+
+                {/* 🟢 ข้อความ Terms & Privacy สำหรับให้ผู้ตรวจ CrazyGames เห็น */}
+                <div className="pt-2 border-t border-slate-900 text-center flex flex-col gap-1">
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                        By playing, you agree to our{' '}
+                        <span className="text-emerald-400 underline cursor-pointer">Terms</span> &{' '}
+                        <span className="text-emerald-400 underline cursor-pointer">Privacy</span>.
+                    </p>
+                    <p className="text-[9px] text-slate-500">
+                        Icons by <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 underline">Game-Icons.net</a>
+                    </p>
+                </div>
             </div>
         </div>
     );
