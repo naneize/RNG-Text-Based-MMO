@@ -27,6 +27,27 @@ export const BattleScreen = () => {
     const [showRewardModal, setShowRewardModal] = useState(false);
     const [isVictory, setIsVictory] = useState(false);
 
+    useEffect(() => {
+        // 1. สร้าง Audio Object และกำหนดให้ loop ได้
+        const battleAudio = new Audio('/Audio/BattleLoop.mp3'); // 👈 เปลี่ยน Path เสียงของคุณ
+        battleAudio.loop = true;
+        battleAudio.volume = 0.3; // ปรับระดับเสียง (0.0 - 1.0)
+
+        // 2. ตั้งเวลาหน่วง (รอเวลาซักนิดตามที่ต้องการ เช่น 500 มิลลิวินาที)
+        const timer = setTimeout(() => {
+            battleAudio.play().catch((error) => {
+                // ป้องกัน Browser บล็อก Autoplay กรณีที่ผู้เล่นยังไม่ได้ Click หน้าจอมาก่อน
+                console.log("Autoplay prevented:", error);
+            });
+        }, 300); // 👈 หน่วงเวลา 0.5 วินาที (ปรับเปลี่ยนได้ตามต้องการ)
+
+        // 3. Cleanup Function: ทำงานเมื่อผู้เล่นออกจากหน้านี้ (Component Unmount หรือ leaveBattle)
+        return () => {
+            clearTimeout(timer);
+            battleAudio.pause();
+            battleAudio.currentTime = 0; // รีเซ็ตเสียงกลับไปจุดเริ่มต้น
+        };
+    }, []); // ทำงานครั้งเดียวตอนเข้าหน้า BattleScreen และเคลียร์ค่าทิ้งตอนออก
 
     // ปรับเงื่อนไขใน useEffect เล็กน้อย
     useEffect(() => {
