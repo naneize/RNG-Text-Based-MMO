@@ -7,7 +7,7 @@ interface AchievementState {
     achievements: Record<string, AchievementProgress>;
     unlockAchievement: (id: string) => void;
     claimReward: (id: string) => void;
-    checkCondition: (conditionKey: string, data?: any) => void; // <--- ปรับให้รองรับข้อมูลส่งเข้ามาเช็ก
+    checkCondition: (conditionKey: string, data?: any) => void;
 }
 
 const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
@@ -43,7 +43,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Overkill',
         description: 'Deal over 10,000 damage with a single normal attack.',
         category: 'combat',
-        rewardFrame: '/Icons/Frames/frame_03.png',
+        rewardFrame: '/Icons/Frames/frame_10.png',
         rewardTitle: 'The Destroyer', // 🟢 ฉายาที่จะได้รับ
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 5 },
@@ -79,6 +79,69 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 5 },
             { type: 'material', itemId: 'primordial_essence', amount: 3 }
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    // 🟢 Starter Quest Chain — เพิ่มใหม่ทั้งหมด
+    'QUEST_ROLL_10': {
+        id: 'QUEST_ROLL_10',
+        title: 'Keep Rolling',
+        description: 'Roll for loot 10 times.',
+        category: 'starter', // ✅ category ใหม่ แยกจาก collection/combat เดิม
+        rewardTitle: undefined,
+        reward: [
+            { type: 'material', itemId: 'iron_ore', amount: 15 },
+            { type: 'material', itemId: 'magic_dust', amount: 10 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    'QUEST_SALVAGE_FIRST': {
+        id: 'QUEST_SALVAGE_FIRST',
+        title: 'First Salvage',
+        description: 'Salvage an item you no longer need.',
+        category: 'starter',
+        reward: [
+            { type: 'material', itemId: 'leather', amount: 10 },
+            { type: 'material', itemId: 'steel_ingot', amount: 10 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    'QUEST_REROLL_FIRST': {
+        id: 'QUEST_REROLL_FIRST',
+        title: 'Master of Change',
+        description: 'Reroll an equipment stat or bonus for the first time.',
+        category: 'starter',
+        reward: [
+            { type: 'material', itemId: 'magic_dust', amount: 10 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    'QUEST_READY_FOR_BOSS': {
+        id: 'QUEST_READY_FOR_BOSS',
+        title: 'Ready for Battle',
+        description: "Reach the recommended Combat Power for your first boss.",
+        category: 'starter',
+        reward: [
+            { type: 'material', itemId: 'magic_dust', amount: 20 },
+            { type: 'material', itemId: 'mithril', amount: 10 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    'QUEST_FIRST_BOSS_KILL': {
+        id: 'QUEST_FIRST_BOSS_KILL',
+        title: 'First Blood',
+        description: 'Defeat your very first boss.',
+        category: 'starter',
+        rewardTitle: 'Boss Slayer',
+        rewardFrame: '/Icons/Frames/frame_07.png',
+        reward: [
+            { type: 'material', itemId: 'ancient_rune', amount: 10 },
+            { type: 'material', itemId: 'primordial_essence', amount: 5 },
         ],
         isUnlocked: false,
         isClaimed: false,
@@ -179,6 +242,42 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                         break;
 
+                    // ✅ เพิ่มใหม่ — เช็คจำนวน roll สะสม (เรียกทุกครั้งที่ roll สำเร็จ)
+                    case 'ROLL_COUNT':
+                        if (!state.achievements['QUEST_ROLL_10']?.isUnlocked && data?.totalOpens >= 10) {
+                            get().unlockAchievement('QUEST_ROLL_10');
+                        }
+                        break;
+
+                    // ✅ เพิ่มใหม่ — เช็คว่า salvage สำเร็จอย่างน้อย 1 ครั้ง
+                    case 'SALVAGE_ITEM':
+                        if (!state.achievements['QUEST_SALVAGE_FIRST']?.isUnlocked) {
+                            get().unlockAchievement('QUEST_SALVAGE_FIRST');
+                        }
+                        break;
+
+                    // ✅ เพิ่มใหม่ — เช็คว่า CP ถึงเกณฑ์บอสตัวแรกหรือยัง
+                    case 'CHECK_CP_READY':
+                        if (!state.achievements['QUEST_READY_FOR_BOSS']?.isUnlocked && data?.playerCP >= data?.requiredCP) {
+                            get().unlockAchievement('QUEST_READY_FOR_BOSS');
+                        }
+                        break;
+
+                    // ✅ เพิ่มใหม่ — ชนะบอสครั้งแรก
+                    case 'BOSS_DEFEATED':
+                        if (!state.achievements['QUEST_FIRST_BOSS_KILL']?.isUnlocked) {
+                            get().unlockAchievement('QUEST_FIRST_BOSS_KILL');
+                        }
+                        break;
+
+                    // ✅ เช็คว่าทำการ Reroll สำเร็จแล้วอย่างน้อย 1 ครั้ง
+                    case 'REROLL_FIRST':
+                        if (!state.achievements['QUEST_REROLL_FIRST']?.isUnlocked) {
+                            get().unlockAchievement('QUEST_REROLL_FIRST');
+                        }
+                        break;
+
+
                     case 'DEAL_DAMAGE': {
                         // 🟢 ดึงค่า damage อย่างปลอดภัย (แก้อ่านค่า NaN)
                         const rawDamage = typeof data === 'object' && data !== null ? data.damage : data;
@@ -200,11 +299,27 @@ export const useAchievementStore = create<AchievementState>()(
         {
             name: 'achievement-storage', // ชื่อ key เดิม
 
-            // 👉 เอาโค้ด 3 บรรทัดนี้มาแปะไว้ตรงนี้ครับ
-            version: 2,
+            version: 4, // 🟢 ขยับเป็น version 4 เพราะเพิ่มเควส Reroll ใหม่
             migrate: (persistedState: any, version: number) => {
                 if (version < 2) {
                     return { achievements: INITIAL_ACHIEVEMENTS };
+                }
+                if (version < 3) {
+                    return {
+                        achievements: {
+                            ...INITIAL_ACHIEVEMENTS,
+                            ...persistedState.achievements,
+                        }
+                    };
+                }
+                if (version < 4) {
+                    // 🟢 เพิ่มบล็อกนี้สำหรับอัปเดตเวอร์ชันล่าสุด เพื่อดึงเควสใหม่มารวมกับเซฟเก่าโดยไม่ล้างความคืบหน้าเดิม
+                    return {
+                        achievements: {
+                            ...INITIAL_ACHIEVEMENTS,
+                            ...persistedState.achievements,
+                        }
+                    };
                 }
                 return persistedState;
             },

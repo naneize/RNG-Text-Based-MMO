@@ -543,6 +543,8 @@ export const useGameStore = create<GameState>()(
                 });
 
                 get().saveUserData();
+                useAchievementStore.getState().checkCondition('SALVAGE_ITEM'); // ✅ เพิ่มบรรทัดนี้
+
 
                 return {
                     success: isSuccess,
@@ -804,6 +806,8 @@ export const useGameStore = create<GameState>()(
                 get().updateInventoryItem(uid, { ...item, stats: newStats, statsLog: newStatsLog });
                 get().saveUserData();
 
+                useAchievementStore.getState().checkCondition('REROLL_FIRST');
+
                 const diff = finalVal - currentVal;
                 const diffText = diff > 0 ? ` (+${diff})` : diff < 0 ? ` (${diff})` : ' (No change)';
 
@@ -874,6 +878,8 @@ export const useGameStore = create<GameState>()(
 
                 get().updateInventoryItem(uid, updatedItem);
                 get().saveUserData();
+
+                useAchievementStore.getState().checkCondition('REROLL_FIRST');
 
                 const diff = finalBonus.value - currentBonus.value;
                 const diffText = diff > 0 ? ` (+${diff}%)` : diff < 0 ? ` (${diff}%)` : ' (No change)';

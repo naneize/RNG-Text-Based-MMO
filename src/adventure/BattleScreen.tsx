@@ -93,7 +93,8 @@ export const BattleScreen = () => {
             style={{ backgroundImage: `url(${currentBg})` }}
         >
             {/* Overlay ให้จางลง หรือเปลี่ยนเป็นโทนสีฟ้า/น้ำเพื่อให้เข้ากับธาตุน้ำ */}
-            <div className="absolute inset-0 bg-slate-950/10 bg-linear-to-b from-slate-950/5 via-slate-950/20 to-slate-950/40 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-slate-950/5 bg-linear-to-b from-slate-950/0 via-slate-950/10 to-slate-950/30 pointer-events-none"></div>
+
 
             {/* Content Wrapper */}
             <div className="relative z-10">
@@ -108,15 +109,19 @@ export const BattleScreen = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
                     {/* ===================== กรอบซ้าย: BOSS & PLAYER STATUS ===================== */}
-                    <div className="flex flex-col justify-between bg-black/20 p-5 rounded-xl border border-white/10 hover:border-white/20 backdrop-blur-md transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    {/* แก้ไข: เปลี่ยน bg-black/20 เป็น bg-black/10 และลดเบลอเป็น backdrop-blur-[2px] */}
+                    <div className="flex flex-col justify-between bg-black/10 p-5 rounded-xl border border-white/10 hover:border-white/20 backdrop-blur-[2px] transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                         <div>
                             {/* Boss Avatar & Info */}
                             <div className="flex flex-col items-center mb-4">
-                                <div className="relative group w-full max-w-sm">
+                                <div className="relative group w-full max-w-sm flex justify-center">
+                                    {/* แสงออร่าด้านหลัง */}
+                                    <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full transform scale-75 pointer-events-none"></div>
+
                                     <img
                                         src={selectedBoss.imagePath}
                                         alt={selectedBoss.name}
-                                        className="relative w-full h-48 rounded-2xl border-2 border-slate-700 bg-slate-950 object-cover shadow-2xl"
+                                        className="relative w-full h-48 object-cover p-0 [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_85%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_85%)]"
                                         onError={(e) => (e.currentTarget.src = '/Icons/Monsters/default.png')}
                                     />
                                 </div>
@@ -257,7 +262,8 @@ export const BattleScreen = () => {
                     </div>
 
                     {/* ===================== กรอบขวา: BATTLE LOG ===================== */}
-                    <div className="flex flex-col h-full bg-slate-950/80 p-4 rounded-xl border border-slate-800 backdrop-blur-sm min-h-[380px] max-h-[520px]">
+                    {/* แก้ไข: เปลี่ยน bg-slate-950/80 เป็น bg-slate-950/20 และปรับ backdrop-blur-[2px] */}
+                    <div className="flex flex-col h-full bg-slate-950/20 p-4 rounded-xl border border-slate-800 backdrop-blur-[2px] min-h-[380px] max-h-[520px]">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pb-2 border-b border-slate-800 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                             Battle Log
@@ -322,7 +328,6 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // เพิ่มเงื่อนไขจับคำว่า Crit Rate +XX% ตรงนี้
                                                 if (part.includes('Crit Rate')) {
                                                     return (
                                                         <span key={index} className="text-amber-300 font-bold drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] mx-0.5">

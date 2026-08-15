@@ -1,4 +1,4 @@
-export type AchievementCategory = 'combat' | 'challenge' | 'collection';
+export type AchievementCategory = 'combat' | 'challenge' | 'collection' | 'starter';
 
 export interface AchievementTemplate {
     id: string;             // รหัสความสำเร็จ เช่น 'BOSS_KILL_RARE_ONLY'

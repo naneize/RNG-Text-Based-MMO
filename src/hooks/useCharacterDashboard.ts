@@ -108,6 +108,7 @@ export const useCharacterDashboard = () => {
 
         if (newItem && newItem.rarity) {
             useAchievementStore.getState().checkCondition('OBTAIN_ITEM', { rarity: newItem.rarity });
+            useAchievementStore.getState().checkCondition('ROLL_COUNT', { totalOpens: useGameStore.getState().totalOpens }); // ✅ เพิ่มบรรทัดนี้
         }
 
         if (newItem && newItem.rarity === 'Legendary') {

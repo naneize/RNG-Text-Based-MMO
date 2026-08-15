@@ -7,6 +7,7 @@ import { useGameStore } from './gameStore';
 import type { Stats, Player, Boss, Item } from '../types/game';
 import { WEAKNESS_BONUS_RATE } from '../types/game';
 
+
 interface ActiveBuff {
     type: 'ignoreDef' | 'critBoost' | 'stunBoss';
     remainingRounds: number;
@@ -236,6 +237,7 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     if (nextBossHp <= 0) {
         const rewards = useGameStore.getState().handleBossDefeated(selectedBoss);
         set({ lastRewards: rewards, rewardTick: get().rewardTick + 1 });
+        useAchievementStore.getState().checkCondition('BOSS_DEFEATED'); // ✅ เพิ่มบรรทัดนี้
 
         // ถ้าเปิด Auto-Farm อยู่ ให้รีเซ็ตทั้งเลือดบอส เลือดผู้เล่น และเคลียร์ของรอบเก่าทันที
         if (get().isAutoFarm) {

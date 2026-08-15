@@ -31,7 +31,7 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
                 }
                 return prev + 1;
             });
-        }, 150);
+        }, 50);
 
         return () => clearInterval(interval);
     }, [onFinished]);

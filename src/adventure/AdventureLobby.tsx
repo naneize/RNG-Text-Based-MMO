@@ -1,12 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BOSS_LIBRARY } from '../data/bossLibrary';
 import { getEffectiveStats } from '../utils/combat';
 import { SKILL_POOL } from '../data/skills';
-
+import { calculateCombatPower } from '../utils/combatPower';
+import { useAchievementStore } from '../store/achievementStore';
 
 export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss: any) => void; playerCP: number }) => {
     const [selectedElement, setSelectedElement] = useState<string>('All');
     const [selectedBossForDrops, setSelectedBossForDrops] = useState<any>(null);
+
+    // ✅ เช็ค quest "Ready for Battle" ทุกครั้งที่ playerCP เปลี่ยน เทียบกับบอสตัวแรกสุดในเกม (level ต่ำสุด)
+    useEffect(() => {
+        const firstBoss = [...BOSS_LIBRARY].sort((a, b) => a.level - b.level)[0];
+        if (firstBoss?.recommendedCP) {
+            useAchievementStore.getState().checkCondition('CHECK_CP_READY', {
+                playerCP,
+                requiredCP: firstBoss.recommendedCP,
+            });
+        }
+    }, [playerCP]);
 
     const getRarityColor = (rarity: string) => {
         switch (rarity) {

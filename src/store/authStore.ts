@@ -235,10 +235,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     setEquippedTitle: async (title: string) => {
-        // อัปเดตลง State และบันทึกลง Database (เช่น Firebase Firestore) ตามโครงสร้างโปรเจกต์ของคุณ
+        const currentUser = get().user;
+        const currentProfile = get().userProfile;
+
+        // อัปเดตลง State ในเครื่องทันที
         set((state) => ({
             userProfile: state.userProfile ? { ...state.userProfile, equippedTitle: title } : null
         }));
+
+        // 🟢 เพิ่มส่วนบันทึกลง Firestore ตรงนี้ครับ
+        if (currentUser && currentProfile) {
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                await setDoc(userRef, { equippedTitle: title }, { merge: true });
+            } catch (err) {
+                console.error("Failed to save equippedTitle to Firestore:", err);
+            }
+        }
     },
     // 🟢 3. เพิ่มฟังก์ชันสำหรับอัปเดตและบันทึก Avatar ลง Firestore
     setAvatar: async (avatarPath: string) => {

@@ -17,6 +17,7 @@ import type { Item } from '../../types/game';
 import { SkillModal } from '../../components/Modals/SkillModal';
 import { SellItemModal } from '../../components/Marketplace/SellItemModal';
 import { RerollModal } from '../Modals/RerollModal';
+import { StarterQuestPanel } from '../StarterQuestPanel';
 
 export const CharacterDashboard = () => {
     const {
@@ -41,6 +42,10 @@ export const CharacterDashboard = () => {
 
     return (
         <div className="flex flex-col gap-4">
+
+            {/* 👇 นำ StarterQuestPanel มาวางไว้ตรงนี้ เป็นบรรทัดแรกสุดของหน้าจอเลยครับ! */}
+            <StarterQuestPanel />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-900 rounded-xl border border-slate-700 shadow-xl">
 
                 {/* 📌 คอลัมน์ที่ 1: CharacterStats + ปุ่ม World Chat (รวมอยู่ในกล่องเดียว) */}

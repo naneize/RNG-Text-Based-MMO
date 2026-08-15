@@ -57,6 +57,18 @@ export const AchievementPage: React.FC = () => {
                     >
                         All
                     </button>
+
+                    {/* 🟢 เพิ่มปุ่ม Starter ตรงนี้ */}
+                    <button
+                        onClick={() => setSelectedFilter('starter')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFilter === 'starter'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'text-slate-400 hover:text-white'
+                            }`}
+                    >
+                        Starter
+                    </button>
+
                     <button
                         onClick={() => setSelectedFilter('collection')}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFilter === 'collection'
@@ -66,7 +78,6 @@ export const AchievementPage: React.FC = () => {
                     >
                         Collection
                     </button>
-                    {/* 🟢 เพิ่มปุ่ม Filter หมวด Combat ตรงนี้ */}
                     <button
                         onClick={() => setSelectedFilter('combat')}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFilter === 'combat'
