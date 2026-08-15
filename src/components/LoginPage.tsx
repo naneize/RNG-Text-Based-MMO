@@ -25,7 +25,6 @@ export const LoginPage = () => {
     // 🟢 ฟังก์ชันกดเริ่มเกม (กดปุ่ม START ADVENTURE)
     const handleStartAdventure = () => {
         setHasStarted(true);
-        // ถ้าอยู่บน CrazyGames แนะนำให้กดเข้าเกมแบบ Guest หรือข้ามหน้าจอ Login ไปเลยอัตโนมัติก็ได้
         if (isEmbedded) {
             loginAsGuest();
         }
@@ -116,7 +115,6 @@ export const LoginPage = () => {
                                 </div>
                             </div>
 
-                            {/* 🟢 ถ้าอยู่บน CrazyGames (isEmbedded) จะซ่อนฟอร์ม Email/Password และปุ่ม Google Login เพื่อให้ทำตามกฎ No external login options */}
                             {!isEmbedded ? (
                                 <>
                                     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -157,7 +155,6 @@ export const LoginPage = () => {
                                         <div className="flex-1 h-px bg-slate-800" />
                                     </div>
 
-                                    {/* ปุ่ม Google Login (ถูกซ่อนเมื่ออยู่บน CrazyGames) */}
                                     <button
                                         onClick={handleGoogleLogin}
                                         disabled={isSubmitting}
@@ -196,7 +193,14 @@ export const LoginPage = () => {
                             </button>
                         </div>
 
-                        <div className="mt-8 pt-4 border-t border-slate-800/80 text-center">
+                        {/* 🟢 ส่วนที่เพิ่ม: ข้อความ Terms & Conditions และ Privacy Policy สำหรับผ่านตรวจ CrazyGames */}
+                        <div className="mt-6 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-1.5">
+                            <p className="text-[11px] text-slate-400">
+                                By playing, you agree to our{' '}
+                                <span className="text-emerald-400 underline cursor-pointer">Terms & Conditions</span>{' '}
+                                and{' '}
+                                <span className="text-emerald-400 underline cursor-pointer">Privacy Policy</span>.
+                            </p>
                             <p className="text-[10px] text-slate-500">
                                 Icons provided by{' '}
                                 <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-emerald-400 underline">
