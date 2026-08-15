@@ -1,15 +1,20 @@
 // components/StarterQuestPanel.tsx
 import { useState } from 'react';
 import { useAchievementStore } from '../store/achievementStore';
-import { useGameStore } from '../store/gameStore';
+
 
 const QUEST_ORDER = [
     'FIRST_EQUIP',
+    'EQUIP_FIVE_COMMONS',
     'QUEST_ROLL_10',
+    'FIRST_EPIC',
+    'FIRST_LEGENDARY',
     'QUEST_REROLL_FIRST',
     'QUEST_SALVAGE_FIRST',
+    'QUEST_TRANSFER_FIRST',
     'QUEST_READY_FOR_BOSS',
-    'QUEST_FIRST_BOSS_KILL'
+    'QUEST_FIRST_BATTLE',
+    'QUEST_FIRST_BOSS_KILL',
 ];
 
 export const StarterQuestPanel = () => {
@@ -58,7 +63,9 @@ export const StarterQuestPanel = () => {
                             <div className="flex items-center gap-2.5">
                                 <span className="text-sm">{quest.isClaimed ? '✅' : quest.isUnlocked ? '🎁' : '⬜'}</span>
                                 <div>
-                                    <div className="font-bold text-slate-100">{quest.title}</div>
+                                    {/* 🟢 ปรับชื่อเควสให้เป็นสีเขียวสว่าง */}
+                                    <div className="font-bold text-emerald-400">{quest.title}</div>
+                                    {/* คำอธิบายยังคงใช้สีเทาอ่อนเพื่อให้สบายตา */}
                                     <div className="text-[11px] text-slate-300">{quest.description}</div>
                                 </div>
                             </div>

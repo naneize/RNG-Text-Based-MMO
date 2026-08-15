@@ -4,8 +4,7 @@ import { calculateCombatPower, getCPRating, getCPBreakdown } from '../../utils/c
 import { STAT_CAPS } from '../../utils/statCalculator';
 import { useAchievementStore } from '../../store/achievementStore';
 import { useAuthStore } from '../../store/authStore';
-import { AVATAR_FILES } from '../constants/avatars';
-import { FRAME_FILES } from '../constants/frames';
+
 
 interface PlayerProfileProps {
     player: Player;
@@ -78,7 +77,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
     };
 
     // ดึงรูป Avatar ปัจจุบัน (ใช้จาก userProfile หรือ fallback เป็นรูปแรกใน AVATAR_FILES)
-    const currentAvatar = userProfile?.avatar || AVATAR_FILES?.[0] || '';
+    const currentAvatar = userProfile?.avatar || '';
 
 
     return (
@@ -465,83 +464,70 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                             <h3 className="text-slate-200 font-bold text-lg mb-4">Select Avatar</h3>
 
                             {/* ปุ่มอัปโหลดรูปจากคอมพิวเตอร์พร้อมระบบย่อขนาดอัตโนมัติ */}
-                            <div className="mb-4">
-                                <label className="flex items-center justify-center w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-md">
-                                    <span>Upload Custom Image (Auto-Resize)</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (event) => {
-                                                    const img = new Image();
-                                                    img.onload = () => {
-                                                        const canvas = document.createElement('canvas');
-                                                        const MAX_SIZE = 150; // กำหนดขนาดสูงสุด (กว้าง/สูง 150px สำหรับรูป Avatar)
-                                                        let width = img.width;
-                                                        let height = img.height;
+                            <div className="mb-4 relative">
+                                <div className="mb-4 flex flex-col gap-2">
+                                    <label className="flex items-center justify-center w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-md">
+                                        <span>Upload Custom Image (Auto-Resize)</span>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => {
+                                                        const img = new Image();
+                                                        img.onload = () => {
+                                                            const canvas = document.createElement('canvas');
+                                                            const MAX_SIZE = 150; // กำหนดขนาดสูงสุด (กว้าง/สูง 150px สำหรับรูป Avatar)
+                                                            let width = img.width;
+                                                            let height = img.height;
 
-                                                        if (width > height) {
-                                                            if (width > MAX_SIZE) {
-                                                                height *= MAX_SIZE / width;
-                                                                width = MAX_SIZE;
+                                                            if (width > height) {
+                                                                if (width > MAX_SIZE) {
+                                                                    height *= MAX_SIZE / width;
+                                                                    width = MAX_SIZE;
+                                                                }
+                                                            } else {
+                                                                if (height > MAX_SIZE) {
+                                                                    width *= MAX_SIZE / height;
+                                                                    height = MAX_SIZE;
+                                                                }
                                                             }
-                                                        } else {
-                                                            if (height > MAX_SIZE) {
-                                                                width *= MAX_SIZE / height;
-                                                                height = MAX_SIZE;
-                                                            }
-                                                        }
 
-                                                        canvas.width = width;
-                                                        canvas.height = height;
+                                                            canvas.width = width;
+                                                            canvas.height = height;
 
-                                                        const ctx = canvas.getContext('2d');
-                                                        ctx?.drawImage(img, 0, 0, width, height);
+                                                            const ctx = canvas.getContext('2d');
+                                                            ctx?.drawImage(img, 0, 0, width, height);
 
-                                                        // แปลงเป็น Base64 (บีบอัดคุณภาพเหลือ 85% เป็น JPEG เพื่อให้ไฟล์เล็กจิ๋ว)
-                                                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                                                            // แปลงเป็น Base64 (บีบอัดคุณภาพเหลือ 85% เป็น JPEG เพื่อให้ไฟล์เล็กจิ๋ว)
+                                                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-                                                        setAvatar?.(compressedBase64);
-                                                        setIsAvatarModalOpen(false);
+                                                            setAvatar?.(compressedBase64);
+                                                            setIsAvatarModalOpen(false);
+                                                        };
+                                                        img.src = event.target?.result as string;
                                                     };
-                                                    img.src = event.target?.result as string;
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }}
-                                    />
-                                </label>
-                            </div>
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                    </label>
 
-                            <div className="text-xs text-slate-400 mb-2 font-medium">choose from presets:</div>
-
-                            {/* รายการ Avatar สำเร็จรูป */}
-                            <div className="grid grid-cols-4 gap-3 max-h-48 overflow-y-auto mb-4 p-1">
-                                {AVATAR_FILES && AVATAR_FILES.map((avatarSrc: string, index: number) => (
-                                    <div
-                                        key={index}
-                                        onClick={() => {
-                                            setAvatar?.(avatarSrc);
-                                            setIsAvatarModalOpen(false);
-                                        }}
-                                        className={`w-16 h-16 rounded-full overflow-hidden border-2 cursor-pointer transition-all hover:scale-105 ${currentAvatar === avatarSrc ? 'border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-slate-700'
-                                            }`}
+                                    {/* ปุ่มปิดอยู่ด้านล่าง */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAvatarModalOpen(false)}
+                                        className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors shadow-md"
                                     >
-                                        <img src={avatarSrc} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
-                                    </div>
-                                ))}
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
 
-                            <button
-                                onClick={() => setIsAvatarModalOpen(false)}
-                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded"
-                            >
-                                Close
-                            </button>
+
                         </div>
                     </div>
                 )

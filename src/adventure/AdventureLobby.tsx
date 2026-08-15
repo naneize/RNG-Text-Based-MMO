@@ -61,12 +61,12 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                             let iconPath = '/Icons/Items/default.png';
 
                             if (item.type === 'material') {
-                                iconPath = `/Icons/Materials/${item.itemId}.svg`;
+                                iconPath = `/Icons/Materials/${item.itemId}.png`;
                             } else if (item.type === 'skill') {
                                 const foundSkill = SKILL_POOL.find((s: any) => s.id === item.itemId);
                                 iconPath = foundSkill?.icon || `/Icons/Skills/skill-${item.itemId}.svg`;
                             } else if (item.type === 'item') {
-                                iconPath = `/Icons/Equipments/${item.itemId}.svg`;
+                                iconPath = `/Icons/Equipments/${item.itemId}.png`; // 🟢 เปลี่ยนจาก .svg เป็น .png ตรงนี้
                             }
 
                             // 🟢 คำนวณช่วงเลเวลไอเทม (70% ถึง 100% ของ maxLevel)

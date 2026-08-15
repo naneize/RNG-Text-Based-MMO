@@ -63,9 +63,15 @@ export const ItemDetailModal = ({
                 <div className="flex flex-col items-center justify-start w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-700 pb-4 md:pb-0">
                     <h2 className="text-xl font-bold text-white text-center mb-2">{selectedItem.name}</h2>
                     {selectedItem.icon ? (
-                        <img src={selectedItem.icon} alt={selectedItem.name} className="w-24 h-24 mb-4 object-contain" />
+                        <img
+                            src={selectedItem.icon}
+                            alt={selectedItem.name}
+                            className="w-32 h-32 mb-4 object-contain"
+                        />
                     ) : (
-                        <div className="w-24 h-24 mb-4 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 text-xs">No Image</div>
+                        <div className="w-32 h-32 mb-4 bg-slate-800 flex items-center justify-center text-slate-500 text-xs">
+                            No Image
+                        </div>
                     )}
 
                     <div className="text-center space-y-1">

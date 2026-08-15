@@ -13,9 +13,22 @@ export const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // 🟢 เช็กว่าเกมกำลังรันอยู่บน iframe ของแพลตฟอร์มภายนอก (เช่น CrazyGames) หรือไม่
+    const isEmbedded = (() => {
+        try {
+            return window.self !== window.top || window.location.hostname.includes('crazygames');
+        } catch (e) {
+            return true;
+        }
+    })();
+
     // 🟢 ฟังก์ชันกดเริ่มเกม (กดปุ่ม START ADVENTURE)
     const handleStartAdventure = () => {
         setHasStarted(true);
+        // ถ้าอยู่บน CrazyGames แนะนำให้กดเข้าเกมแบบ Guest หรือข้ามหน้าจอ Login ไปเลยอัตโนมัติก็ได้
+        if (isEmbedded) {
+            loginAsGuest();
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +56,7 @@ export const LoginPage = () => {
     return (
         <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden">
 
-            {/* 🖼️ วิดีโอพื้นหลังเคลื่อนไหว (Live Background / Loop Animation) */}
+            {/* 🖼️ วิดีโอพื้นหลังเคลื่อนไหว */}
             <div className="absolute inset-0 z-0 overflow-hidden">
                 <video
                     autoPlay
@@ -52,11 +65,10 @@ export const LoginPage = () => {
                     playsInline
                     className="w-full h-full object-cover"
                 >
-                    <source src="/Icons/Backgrounds/202608131618.mp4" type="video/mp4" />
+                    <source src="/Icons/Backgrounds/202608131618.webm" type="video/webm" />
                     <img src={`/Icons/Backgrounds/${currentBg}`} alt="Background Fallback" className="w-full h-full object-cover" />
                 </video>
 
-                {/* 🖤 Layer ซ้อนมืดมัว/เบลอ */}
                 <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-slate-950/40 backdrop-blur-xs' : 'bg-slate-950/0 backdrop-blur-none'}`} />
             </div>
 
@@ -99,78 +111,88 @@ export const LoginPage = () => {
                                         Version : 0.0.4
                                     </span>
                                     <p className="text-slate-400 text-sm">
-                                        {mode === 'login' ? 'Sign In' : 'Create Account'}
+                                        {isEmbedded ? 'Welcome Player' : (mode === 'login' ? 'Sign In' : 'Create Account')}
                                     </p>
                                 </div>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                                <input
-                                    type="email"
-                                    placeholder="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
-                                />
+                            {/* 🟢 ถ้าอยู่บน CrazyGames (isEmbedded) จะซ่อนฟอร์ม Email/Password และปุ่ม Google Login เพื่อให้ทำตามกฎ No external login options */}
+                            {!isEmbedded ? (
+                                <>
+                                    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
+                                        />
+                                        <input
+                                            type="password"
+                                            placeholder="Password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            minLength={6}
+                                            className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
+                                        />
 
-                                {error && (
-                                    <p className="text-red-400 text-xs text-center">{error}</p>
-                                )}
+                                        {error && (
+                                            <p className="text-red-400 text-xs text-center">{error}</p>
+                                        )}
 
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="p-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition disabled:opacity-50 mt-1 cursor-pointer"
-                                >
-                                    {isSubmitting ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
-                                </button>
-                            </form>
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="p-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition disabled:opacity-50 mt-1 cursor-pointer"
+                                        >
+                                            {isSubmitting ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
+                                        </button>
+                                    </form>
 
-                            <div className="flex items-center gap-3 my-4">
-                                <div className="flex-1 h-px bg-slate-800" />
-                                <span className="text-slate-500 text-xs">OR</span>
-                                <div className="flex-1 h-px bg-slate-800" />
-                            </div>
+                                    <div className="flex items-center gap-3 my-4">
+                                        <div className="flex-1 h-px bg-slate-800" />
+                                        <span className="text-slate-500 text-xs">OR</span>
+                                        <div className="flex-1 h-px bg-slate-800" />
+                                    </div>
 
-                            <button
-                                onClick={handleGoogleLogin}
-                                disabled={isSubmitting}
-                                className="w-full p-3 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                            >
-                                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
-                                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.35 7.23 24 12 24z" />
-                                    <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.14 0 9.87 0 12s.43 3.86 1.18 5.38l4.09-3.14z" />
-                                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.15 2.65 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.91 6.73-4.91z" />
-                                </svg>
-                                Continue with Google
-                            </button>
+                                    {/* ปุ่ม Google Login (ถูกซ่อนเมื่ออยู่บน CrazyGames) */}
+                                    <button
+                                        onClick={handleGoogleLogin}
+                                        disabled={isSubmitting}
+                                        className="w-full p-3 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                    >
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.35 7.23 24 12 24z" />
+                                            <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.14 0 9.87 0 12s.43 3.86 1.18 5.38l4.09-3.14z" />
+                                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.15 2.65 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.91 6.73-4.91z" />
+                                        </svg>
+                                        Continue with Google
+                                    </button>
 
-                            <p className="text-slate-400 text-sm text-center mt-6">
-                                {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
-                                <button
-                                    onClick={switchMode}
-                                    className="text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
-                                >
-                                    {mode === 'login' ? 'Sign Up' : 'Sign In'}
-                                </button>
-                            </p>
+                                    <p className="text-slate-400 text-sm text-center mt-6">
+                                        {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+                                        <button
+                                            onClick={switchMode}
+                                            className="text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
+                                        >
+                                            {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                                        </button>
+                                    </p>
+                                </>
+                            ) : (
+                                <div className="text-center py-6 text-slate-300">
+                                    <p className="mb-4 text-sm">Ready to play on CrazyGames!</p>
+                                </div>
+                            )}
 
                             <button
                                 onClick={loginAsGuest}
-                                className="w-full mt-3 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                                className="w-full mt-3 p-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
                             >
-                                Play as Guest
+                                Play Game (Guest)
                             </button>
                         </div>
 

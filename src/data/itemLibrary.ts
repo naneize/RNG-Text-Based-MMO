@@ -4,14 +4,14 @@ import type { ItemTemplate } from '../types/game';
 
 export const itemLibrary: ItemTemplate[] = [
 
-    { id: 'iron_sword', name: 'Iron Sword', slot: 'weapon', weaponType: 'sword', icon: '/Icons/Equipments/iron_sword.svg', type: 'equipment' },
-    { id: 'steel_dagger', name: 'Steel Dagger', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/steel_dagger.svg', type: 'equipment' },
-    { id: 'magic_staff', name: 'Magic Staff', slot: 'weapon', weaponType: 'staff', icon: '/Icons/Equipments/magic_staff.svg', type: 'equipment' },
-    { id: 'mace', name: 'Mace', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/mace.svg', type: 'equipment' },
-    { id: 'bone_dagger', name: 'Bone Dagger', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/bone_dagger.svg', type: 'equipment' },
-    { id: 'short_sword', name: 'Short Sword', slot: 'weapon', weaponType: 'sword', icon: '/Icons/Equipments/short_sword.svg', type: 'equipment' },
-    { id: 'gladius', name: 'Gladius', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/gladius.svg', type: 'equipment' },
-    { id: 'morning_star', name: 'Morning Star', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/morning_star.svg', type: 'equipment' },
+    { id: 'iron_sword', name: 'Iron Sword', slot: 'weapon', weaponType: 'sword', icon: '/Icons/Equipments/iron_sword.png', type: 'equipment' },
+    { id: 'steel_dagger', name: 'Steel Dagger', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/steel_dagger.png', type: 'equipment' },
+    { id: 'magic_staff', name: 'Magic Staff', slot: 'weapon', weaponType: 'staff', icon: '/Icons/Equipments/magic_staff.png', type: 'equipment' },
+    { id: 'mace', name: 'Mace', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/mace.png', type: 'equipment' },
+    { id: 'bone_dagger', name: 'Bone Dagger', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/bone_dagger.png', type: 'equipment' },
+    { id: 'short_sword', name: 'Short Sword', slot: 'weapon', weaponType: 'sword', icon: '/Icons/Equipments/short_sword.png', type: 'equipment' },
+    { id: 'gladius', name: 'Gladius', slot: 'weapon', weaponType: 'dagger', icon: '/Icons/Equipments/gladius.png', type: 'equipment' },
+    { id: 'morning_star', name: 'Morning Star', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/morning_star.png', type: 'equipment' },
 
     // --- TWO-HAND WEAPONS ---
     { id: 'war_hammer', name: 'War Hammer', slot: 'weapon', weaponType: 'hammer', icon: '/Icons/Equipments/war_hammer.svg', type: 'equipment' },
@@ -124,17 +124,17 @@ export const itemLibrary: ItemTemplate[] = [
 
 
     // --- Materials (เพิ่มส่วนนี้เข้าไป) ---
-    { id: 'iron_ore', name: 'Iron Ore', slot: 'material', icon: '/Icons/Materials/iron_ore.svg', type: 'material' },
-    { id: 'steel_ingot', name: 'Steel Ingot', slot: 'material', icon: '/Icons/Materials/steel_ingot.svg', type: 'material' },
-    { id: 'leather', name: 'Leather', slot: 'material', icon: '/Icons/Materials/leather.svg', type: 'material' },
-    { id: 'magic_dust', name: 'Magic Dust', slot: 'material', icon: '/Icons/Materials/magic_dust.svg', type: 'material' },
-    { id: 'dragon_scale', name: 'Dragon Scale', slot: 'material', icon: '/Icons/Materials/dragon_scale.svg', type: 'material' },
-    { id: 'mithril', name: 'Mithril', slot: 'material', icon: '/Icons/Materials/mithril.svg', type: 'material' },
-    { id: 'gold_ore', name: 'Gold Ore', slot: 'material', icon: '/Icons/Materials/gold_ore.svg', type: 'material' },
-    { id: 'dark_crystal', name: 'Dark Crystal', slot: 'material', icon: '/Icons/Materials/dark_crystal.svg', type: 'material' },
-    { id: 'void_essence', name: 'Void Essence', slot: 'material', icon: '/Icons/Materials/void_essence.svg', type: 'material' },
-    { id: 'celestial_shard', name: 'Celestial Shard', slot: 'material', icon: '/Icons/Materials/celestial_shard.svg', type: 'material' },
-    { id: 'ancient_rune', name: 'Ancient Rune', slot: 'material', icon: '/Icons/Materials/ancient_rune.svg', type: 'material' },
-    { id: 'primordial_essence', name: 'Primordial Essence', slot: 'material', icon: '/Icons/Materials/primordial_essence.svg', type: 'material' },
+    { id: 'iron_ore', name: 'Iron Ore', slot: 'material', icon: '/Icons/Materials/iron_ore.png', type: 'material' },
+    { id: 'steel_ingot', name: 'Steel Ingot', slot: 'material', icon: '/Icons/Materials/steel_ingot.png', type: 'material' },
+    { id: 'leather', name: 'Leather', slot: 'material', icon: '/Icons/Materials/leather.png', type: 'material' },
+    { id: 'magic_dust', name: 'Magic Dust', slot: 'material', icon: '/Icons/Materials/magic_dust.png', type: 'material' },
+    { id: 'dragon_scale', name: 'Dragon Scale', slot: 'material', icon: '/Icons/Materials/dragon_scale.png', type: 'material' },
+    { id: 'mithril', name: 'Mithril', slot: 'material', icon: '/Icons/Materials/mithril.png', type: 'material' },
+    { id: 'gold_ore', name: 'Gold Ore', slot: 'material', icon: '/Icons/Materials/gold_ore.png', type: 'material' },
+    { id: 'dark_crystal', name: 'Dark Crystal', slot: 'material', icon: '/Icons/Materials/dark_crystal.png', type: 'material' },
+    { id: 'void_essence', name: 'Void Essence', slot: 'material', icon: '/Icons/Materials/void_essence.png', type: 'material' },
+    { id: 'celestial_shard', name: 'Celestial Shard', slot: 'material', icon: '/Icons/Materials/celestial_shard.png', type: 'material' },
+    { id: 'ancient_rune', name: 'Ancient Rune', slot: 'material', icon: '/Icons/Materials/ancient_rune.png', type: 'material' },
+    { id: 'primordial_essence', name: 'Primordial Essence', slot: 'material', icon: '/Icons/Materials/primordial_essence.png', type: 'material' },
 ] as const;
 

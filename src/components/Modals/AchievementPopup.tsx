@@ -6,36 +6,41 @@ export const AchievementPopup: React.FC = () => {
     const [popupData, setPopupData] = useState<{ title: string; description: string } | null>(null);
 
     const prevUnlockedRef = useRef<Record<string, boolean>>({});
-    // 1. เพิ่ม Ref สำหรับเช็กว่าเป็นการ Render ครั้งแรกหรือไม่
     const isFirstRender = useRef(true);
+
+    // 🟢 ฟังก์ชันสำหรับเล่นเสียง Achievement
+    const playUnlockSound = () => {
+        const audio = new Audio('/Audio/achievement-unlocked.wav');
+        audio.volume = 0.3; // ปรับความดังได้ตามต้องการ (0.0 - 1.0)
+        audio.play().catch((err) => {
+            // ป้องกัน Error กรณี Browser บล็อกการเล่นเสียงอัตโนมัติก่อนมีการคลิกหน้าจอ
+            console.log("Audio play blocked:", err);
+        });
+    };
 
     useEffect(() => {
         const currentUnlockedStates = prevUnlockedRef.current;
 
-        // 2. ถ้าเป็นการ Render ครั้งแรก (โหลดหน้าเว็บ / Refresh)
         if (isFirstRender.current) {
-            // บันทึกสถานะปัจจุบันเก็บไว้ก่อน โดย "ไม่ต้องสั่งโชว์ Popup"
             Object.values(achievements).forEach((ach) => {
                 currentUnlockedStates[ach.id] = ach.isUnlocked;
             });
-            // เปลี่ยนสถานะเพื่อบอกว่าผ่านการ render ครั้งแรกไปแล้ว
             isFirstRender.current = false;
             return;
         }
 
-        // 3. หลังจากครั้งแรกไปแล้ว หากมี achievement เปลี่ยนสถานะ ค่อยเช็กเพื่อเด้ง Popup
         Object.values(achievements).forEach((ach) => {
             const wasUnlocked = currentUnlockedStates[ach.id] || false;
 
             if (ach.isUnlocked && !wasUnlocked) {
                 setPopupData({ title: ach.title, description: ach.description });
+                playUnlockSound(); // 🟢 สั่งเล่นเสียงตรงนี้เวลา Achievement ปลดล็อก
             }
 
             currentUnlockedStates[ach.id] = ach.isUnlocked;
         });
     }, [achievements]);
 
-    // จัดการเรื่องเวลาแสดงผล Popup 3 วินาที
     useEffect(() => {
         if (popupData) {
             const timer = setTimeout(() => {

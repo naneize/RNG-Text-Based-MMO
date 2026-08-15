@@ -175,7 +175,7 @@ export const InventorySection = ({
                             onClick={() => setSelectedItem(item)}
                             className={`w-12 h-12 bg-slate-800 border-2 ${getRarityColor(item.rarity)} rounded flex flex-col items-center justify-center p-1 relative hover:scale-105 transition-transform group`}
                         >
-                            <img src={item.icon} alt={item.name} className="w-6 h-6 object-contain" />
+                            <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain" />
                             <span className="text-[8px] text-slate-300 truncate w-full text-center mt-0.5">
                                 {item.name}
                             </span>

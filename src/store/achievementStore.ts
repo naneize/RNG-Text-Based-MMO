@@ -15,7 +15,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'FIRST_EQUIP',
         title: 'First Step into Adventure',
         description: 'Obtain your first equipment item.',
-        category: 'collection',
+        category: 'starter',
         rewardTitle: 'First Adventurer',
         rewardFrame: '/Icons/Frames/frame_01.png',
         reward: [
@@ -29,7 +29,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'EQUIP_FIVE_COMMONS',
         title: 'Common Collector',
         description: 'Equip at least 5 Common items.',
-        category: 'collection',
+        category: 'starter',
         rewardTitle: 'Novice Collector',
         reward: [
             { type: 'material', itemId: 'iron_ore', amount: 10 },
@@ -58,7 +58,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'FIRST_EPIC',
         title: 'Epic Discovery',
         description: 'Obtain your first Epic item.',
-        category: 'collection',
+        category: 'starter',
         rewardTitle: 'Epic Seeker',
         rewardFrame: '/Icons/Frames/frame_02.png',
         reward: [
@@ -73,7 +73,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'FIRST_LEGENDARY',
         title: 'Legend of the Realm',
         description: 'Obtain your first Legendary item.',
-        category: 'collection',
+        category: 'starter',
         rewardTitle: 'Legendary Hunter',
         rewardFrame: '/Icons/Frames/frame_06.png',
         reward: [
@@ -120,6 +120,17 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         isUnlocked: false,
         isClaimed: false,
     },
+    'QUEST_TRANSFER_FIRST': {
+        id: 'QUEST_TRANSFER_FIRST',
+        title: 'Essence Transfer',
+        description: 'Successfully transfer a stat between equipment for the first time.',
+        category: 'starter',
+        reward: [
+            { type: 'material', itemId: 'magic_dust', amount: 15 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
     'QUEST_READY_FOR_BOSS': {
         id: 'QUEST_READY_FOR_BOSS',
         title: 'Ready for Battle',
@@ -128,6 +139,17 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         reward: [
             { type: 'material', itemId: 'magic_dust', amount: 20 },
             { type: 'material', itemId: 'mithril', amount: 10 },
+        ],
+        isUnlocked: false,
+        isClaimed: false,
+    },
+    'QUEST_FIRST_BATTLE': {
+        id: 'QUEST_FIRST_BATTLE',
+        title: 'Into the Fray',
+        description: "Enter a boss battle for the first time.",
+        category: 'starter',
+        reward: [
+            { type: 'material', itemId: 'magic_dust', amount: 15 },
         ],
         isUnlocked: false,
         isClaimed: false,
@@ -263,6 +285,12 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                         break;
 
+                    case 'CHECK_FIRST_BATTLE':
+                        if (!state.achievements['QUEST_FIRST_BATTLE']?.isUnlocked) {
+                            get().unlockAchievement('QUEST_FIRST_BATTLE');
+                        }
+                        break;
+
                     // ✅ เพิ่มใหม่ — ชนะบอสครั้งแรก
                     case 'BOSS_DEFEATED':
                         if (!state.achievements['QUEST_FIRST_BOSS_KILL']?.isUnlocked) {
@@ -277,6 +305,12 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                         break;
 
+                    // ✅ เช็คว่าทำการ Transfer Stats สำเร็จแล้วอย่างน้อย 1 ครั้ง
+                    case 'TRANSFER_FIRST':
+                        if (!state.achievements['QUEST_TRANSFER_FIRST']?.isUnlocked) {
+                            get().unlockAchievement('QUEST_TRANSFER_FIRST');
+                        }
+                        break;
 
                     case 'DEAL_DAMAGE': {
                         // 🟢 ดึงค่า damage อย่างปลอดภัย (แก้อ่านค่า NaN)
@@ -299,7 +333,7 @@ export const useAchievementStore = create<AchievementState>()(
         {
             name: 'achievement-storage', // ชื่อ key เดิม
 
-            version: 4, // 🟢 ขยับเป็น version 4 เพราะเพิ่มเควส Reroll ใหม่
+            version: 5, // 🟢 ขยับเป็น version 5 เพราะเพิ่มเควส Transfer ใหม่
             migrate: (persistedState: any, version: number) => {
                 if (version < 2) {
                     return { achievements: INITIAL_ACHIEVEMENTS };
@@ -321,6 +355,17 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                     };
                 }
+
+                // 🟢 เพิ่มบล็อกสำหรับเวอร์ชัน 5
+                if (version < 5) {
+                    return {
+                        achievements: {
+                            ...INITIAL_ACHIEVEMENTS,
+                            ...persistedState.achievements,
+                        }
+                    };
+                }
+
                 return persistedState;
             },
         }

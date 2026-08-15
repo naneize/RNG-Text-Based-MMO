@@ -712,6 +712,8 @@ export const useGameStore = create<GameState>()(
                     get().updateInventoryItem(itemA.uid, { ...itemA, stats: newStatsA });
                     get().updateInventoryItem(itemB.uid, { ...itemB, stats: newStatsB });
 
+                    useAchievementStore.getState().checkCondition('TRANSFER_FIRST');
+
                     get().saveUserData();
 
                     return {
@@ -738,7 +740,11 @@ export const useGameStore = create<GameState>()(
                     get().updateInventoryItem(itemA.uid, { ...itemA, stats: newStatsA });
                     get().updateInventoryItem(itemB.uid, { ...itemB, stats: newStatsB });
 
+                    useAchievementStore.getState().checkCondition('TRANSFER_FIRST');
+
                     get().saveUserData();
+
+
 
                     const protectedMsgParts: string[] = [];
                     if (protectA) protectedMsgParts.push(itemA.name);

@@ -9,6 +9,23 @@ interface Props {
     isLoading: boolean;
 }
 
+const getCurrencyData = (currencyId: string) => {
+    const mat = materialLibrary.find((m) => m.id === currencyId);
+
+    // ลองตรวจสอบดูว่า mat.icon มีค่าหรือไม่
+    let iconPath = mat?.icon;
+
+    // ถ้าไม่มี icon หรือเป็นค่าว่าง ให้ใส่ค่าเริ่มต้น หรือปรับ Path ให้ถูกต้องตามโครงสร้างโปรเจกต์
+    if (!iconPath) {
+        iconPath = `/Icons/${currencyId}.png`; // ปรับตามโครงสร้างโฟลเดอร์จริงของคุณ
+    }
+
+    return {
+        name: mat ? mat.name : 'Gold Ore',
+        icon: iconPath
+    };
+};
+
 // Helper function to map rarity to dynamic Tailwind text color classes for the rarity value
 const getRarityTextColor = (rarity: string) => {
     switch (rarity?.toLowerCase()) {
@@ -117,17 +134,43 @@ export const MarketListingCard = ({ listing, isOwner, onBuy, onCancel, isLoading
                 Seller: <span className="text-slate-300">{listing.sellerUsername}</span>
             </div>
 
-            <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-1.5 text-amber-400 font-bold text-sm">
-                    <span>{listing.price.toLocaleString()}</span>
-                    <span className="text-xs text-slate-300 font-medium">({getCurrencyName(currencyType)})</span>
-                </div>
+            {/* ส่วนแสดงราคาและสกุลเงิน */}
+            {/* ส่วนแสดงราคาและสกุลเงิน */}
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
+                {/* แสดงจำนวน + รูป + ชื่อแร่ */}
+                {(() => {
+                    const currency = getCurrencyData(currencyType);
+                    return (
+                        <div className="flex items-center gap-2">
+                            {/* ตัวเลขราคา */}
+                            <span className="text-amber-400 font-bold text-base tracking-wide">
+                                {listing.price.toLocaleString()}
+                            </span>
 
+                            {/* แท็กแสดงรูปและชื่อแร่ */}
+                            <div className="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2 py-1 rounded-lg shadow-inner">
+                                <img
+                                    src={currency.icon}
+                                    alt={currency.name}
+                                    className="w-8 h-8 object-contain filter drop-shadow"
+                                    onError={(e) => {
+                                        (e.target as HTMLElement).style.display = 'none';
+                                    }}
+                                />
+                                <span className="text-xs text-slate-200 font-semibold">
+                                    {currency.name}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* ปุ่ม Buy / Cancel */}
                 {isOwner ? (
                     <button
                         onClick={() => onCancel(listing.id)}
                         disabled={isLoading}
-                        className="bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
+                        className="bg-red-700 hover:bg-red-600 active:scale-95 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer shadow-md"
                     >
                         Cancel
                     </button>
@@ -135,7 +178,7 @@ export const MarketListingCard = ({ listing, isOwner, onBuy, onCancel, isLoading
                     <button
                         onClick={() => onBuy(listing.id)}
                         disabled={isLoading}
-                        className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
+                        className="bg-emerald-700 hover:bg-emerald-600 active:scale-95 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer shadow-md"
                     >
                         Buy
                     </button>

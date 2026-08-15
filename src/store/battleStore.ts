@@ -136,6 +136,8 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     if (!selectedBoss || !bossEffectiveStats || !finalStatsSnapshot || !equippedItemsSnapshot) return;
     if (state.bossHp <= 0 || state.playerHp <= 0) return;
 
+    useAchievementStore.getState().checkCondition('CHECK_FIRST_BATTLE');
+
     const playerWeapon = equippedItemsSnapshot.weapon;
     const isMatchWeakness = playerWeapon?.weaponType && (selectedBoss as any).weakness === playerWeapon.weaponType;
     const weaponWeaknessPercent = isMatchWeakness ? WEAKNESS_BONUS_RATE : 0;
