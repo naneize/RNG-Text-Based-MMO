@@ -51,7 +51,6 @@ export const CharacterDashboard = () => {
                 {/* 📌 คอลัมน์ที่ 1: CharacterStats + ปุ่ม World Chat (รวมอยู่ในกล่องเดียว) */}
                 <div className="flex flex-col gap-4">
 
-
                     <CharacterStats
                         player={player}
                         finalStats={finalStats}
@@ -59,21 +58,21 @@ export const CharacterDashboard = () => {
                         setShowBonusModal={setShowBonusModal}
                     />
 
-                    {/* ปุ่มเปิด World Chat ใต้กล่อง Stat */}
+                    {/* 🌍 World Chat (สไตล์ Slate เรียบหรู + จุดกระพริบสีเขียวบอกสถานะออนไลน์) */}
                     <button
                         onClick={() => setIsChatOpen(true)}
-                        className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700/80 shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         WORLD CHAT
                     </button>
 
-                    {/* ปุ่มเปิด Leaderboard */}
+                    {/* 🏆 Leaderboard (สไตล์ Slate เรียบหรู + จุดกระพริบสีทอง/ส้ม) */}
                     <button
                         onClick={() => setIsLeaderboardOpen(true)}
-                        className="w-full py-3 px-4 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700/80 shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                         LEADERBOARD
                     </button>
                 </div>

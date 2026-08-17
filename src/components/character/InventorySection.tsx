@@ -173,10 +173,10 @@ export const InventorySection = ({
                         <button
                             key={`${item.id}-${index}`}
                             onClick={() => setSelectedItem(item)}
-                            className={`w-12 h-12 bg-slate-800 border-2 ${getRarityColor(item.rarity)} rounded flex flex-col items-center justify-center p-1 relative hover:scale-105 transition-transform group`}
+                            className={`w-14 h-14 bg-slate-800 border-2 ${getRarityColor(item.rarity)} rounded flex flex-col items-center justify-center p-1 relative hover:scale-105 transition-transform group`}
                         >
                             <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain" />
-                            <span className="text-[8px] text-slate-300 truncate w-full text-center mt-0.5">
+                            <span className="text-[6px] text-slate-300 truncate w-full text-center mt-0.5">
                                 {item.name}
                             </span>
                         </button>

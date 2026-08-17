@@ -5,9 +5,11 @@ import { materialLibrary } from '../../data/materialLibrary';
 interface RewardModalProps {
     rewards: RewardResult[];
     onClose: () => void;
+    newRollCapUnlocked?: number | null; // ✅ เพิ่มบรรทัดนี้
+
 }
 
-export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
+export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModalProps) => {
 
     const rarityWeight: Record<string, number> = {
         'Legendary': 1,
@@ -45,12 +47,14 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
     });
 
     useEffect(() => {
+        // ✅ ถ้ามีการปลดล็อก roll cap ให้เวลาอ่านนานขึ้น (3.5 วิ) ปกติทั่วไปยังคง 1.5 วิเหมือนเดิม
+        const duration = newRollCapUnlocked ? 3500 : 1500;
         const timer = setTimeout(() => {
             onClose();
-        }, 1500);
+        }, duration);
 
         return () => clearTimeout(timer);
-    }, [onClose]);
+    }, [onClose, newRollCapUnlocked]);
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -62,6 +66,16 @@ export const RewardModal = ({ rewards, onClose }: RewardModalProps) => {
                     <h2 className="text-xl font-bold text-amber-200/90 mb-5 text-center tracking-wide">
                         VICTORY
                     </h2>
+
+                    {/* ✅ เพิ่ม banner นี้ — โชว์เฉพาะตอนปลดล็อก roll cap ใหม่จริงๆ */}
+                    {newRollCapUnlocked && (
+                        <div className="bg-gradient-to-r from-amber-600/20 via-yellow-500/20 to-amber-600/20 border border-amber-500/50 rounded-xl p-3 mb-4 text-center animate-pulse">
+                            <div className="text-amber-300 font-bold text-xs uppercase tracking-wider">🎉 Roll Ceiling Increased!</div>
+                            <div className="text-white text-sm mt-1 font-semibold">
+                                Loot up to <span className="text-amber-300">Level {newRollCapUnlocked}</span> unlocked
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-2 mb-6">
                         {sortedRewards.map((reward, index) => {

@@ -522,7 +522,7 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                                         onClick={() => setIsAvatarModalOpen(false)}
                                         className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors shadow-md"
                                     >
-                                        Cancel
+                                        Close
                                     </button>
                                 </div>
                             </div>

@@ -120,6 +120,7 @@ export interface Player {
     totalRolls: number;
     epicPity: number;
     legendPity: number;
+    unlockedRollCap: number;
     equippedItems: {
         weapon: Item | null;
         armor: Item | null;

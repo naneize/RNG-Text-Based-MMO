@@ -98,8 +98,9 @@ export const EquippedGear = ({
 
                 <button
                     onClick={() => setShowCombine(true)}
-                    className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold py-4 rounded mt-10 w-full text-xs"
+                    className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700/80 shadow-lg transition flex items-center justify-center gap-2 cursor-pointer mt-5 text-xs"
                 >
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                     COMBINE ITEMS
                 </button>
             </div>

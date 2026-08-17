@@ -43,13 +43,12 @@ export const useCharacterDashboard = () => {
 
         // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
 
-        const ROLL_MAX_ITEM_LEVEL = 300; // ✅ ต่ำกว่า boss loot ceiling (1,000) พอสมควร ให้บอสยังคงเป็นแหล่งของแรงสุด
 
         const rawMaxLevel = totalOpens < 1000
             ? 1 + Math.floor(totalOpens / 10) * 5
             : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
 
-        const maxLevel = Math.min(rawMaxLevel, ROLL_MAX_ITEM_LEVEL);
+        const maxLevel = Math.min(rawMaxLevel, player.unlockedRollCap || 300); // ✅ ใช้ค่าที่ปลดล็อกแล้วแทน constant ตายตัว
 
         // 2. กำหนดให้สุ่มอยู่ในช่วง 70% ถึง 100% ของ maxLevel ปัจจุบัน 
         // (หรือจะปรับสัดส่วน 0.7 ตามความเหมาะสมได้เลยครับ เพื่อไม่ให้เจอของเวล 1 ตอนช่วงท้ายๆ)

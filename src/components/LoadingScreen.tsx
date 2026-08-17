@@ -7,7 +7,8 @@ const GAME_TIPS = [
     "Tip: RNG can be unpredictable—patience is a true adventurer's strength.",
     "Tip: Make sure to check your Patch Notes for recent balance updates.",
     "Tip: Equipping items with complementary stats will greatly boost your combat rating.",
-    "Tip: Daily login streaks grant exclusive bonuses for dedicated adventurers."
+    "Tip: Daily login streaks grant exclusive bonuses for dedicated adventurers.",
+    "Tip: Item rolls cap at level 300 initially—defeat the boss to unlock higher limits!"
 ];
 
 interface LoadingScreenProps {
@@ -31,7 +32,7 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
                 }
                 return prev + 1;
             });
-        }, 50);
+        }, 80);
 
         return () => clearInterval(interval);
     }, [onFinished]);
@@ -51,7 +52,7 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
             {/* 🖼️ Live Video Background */}
             <div className="absolute inset-0 z-0 opacity-100">
                 <video autoPlay loop muted playsInline className="w-full h-full object-cover">
-                    <source src="/Icons/Backgrounds/202608131618.mp4" type="video/mp4" />
+                    <source src="/Icons/Backgrounds/202608131618.webm" type="video/webm" />
                 </video>
                 {/* เกลี่ยแสงขอบมืดให้ตัวหนังสือเด่นขึ้น โดยอมโทนแดงเข้มนิดๆ ด้านล่าง */}
                 <div className="absolute inset-0 bg-radial from-transparent via-slate-950/40 to-black/80" />

@@ -121,6 +121,7 @@ interface GameState {
     addEpicPity: () => void;
     resetEpicPity: () => void;
     addLegendPity: () => void;
+    unlockRollCap: (newCap: number) => void;
     resetLegendPity: () => void;
 
     achievements: Record<string, { isUnlocked: boolean; progress?: number }>;
@@ -179,10 +180,12 @@ export const useGameStore = create<GameState>()(
                 totalRolls: 0,
                 epicPity: 0,     // ✅ ค่าเริ่มต้นพิตี้ Epic ในตัว player
                 legendPity: 0,
+                unlockedRollCap: 300,
             },
             totalOpens: 0,
             epicPity: 0,         // ✅ ค่าเริ่มต้นระดับ Store หลัก (ถ้าจำเป็นต้องใช้เรียกนอก player)
             legendPity: 0,
+
 
 
             isProcessingReward: false,
@@ -264,6 +267,7 @@ export const useGameStore = create<GameState>()(
                     totalRolls: 0,
                     epicPity: 0,
                     legendPity: 0,
+                    unlockedRollCap: 300,
                 }
             }),
 
@@ -315,6 +319,16 @@ export const useGameStore = create<GameState>()(
                 legendPity: 0,
                 player: { ...state.player, legendPity: 0 }
             })),
+            unlockRollCap: (newCap: number) => {
+                set((state) => ({
+                    player: {
+                        ...state.player,
+                        unlockedRollCap: Math.max(state.player.unlockedRollCap || 300, newCap),
+                    }
+                }));
+                get().saveUserData();
+            },
+
 
 
             addOpen: () => set((state) => ({ totalOpens: state.totalOpens + 1 })),

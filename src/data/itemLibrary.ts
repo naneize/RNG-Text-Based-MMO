@@ -14,26 +14,26 @@ export const itemLibrary: ItemTemplate[] = [
     { id: 'morning_star', name: 'Morning Star', slot: 'weapon', weaponType: 'mace', icon: '/Icons/Equipments/morning_star.png', type: 'equipment' },
 
     // --- TWO-HAND WEAPONS ---
-    { id: 'war_hammer', name: 'War Hammer', slot: 'weapon', weaponType: 'hammer', icon: '/Icons/Equipments/war_hammer.svg', type: 'equipment' },
-    { id: 'great_sword', name: 'Great Sword', slot: 'weapon', weaponType: 'two-hand sword', icon: '/Icons/Equipments/great_sword.svg', type: 'equipment' },
-    { id: 'claymore', name: 'Claymore', slot: 'weapon', weaponType: 'two-hand sword', icon: '/Icons/Equipments/claymore.svg', type: 'equipment' },
-    { id: 'halberd', name: 'Halberd', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/halberd.svg', type: 'equipment' },
-    { id: 'spear', name: 'Spear', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/spear.svg', type: 'equipment' },
-    { id: 'mailed_fist', name: 'Mailed Fist', slot: 'weapon', weaponType: 'fist', icon: '/Icons/Equipments/mailed_fist.svg', type: 'equipment' },
-    { id: 'pike', name: 'Pike', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/pike.svg', type: 'equipment' },
-    { id: 'two_hand_axe', name: 'Two Hand Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/two_hand_axe.svg', type: 'equipment' },
-    { id: 'broad_axe', name: 'Broad Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/broad_axe.svg', type: 'equipment' },
-    { id: 'rapier', name: 'Rapier', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/rapier.svg', type: 'equipment' },
+    { id: 'war_hammer', name: 'War Hammer', slot: 'weapon', weaponType: 'hammer', icon: '/Icons/Equipments/war_hammer.png', type: 'equipment' },
+    { id: 'great_sword', name: 'Great Sword', slot: 'weapon', weaponType: 'two-hand sword', icon: '/Icons/Equipments/great_sword.png', type: 'equipment' },
+    { id: 'claymore', name: 'Claymore', slot: 'weapon', weaponType: 'two-hand sword', icon: '/Icons/Equipments/claymore.png', type: 'equipment' },
+    { id: 'halberd', name: 'Halberd', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/halberd.png', type: 'equipment' },
+    { id: 'spear', name: 'Spear', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/spear.png', type: 'equipment' },
+    { id: 'mailed_fist', name: 'Mailed Fist', slot: 'weapon', weaponType: 'fist', icon: '/Icons/Equipments/mailed_fist.png', type: 'equipment' },
+    { id: 'pike', name: 'Pike', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/pike.png', type: 'equipment' },
+    { id: 'two_hand_axe', name: 'Two Hand Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/two_hand_axe.png', type: 'equipment' },
+    { id: 'broad_axe', name: 'Broad Axe', slot: 'weapon', weaponType: 'axe', icon: '/Icons/Equipments/broad_axe.png', type: 'equipment' },
+    { id: 'rapier', name: 'Rapier', slot: 'weapon', weaponType: 'spear', icon: '/Icons/Equipments/rapier.png', type: 'equipment' },
 
 
     // --- RANGED WEAPONS ---
-    { id: 'long_bow', name: 'Long Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/long_bow.svg', type: 'equipment' },
-    { id: 'battle_bow', name: 'Battle Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/battle_bow.svg', type: 'equipment' },
-    { id: 'crossbow', name: 'Crossbow', slot: 'weapon', weaponType: 'crossbow', icon: '/Icons/Equipments/crossbow.svg', type: 'equipment' },
-    { id: 'pocket_bow', name: 'Pocket Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/pocket_bow.svg', type: 'equipment' },
-    { id: 'sling', name: 'Sling', slot: 'weapon', weaponType: 'sling', icon: '/Icons/Equipments/sling.svg', type: 'equipment' },
-    { id: 'throwing_knives', name: 'Throwing Knives', slot: 'weapon', weaponType: 'throwing', icon: '/Icons/Equipments/throwing_knives.svg', type: 'equipment' },
-    { id: 'heavy_crossbow', name: 'Heavy Crossbow', slot: 'weapon', weaponType: 'crossbow', icon: '/Icons/Equipments/heavy_crossbow.svg', type: 'equipment' },
+    { id: 'long_bow', name: 'Long Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/long_bow.png', type: 'equipment' },
+    { id: 'battle_bow', name: 'Battle Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/battle_bow.png', type: 'equipment' },
+    { id: 'crossbow', name: 'Crossbow', slot: 'weapon', weaponType: 'crossbow', icon: '/Icons/Equipments/crossbow.png', type: 'equipment' },
+    { id: 'pocket_bow', name: 'Pocket Bow', slot: 'weapon', weaponType: 'bow', icon: '/Icons/Equipments/pocket_bow.png', type: 'equipment' },
+    { id: 'sling', name: 'Sling', slot: 'weapon', weaponType: 'sling', icon: '/Icons/Equipments/sling.png', type: 'equipment' },
+    { id: 'throwing_knives', name: 'Throwing Knives', slot: 'weapon', weaponType: 'throwing', icon: '/Icons/Equipments/throwing_knives.png', type: 'equipment' },
+    { id: 'heavy_crossbow', name: 'Heavy Crossbow', slot: 'weapon', weaponType: 'crossbow', icon: '/Icons/Equipments/heavy_crossbow.png', type: 'equipment' },
 
     ////////////////////////////////////////////
 

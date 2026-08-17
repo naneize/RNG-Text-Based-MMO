@@ -15,6 +15,7 @@ export const BattleScreen = () => {
         battleLog,
         lastRewards,
         rewardTick,
+        newRollCapUnlocked,
         leaveBattle,
         setFighting,
         startBattle,
@@ -283,7 +284,7 @@ export const BattleScreen = () => {
                     </div>
 
                     {/* ===================== กรอบขวา: BATTLE LOG ===================== */}
-                    {/* แก้ไข: เปลี่ยน bg-slate-950/80 เป็น bg-slate-950/20 และปรับ backdrop-blur-[2px] */}
+
                     <div className="flex flex-col h-full bg-slate-950/20 p-4 rounded-xl border border-slate-800 backdrop-blur-[2px] min-h-[380px] max-h-[520px]">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pb-2 border-b border-slate-800 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -329,10 +330,15 @@ export const BattleScreen = () => {
                                             ? 'text-emerald-300'
                                             : 'text-red-300';
 
-                                    const parts = log.text.split(/(\(CRIT!\)|Crit Rate\s*\+\d+%|\[[^\]]+\]|,\s*activated [^!]+!\s*Lifesteal![^!]*\([^)]+\)|,\s*activated [^!]+!\s*Enemy stunned!|Enemy stunned!)/g);
+                                    // 🟢 ปรับ Regex ให้รองรับรูปแบบโบนัส, สกิล และเอฟเฟกต์เสริมทั้งหมดที่คุณเพิ่งเพิ่มเข้าไป
+                                    const parts = log.text.split(/(\(CRIT!\)|Crit Rate\s*\+\d+%|\[[^\]]+\]|\(Elem\+\d+%|\bRace\+\d+%\b|\bWeakness\+\d+%\b|\bSkillElem\+\d+%|\bSkillRace\+\d+%\b|activated [^!]+!|\+\d+ bonus damage from (?:LUK|AGI|STR|INT|DEX|VIT)!|\b\d+ damage\b)/g);
+
                                     return (
                                         <div key={i} className={`p-1.5 rounded leading-relaxed ${baseStyle} ${defaultTextColor}`}>
                                             {parts.map((part, index) => {
+                                                if (!part) return null;
+
+                                                // 1. ข้อความในวงเล็บเหลี่ยม [...] เช่น ชื่อสกิล หรือ บัฟ Active
                                                 if (part.startsWith('[') && part.endsWith(']')) {
                                                     return (
                                                         <span key={index} className="text-purple-300 font-bold drop-shadow-[0_0_6px_rgba(192,132,252,0.5)] mx-0.5">
@@ -341,6 +347,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
+                                                // 2. สถานะ CRIT!
                                                 if (part === '(CRIT!)') {
                                                     return (
                                                         <span key={index} className="text-amber-400 font-extrabold drop-shadow-[0_0_8px_rgba(251,191,36,0.5)] mx-1">
@@ -349,6 +356,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
+                                                // 3. Crit Rate เพิ่มเติม
                                                 if (part.includes('Crit Rate')) {
                                                     return (
                                                         <span key={index} className="text-amber-300 font-bold drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] mx-0.5">
@@ -357,6 +365,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
+                                                // 4. Lifesteal
                                                 if (part.includes('Lifesteal!')) {
                                                     return (
                                                         <span key={index} className="text-lime-400 font-bold drop-shadow-[0_0_6px_rgba(163,230,53,0.4)] ml-0.5">
@@ -365,9 +374,53 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
+                                                // 5. สถานะ Stun
                                                 if (part.includes('stunned') || part.includes('Stun')) {
                                                     return (
                                                         <span key={index} className="text-yellow-300 font-bold drop-shadow-[0_0_6px_rgba(253,224,71,0.5)] ml-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+
+                                                // 6. ชื่อสกิลที่ทำงาน (activated ...) - ลดความสว่างและลดเงาเรืองแสงลง
+                                                if (part.startsWith('activated ')) {
+                                                    return (
+                                                        <span key={index} className="text-cyan-400/90 font-medium mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 7. โบนัสดาเมจจาก Stat (LUK, AGI, ฯลฯ) - ใช้สีฟ้าที่นุ่มนวลขึ้น ไม่มีเงาฟุ้ง
+                                                if (part.includes('bonus damage from')) {
+                                                    return (
+                                                        <span key={index} className="text-sky-400/90 font-normal mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 8. โบนัสประเภทต่างๆ ในวงเล็บสรุป (Elem+, Race+, Weakness+, SkillElem+, SkillRace+)
+                                                if (
+                                                    part.startsWith('Elem+') ||
+                                                    part.startsWith('Race+') ||
+                                                    part.startsWith('Weakness+') ||
+                                                    part.startsWith('SkillElem+') ||
+                                                    part.startsWith('SkillRace+')
+                                                ) {
+                                                    return (
+                                                        <span key={index} className="text-orange-300 font-semibold mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 9. เน้นตัวเลขดาเมจหลัก
+                                                if (part.endsWith('damage') && !part.includes('bonus')) {
+                                                    return (
+                                                        <span key={index} className="text-emerald-400 font-bold">
                                                             {part}
                                                         </span>
                                                     );
@@ -385,10 +438,11 @@ export const BattleScreen = () => {
             </div>
 
             {/* Modal แสดงของรางวัล */}
-            {showRewardModal && lastRewards && lastRewards.length > 0 && (
+            {showRewardModal && lastRewards.length > 0 && (
                 <RewardModal
                     rewards={lastRewards}
                     onClose={() => setShowRewardModal(false)}
+                    newRollCapUnlocked={newRollCapUnlocked} // ✅ เพิ่มบรรทัดนี้
                 />
             )}
         </div>

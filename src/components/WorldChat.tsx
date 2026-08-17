@@ -106,7 +106,6 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                     <h2 className="text-white font-bold text-sm tracking-wider flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         WORLD CHAT
-                        {/* 🟢 โชว์จำนวนคนออนไลน์ตรงนี้ */}
                         <span className="text-xs bg-emerald-900/60 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded-full font-normal">
                             Online : {onlineUsers.length}
                         </span>
@@ -149,9 +148,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                 key={msg.id}
                                 className={`flex flex-col max-w-[80%] relative group ${isMyMessage ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                             >
-                                {/* โครงสร้างใหม่: รวม Avatar, ชื่อ, เวลา และกล่องข้อความไว้ในก้อนเดียว */}
                                 <div className={`flex items-start gap-3 ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-
                                     {/* Avatar */}
                                     <div className="relative w-11 h-11 shrink-0 flex items-center justify-center cursor-pointer">
                                         <img src={msg.avatar || '/default-avatar.png'} alt={msg.username} className="w-9 h-9 rounded-full object-cover" />
@@ -170,18 +167,25 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                             <span className="text-[10px] text-slate-500">{formatMessageTime(msg.createdAt)}</span>
                                         </div>
 
-                                        {/* กล่องข้อความ (รวม Logic การลบ/Item/Stats ไว้ที่นี่) */}
+                                        {/* กล่องข้อความ */}
                                         <div className={`flex items-center gap-2 ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                                             {isMyMessage && (
-                                                <button onClick={() => deleteMessage(msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-500 text-xs p-1 cursor-pointer">Clear</button>
+                                                <button onClick={() => deleteMessage(msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-500 text-xs p-1 cursor-pointer">🗑️</button>
                                             )}
 
                                             <div className={`px-3 py-2 rounded-2xl text-sm break-words flex flex-col gap-1.5 ${isMyMessage ? 'bg-emerald-700 text-white rounded-br-none border border-emerald-600' : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50'}`}>
                                                 {msg.text && <span>{msg.text}</span>}
                                                 {msg.item && (
                                                     <button onClick={() => setInspectingItem(msg.item!)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold ${getRarityColor(msg.item.rarity)}`}>
-                                                        <img src={msg.item.icon} alt={msg.item.name} className="w-5 h-5 object-contain" />
-                                                        <span>[{msg.item.name}]</span>
+                                                        <img
+                                                            src={msg.item.icon || '/default-item-icon.png'}
+                                                            alt={msg.item.name}
+                                                            className="w-5 h-5 object-contain"
+                                                            onError={(e) => {
+                                                                // ถ้าโหลดรูปไม่ขึ้น ให้เปลี่ยนไปใช้รูปไอคอนสำรองอัตโนมัติทันที
+                                                                (e.target as HTMLImageElement).src = '/default-item-icon.png';
+                                                            }}
+                                                        />                                                        <span>[{msg.item.name}]</span>
                                                         <span className="text-[10px] underline opacity-80 text-white font-normal">Click to view</span>
                                                     </button>
                                                 )}
@@ -196,10 +200,60 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                             </div>
                                         </div>
 
-                                        {/* Reactions */}
+                                        {/* Reactions Component ที่ถูกกู้คืนกลับมา */}
                                         <div className={`relative flex items-center gap-1.5 mt-1 flex-wrap ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                                            {/* (ส่วน Reaction เหมือนเดิมของคุณ) */}
-                                            {/* ... วางโค้ด Reaction เดิมของคุณต่อจากตรงนี้ได้เลยครับ ... */}
+                                            {/* แสดงรายการ Reaction ที่คนอื่นหรือเรากดไปแล้ว */}
+                                            {reactionSummary.map(([emoji, count]) => {
+                                                const hasReactedThis = myReaction === emoji;
+                                                return (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => userProfile && toggleReaction(msg.id, emoji)}
+                                                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition cursor-pointer ${hasReactedThis
+                                                            ? 'bg-emerald-900/50 border-emerald-500 text-white'
+                                                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700'
+                                                            }`}
+                                                    >
+                                                        <span>{emoji}</span>
+                                                        <span className="text-[10px] font-bold">{count}</span>
+                                                    </button>
+                                                );
+                                            })}
+
+                                            {/* ปุ่มเปิดตัวเลือก Reaction (+) */}
+                                            {userProfile && (
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setOpenReactionPickerFor(openReactionPickerFor === msg.id ? null : msg.id)}
+                                                        className="w-6 h-6 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white rounded-full flex items-center justify-center text-xs transition cursor-pointer"
+                                                        title="React"
+                                                    >
+                                                        😀
+                                                    </button>
+
+                                                    {/* Popup เลือกอีโมจิสำหรับกด Reaction */}
+                                                    {openReactionPickerFor === msg.id && (
+                                                        <div
+                                                            ref={reactionPickerRef}
+                                                            className={`absolute bottom-full mb-1 bg-slate-800 border border-slate-700 p-1.5 rounded-xl shadow-xl flex gap-1 z-30 ${isMyMessage ? 'right-0' : 'left-0'
+                                                                }`}
+                                                        >
+                                                            {REACTION_EMOJIS.map((emoji) => (
+                                                                <button
+                                                                    key={emoji}
+                                                                    onClick={() => {
+                                                                        toggleReaction(msg.id, emoji);
+                                                                        setOpenReactionPickerFor(null);
+                                                                    }}
+                                                                    className="w-7 h-7 flex items-center justify-center hover:bg-slate-700 rounded-lg text-sm transition cursor-pointer"
+                                                                >
+                                                                    {emoji}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -212,7 +266,6 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
 
             {/* Input Form & Emoji Picker */}
             <div className="relative p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
-                {/* 📌 นำโค้ดปุ่ม Share My Stats มาวางไว้ตรงนี้ครับ */}
                 <div className="flex justify-between items-center">
                     <button
                         type="button"
@@ -225,7 +278,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                         }}
                         className="bg-slate-800 hover:bg-slate-700 border border-emerald-600/50 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
                     >
-                        <span></span> Share My Stats
+                        <span>📊</span> Share My Stats
                     </button>
                 </div>
 
@@ -299,7 +352,6 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                     <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
                         <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                             <h3 className="text-white font-bold text-lg flex items-center gap-3">
-                                {/* 🟢 เพิ่มรูป Avatar และ Frame ตรงหัวข้อส่องสเตตัส */}
                                 <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
                                     <img
                                         src={inspectingPlayerStats.avatar || '/default-avatar.png'}
@@ -324,12 +376,11 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                             </button>
                         </div>
 
-                        {/* เรียกใช้ Component CharacterStats ที่มีอยู่แล้ว */}
                         <CharacterStats
                             finalStats={inspectingPlayerStats.finalStats}
                             statBreakdown={inspectingPlayerStats.statBreakdown}
                             equippedItems={inspectingPlayerStats.equippedItems as Record<string, Item | null>}
-                            hideExtraButtons={true} // 👈 ซ่อนปุ่มเฉพาะตอนส่องผู้เล่นอื่น
+                            hideExtraButtons={true}
                             hideBreakdown={true}
                         />
                     </div>

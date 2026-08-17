@@ -14,7 +14,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
     'FIRST_EQUIP': {
         id: 'FIRST_EQUIP',
         title: 'First Step into Adventure',
-        description: 'Obtain your first equipment item.',
+        description: 'Roll and obtain your first equipment item.',
         category: 'starter',
         rewardTitle: 'First Adventurer',
         rewardFrame: '/Icons/Frames/frame_01.png',

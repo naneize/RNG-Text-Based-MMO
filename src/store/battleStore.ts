@@ -37,6 +37,7 @@ interface BattleState {
     battleLog: BattleLogEntry[];
     lastRewards: any[];
     rewardTick: number;
+    newRollCapUnlocked: number | null;
 
 
     startBattle: (boss: Boss, finalStats: Stats, equippedItems: Player['equippedItems']) => void;
@@ -72,6 +73,7 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     battleLog: [],
     lastRewards: [],
     rewardTick: 0,
+    newRollCapUnlocked: null,
 
     clearRewards: () => set({ lastRewards: [], rewardTick: 0 }),
 
@@ -237,9 +239,20 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     set({ playerHp: newPlayerHp, bossHp: nextBossHp });
 
     if (nextBossHp <= 0) {
+        // ✅ เช็ค cap เดิมก่อนปลดล็อก จะได้รู้ว่า "เปลี่ยนจริง" หรือ "เท่าเดิม" (ฆ่าบอสอ่อนกว่าซ้ำ)
+        const oldRollCap = useGameStore.getState().player.unlockedRollCap || 300;
+        const newRollCap = 300 + Math.floor((selectedBoss.level - 80) / 10) * 100;
+        const didUnlockIncrease = newRollCap > oldRollCap;
+
+        useGameStore.getState().unlockRollCap(newRollCap);
+
         const rewards = useGameStore.getState().handleBossDefeated(selectedBoss);
-        set({ lastRewards: rewards, rewardTick: get().rewardTick + 1 });
-        useAchievementStore.getState().checkCondition('BOSS_DEFEATED'); // ✅ เพิ่มบรรทัดนี้
+        set({
+            lastRewards: rewards,
+            rewardTick: get().rewardTick + 1,
+            newRollCapUnlocked: didUnlockIncrease ? newRollCap : null, // ✅ เพิ่ม field ใหม่
+        });
+        useAchievementStore.getState().checkCondition('BOSS_DEFEATED');
 
         // ถ้าเปิด Auto-Farm อยู่ ให้รีเซ็ตทั้งเลือดบอส เลือดผู้เล่น และเคลียร์ของรอบเก่าทันที
         if (get().isAutoFarm) {
