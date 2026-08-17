@@ -23,8 +23,7 @@ export const UsernameSetupPage = () => {
         const success = await saveUsername(username.trim());
 
         if (success) {
-            // บันทึกสำเร็จ รีโหลดหรือปล่อยให้แอปพาไปหน้าหลัก
-            window.location.reload();
+
         }
 
         setIsSubmitting(false);

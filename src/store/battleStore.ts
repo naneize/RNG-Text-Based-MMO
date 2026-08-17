@@ -239,31 +239,37 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     set({ playerHp: newPlayerHp, bossHp: nextBossHp });
 
     if (nextBossHp <= 0) {
-        // ✅ เช็ค cap เดิมก่อนปลดล็อก จะได้รู้ว่า "เปลี่ยนจริง" หรือ "เท่าเดิม" (ฆ่าบอสอ่อนกว่าซ้ำ)
+        // ✅ ดึงค่า Cap เดิม (ถ้ายังไม่มีเริ่มที่ 300 ตามที่ผู้เล่นมีตอนเริ่มเกม)
         const oldRollCap = useGameStore.getState().player.unlockedRollCap || 300;
-        const newRollCap = 300 + Math.floor((selectedBoss.level - 80) / 10) * 100;
+
+        // คำนวณ Cap ใหม่ให้ไต่ระดับจากบอสเลเวล 90 ไปจนถึง 200 และล็อกเพดานสูงสุดไว้ที่ไม่เกิน 900
+        const calculatedCap = 350 + Math.floor(((selectedBoss.level - 90) / 110) * 550);
+        const newRollCap = Math.min(Math.max(calculatedCap, oldRollCap), 900);
+
         const didUnlockIncrease = newRollCap > oldRollCap;
 
-        useGameStore.getState().unlockRollCap(newRollCap);
+        // ✅ อัปเดต Roll Cap เฉพาะเมื่อค่าสูงขึ้นจริง
+        if (didUnlockIncrease) {
+            useGameStore.getState().unlockRollCap(newRollCap);
+        }
 
         const rewards = useGameStore.getState().handleBossDefeated(selectedBoss);
         set({
             lastRewards: rewards,
             rewardTick: get().rewardTick + 1,
-            newRollCapUnlocked: didUnlockIncrease ? newRollCap : null, // ✅ เพิ่ม field ใหม่
+            newRollCapUnlocked: didUnlockIncrease ? newRollCap : null,
         });
         useAchievementStore.getState().checkCondition('BOSS_DEFEATED');
 
-        // ถ้าเปิด Auto-Farm อยู่ ให้รีเซ็ตทั้งเลือดบอส เลือดผู้เล่น และเคลียร์ของรอบเก่าทันที
+        // ถ้าเปิด Auto-Farm อยู่ ให้รีเซ็ตเลือดและเคลียร์รางวัล
         if (get().isAutoFarm) {
             set({
                 bossHp: bossEffectiveStats.maxHp,
-                playerHp: finalStatsSnapshot.maxHp || 100, // 👈 เติมเลือดผู้เล่นให้เต็มที่นี่ด้วย!
-                lastRewards: [] // 👈 เคลียร์รางวัลทันทีเพื่อไม่ให้ Modal เด้งค้างตอนเปลี่ยนหน้า
+                playerHp: finalStatsSnapshot.maxHp || 100,
+                lastRewards: []
             });
-            return; // ข้ามการตีสวนของบอสในเทิร์นที่ตาย
+            return;
         } else {
-            // ถ้าไม่ได้เปิด Auto-Farm ถึงจะหยุดการต่อสู้ตามปกติ
             set({ isFighting: false, isFinished: true });
             clearBattleTimers();
             return;

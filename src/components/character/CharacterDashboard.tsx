@@ -18,6 +18,7 @@ import { SkillModal } from '../../components/Modals/SkillModal';
 import { SellItemModal } from '../../components/Marketplace/SellItemModal';
 import { RerollModal } from '../Modals/RerollModal';
 import { StarterQuestPanel } from '../StarterQuestPanel';
+import { DidYouKnowModal } from '../Modals/DidYouKnowModal';
 
 export const CharacterDashboard = () => {
     const {
@@ -33,7 +34,7 @@ export const CharacterDashboard = () => {
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [itemToSalvage, setItemToSalvage] = useState<Item | null>(null);
-    const [itemToReroll, setItemToReroll] = useState<Item | null>(null); // 👉 1. เพิ่ม State สำหรับ Reroll ตรงนี้
+    const [itemToReroll, setItemToReroll] = useState<Item | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<{ name: string; level: number } | null>(null);
@@ -75,6 +76,8 @@ export const CharacterDashboard = () => {
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                         LEADERBOARD
                     </button>
+
+
                 </div>
 
                 {/* 📌 คอลัมน์ที่ 2: EquippedGear */}
@@ -222,6 +225,9 @@ export const CharacterDashboard = () => {
                     />
                 </div>
             )}
+
+            {/* 💡 Modal หน้าต่าง Did You Know (ปล่อยให้ทำงานแบบอัตโนมัติ ไม่ต้องส่ง props ควบคุม) */}
+            <DidYouKnowModal />
 
             {/* 🏆 Modal หน้าต่าง Leaderboard */}
             {isLeaderboardOpen && (

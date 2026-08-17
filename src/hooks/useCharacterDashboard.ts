@@ -33,7 +33,6 @@ export const useCharacterDashboard = () => {
         const store = useGameStore.getState();
         const {
             addOpen,
-            totalOpens,
             addEpicPity,
             resetEpicPity,
             addLegendPity,
@@ -41,17 +40,10 @@ export const useCharacterDashboard = () => {
             addItem
         } = store;
 
-        // 1. คำนวณเลเวลไอเทมตามจำนวนครั้งที่เปิด (Progression System)
-
-
-        const rawMaxLevel = totalOpens < 1000
-            ? 1 + Math.floor(totalOpens / 10) * 5
-            : 500 + Math.floor((totalOpens - 1000) / 100) * 5;
-
-        const maxLevel = Math.min(rawMaxLevel, player.unlockedRollCap || 300); // ✅ ใช้ค่าที่ปลดล็อกแล้วแทน constant ตายตัว
+        // 1. ดึงค่า Cap สูงสุดที่ปลดล็อกได้จากบอส (ถ้ายังไม่เคยปลดล็อกให้เริ่มที่ 300)
+        const maxLevel = player.unlockedRollCap || 300;
 
         // 2. กำหนดให้สุ่มอยู่ในช่วง 70% ถึง 100% ของ maxLevel ปัจจุบัน 
-        // (หรือจะปรับสัดส่วน 0.7 ตามความเหมาะสมได้เลยครับ เพื่อไม่ให้เจอของเวล 1 ตอนช่วงท้ายๆ)
         const minLevel = Math.max(1, Math.floor(maxLevel * 0.7));
         const randomLevel = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
 

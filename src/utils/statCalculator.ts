@@ -3,8 +3,8 @@ import type { Stats } from '../types/game';
 export const STAT_CAPS: Partial<Record<keyof Stats, number>> = {
     critRate: 95,
     critDmg: 700,
-    hit: 3000,
-    flee: 3000
+    hit: 5000,
+    flee: 5000
 };
 
 export function finalizeStats(rawStats: Stats): Stats {

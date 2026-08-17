@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { BOSS_LIBRARY } from '../data/bossLibrary';
 import { getEffectiveStats } from '../utils/combat';
 import { SKILL_POOL } from '../data/skills';
-import { calculateCombatPower } from '../utils/combatPower';
 import { useAchievementStore } from '../store/achievementStore';
 
 export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss: any) => void; playerCP: number }) => {
@@ -193,115 +192,138 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {bosses.map((boss) => {
                             const effectiveStats = getEffectiveStats(boss.stats);
-                            const isReady = playerCP >= (boss.recommendedCP || 0); // ✅ เพิ่มบรรทัดนี้
+                            const isReady = playerCP >= (boss.recommendedCP || 0);
 
+                            // ฟังก์ชันดึง Background ตามธาตุ
+                            const getBossCardBg = (element: string) => {
+                                const el = element?.toLowerCase();
+                                if (el === 'water' || el === 'ธาตุน้ำ') {
+                                    return 'url(/Icons/Backgrounds/BG_BOSS_WATER.png)';
+                                } else if (el === 'fire' || el === 'ธาตุไฟ') {
+                                    return 'url(/Icons/Backgrounds/BG_BOSS_FIRE.png)';
+                                }
+                                return 'none';
+                            };
 
                             return (
                                 <button
                                     key={boss.id}
                                     onClick={() => onSelectBoss(boss)}
-                                    className="p-4 bg-slate-800 hover:bg-slate-700/80 rounded-xl text-left text-white border border-slate-700 hover:border-slate-500 transition flex flex-col sm:flex-row items-center gap-4 shadow-lg group"
+                                    // 🟢 เปลี่ยนสไตล์กรอบการ์ดให้โปร่งแสงและมีลูกเล่นแบบ BattleScene
+                                    className="w-full p-5 bg-black/10 hover:bg-black/20 rounded-xl text-left text-white border border-white/10 hover:border-white/30 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-[2px] flex flex-col sm:flex-row items-center gap-5 bg-cover bg-center bg-no-repeat relative overflow-hidden group"
+                                    style={{
+                                        backgroundImage: `${getBossCardBg(boss.element)}, linear-gradient(to right, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85))`
+                                    }}
                                 >
-                                    {/* ส่วนรูปมอนสเตอร์ */}
-                                    <div className="w-32 h-20 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-indigo-500/50 transition">
-                                        <img
-                                            src={boss.imagePath}
-                                            alt={boss.name}
-                                            className="w-full h-full object-cover object-center"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/Icons/Monsters/Drake.svg';
-                                            }}
-                                        />
-                                    </div>
+                                    {/* Overlay ปรับความมืดให้ภาพพื้นหลังกลมกลืน */}
+                                    <div className="absolute inset-0 bg-slate-950/40 pointer-events-none"></div>
 
-                                    {/* ส่วนรายละเอียดเนื้อหา */}
-                                    <div className="grow flex flex-col gap-2.5 w-full min-w-0">
-                                        <div className="flex justify-between items-start">
-                                            <div className="w-full">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-bold text-base text-white truncate max-w-[150px] sm:max-w-[180px]">{boss.name}</span>
-                                                        <span className="px-1.5 py-0.5 bg-amber-900/50 border border-amber-700 rounded text-[10px] text-amber-400 font-bold shrink-0">
-                                                            Lv.{boss.level}
-                                                        </span>
-                                                        {boss.recommendedCP && (
-                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 border ${isReady
-                                                                ? 'bg-emerald-900/50 border-emerald-700 text-emerald-400'
-                                                                : 'bg-red-900/50 border-red-700 text-red-400'
-                                                                }`}>
-                                                                CP {boss.recommendedCP.toLocaleString()}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                    {/* เนื้อหาภายใน */}
+                                    <div className="relative z-10 w-full flex flex-col sm:flex-row items-center gap-5">
 
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setSelectedBossForDrops(boss); }}
-                                                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline shrink-0 font-medium"
-                                                    >
-                                                        View Drops
-                                                    </button>
-                                                </div>
+                                        {/* 🟢 ส่วนรูปมอนสเตอร์: ใช้ Mask Gradient ให้ขอบฟุ้งเนียนกลืนไปกับพื้นหลังเหมือน BattleScene */}
+                                        <div className="relative w-36 h-24 shrink-0 flex items-center justify-center">
+                                            {/* แสงออร่าเรืองแสงด้านหลังรูป */}
+                                            <div className="absolute inset-0 bg-indigo-500/10 blur-xl rounded-full transform scale-75 pointer-events-none group-hover:bg-indigo-500/20 transition-all"></div>
 
-                                                {/* รายละเอียด Element, Race, Weakness */}
-                                                <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-1.5 flex-wrap">
-                                                    <div>
-                                                        <span className="text-slate-300">Element:</span>
-                                                        <span className={`${elementColors[boss.element] || 'text-white'} font-medium ml-1`}>
-                                                            {boss.element}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="w-[1px] h-3 bg-slate-700"></div>
-
-                                                    <div>
-                                                        <span className="text-orange-400">Race:</span>
-                                                        <span className="text-slate-200 font-medium ml-1">
-                                                            {Array.isArray(boss.race) ? boss.race.join(', ') : boss.race}
-                                                        </span>
-                                                    </div>
-
-                                                    {boss.weakness && (
-                                                        <>
-                                                            <div className="w-[1px] h-3 bg-slate-700"></div>
-                                                            <div>
-                                                                <span className="text-purple-400">Weak:</span>
-                                                                <span className="text-slate-100 font-medium ml-1 uppercase">
-                                                                    {boss.weakness}
-                                                                </span>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <img
+                                                src={boss.imagePath}
+                                                alt={boss.name}
+                                                className="relative w-full h-full object-cover [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/Icons/Monsters/Drake.svg';
+                                                }}
+                                            />
                                         </div>
 
-                                        {/* ข้อมูล Combat Preview */}
-                                        <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-2.5 rounded-lg border border-slate-700/50">
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs text-slate-300">
-                                                    HP: <span className="text-emerald-400 font-semibold">{Math.floor(effectiveStats.maxHp).toLocaleString()}</span>
-                                                </p>
-                                                <div className="flex gap-2 text-[10px]">
-                                                    <span className="text-blue-400">DEF: {Math.floor(effectiveStats.def)}</span>
-                                                    <span className="text-purple-400">RES: {Math.floor(effectiveStats.res)}</span>
-                                                    {/* 🛡️ เพิ่ม MRES ไว้ด้านหลัง RES ตรงนี้ครับ */}
-                                                    <span className="text-pink-400">MRES: {Math.floor(effectiveStats.mRes || 0)}</span>
-                                                </div>
-                                                <div className="text-[10px] text-cyan-400">
-                                                    Hit: {Math.floor(effectiveStats.hit)}
+                                        {/* ส่วนรายละเอียดเนื้อหา */}
+                                        <div className="grow flex flex-col gap-2.5 w-full min-w-0">
+                                            <div className="flex justify-between items-start">
+                                                <div className="w-full">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-bold text-base text-white truncate max-w-[150px] sm:max-w-[180px] drop-shadow">{boss.name}</span>
+                                                            <span className="px-2 py-0.5 bg-slate-800/60 border border-slate-700/50 rounded-full text-[10px] text-slate-300 font-bold uppercase tracking-widest shadow-inner">
+                                                                Lv.{boss.level}
+                                                            </span>
+                                                            {boss.recommendedCP && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 border ${isReady
+                                                                    ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-400'
+                                                                    : 'bg-red-950/60 border-red-700/60 text-red-400'
+                                                                    }`}>
+                                                                    CP {boss.recommendedCP.toLocaleString()}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setSelectedBossForDrops(boss); }}
+                                                            className="text-[11px] text-indigo-400 hover:text-indigo-300 underline shrink-0 font-medium transition"
+                                                        >
+                                                            View Drops
+                                                        </button>
+                                                    </div>
+
+                                                    {/* รายละเอียด Element, Race, Weakness */}
+                                                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-1.5 flex-wrap">
+                                                        <div>
+                                                            <span className="text-slate-300">Element:</span>
+                                                            <span className={`${elementColors[boss.element] || 'text-white'} font-medium ml-1`}>
+                                                                {boss.element}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="w-[1px] h-3 bg-white/10"></div>
+
+                                                        <div>
+                                                            <span className="text-orange-400">Race:</span>
+                                                            <span className="text-slate-200 font-medium ml-1">
+                                                                {Array.isArray(boss.race) ? boss.race.join(', ') : boss.race}
+                                                            </span>
+                                                        </div>
+
+                                                        {boss.weakness && (
+                                                            <>
+                                                                <div className="w-[1px] h-3 bg-white/10"></div>
+                                                                <div>
+                                                                    <span className="text-purple-400">Weak:</span>
+                                                                    <span className="text-slate-100 font-medium ml-1 uppercase">
+                                                                        {boss.weakness}
+                                                                    </span>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs text-slate-300">
-                                                    ATK: <span className="text-emerald-400 font-semibold">{Math.floor(effectiveStats.atk).toLocaleString()}</span>
-                                                </p>
-                                                <div className="flex gap-2 text-[10px]">
-                                                    <span className="text-orange-400">Crit: {Math.floor(effectiveStats.critRate)}%</span>
-                                                    <span className="text-orange-500">Dmg: {Math.floor(effectiveStats.critDmg)}%</span>
+                                            {/* ข้อมูล Combat Preview (ปรับกล่องให้โปร่งแสงเข้ากัน) */}
+                                            <div className="grid grid-cols-2 gap-2 bg-black/20 p-2.5 rounded-lg border border-white/5">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs text-slate-300">
+                                                        HP: <span className="text-emerald-400 font-semibold">{Math.floor(effectiveStats.maxHp).toLocaleString()}</span>
+                                                    </p>
+                                                    <div className="flex gap-2 text-[10px]">
+                                                        <span className="text-blue-400">DEF: {Math.floor(effectiveStats.def)}</span>
+                                                        <span className="text-purple-400">RES: {Math.floor(effectiveStats.res)}</span>
+                                                        <span className="text-pink-400">MRES: {Math.floor(effectiveStats.mRes || 0)}</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-cyan-400">
+                                                        Hit: {Math.floor(effectiveStats.hit)}
+                                                    </div>
                                                 </div>
-                                                <div className="text-[10px] text-teal-400">
-                                                    Flee: {Math.floor(effectiveStats.flee)}
+
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs text-slate-300">
+                                                        ATK: <span className="text-emerald-400 font-semibold">{Math.floor(effectiveStats.atk).toLocaleString()}</span>
+                                                    </p>
+                                                    <div className="flex gap-2 text-[10px]">
+                                                        <span className="text-orange-400">Crit: {Math.floor(effectiveStats.critRate)}%</span>
+                                                        <span className="text-orange-500">Dmg: {Math.floor(effectiveStats.critDmg)}%</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-teal-400">
+                                                        Flee: {Math.floor(effectiveStats.flee)}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

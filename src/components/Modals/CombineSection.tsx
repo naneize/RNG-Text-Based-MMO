@@ -27,10 +27,8 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     const [combineFailed, setCombineFailed] = useState(false);
 
     const validItems = player.inventory.filter(item =>
-        item.slot !== 'skill' &&
-        item.type !== 'skill' &&
         item.slot !== 'material' &&
-        item.rarity === 'Epic' // 💡 กรองให้แสดงเฉพาะระดับ Epic เท่านั้น
+        item.rarity === 'Epic' // หรือปรับตามเราริตี้ที่ต้องการ
     );
 
     //#region เงื่อนไขการผสม
@@ -42,8 +40,8 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                     requirements: [
                         { material: 'iron_ore', amount: 150 },
                         { material: 'steel_ingot', amount: 100 },
-                        { material: 'magic_dust', amount: 30 },
-                        { material: 'mithril', amount: 20 }
+                        { material: 'magic_dust', amount: 100 },
+                        { material: 'mithril', amount: 100 }
                     ],
                     chance: 100
                 };
@@ -309,7 +307,6 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                                         const rarity = player.inventory.find(i => i.uid === selectedUids[0])?.rarity || 'Common';
                                         const cost = getCombineCost(rarity);
 
-                                        // ฟังก์ชันกำหนดสีตามโอกาส
                                         const getChanceColor = (chance: number) => {
                                             if (chance >= 100) return 'text-emerald-400';
                                             if (chance >= 20) return 'text-yellow-400';
@@ -325,11 +322,9 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
 
                                     {/* โชว์แร่ที่ต้องการ */}
                                     {(() => {
-                                        // 1. ดึงข้อมูล cost ทั้งหมดตาม rarity
                                         const rarity = player.inventory.find(i => i.uid === selectedUids[0])?.rarity || 'Common';
                                         const cost = getCombineCost(rarity);
 
-                                        // 2. ถ้าไม่มีแร่ที่ต้องใช้ (เช่น Common) ให้คืนค่าว่าง
                                         if (!cost.requirements || cost.requirements.length === 0) return null;
 
                                         return (
@@ -340,8 +335,11 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                                                     const isEnough = owned >= req.amount;
 
                                                     return (
-                                                        <div key={req.material} className={`flex items-center gap-1 text-xs font-bold ${isEnough ? 'text-white' : 'text-red-500'}`}>
-                                                            {/* ถ้าคุณมีไฟล์รูปไอคอนแร่ สามารถใส่ img tag ตรงนี้ได้เลย */}
+                                                        <div
+                                                            key={req.material}
+                                                            // 🟢 เปลี่ยนจาก text-white เป็น text-emerald-400 เมื่อแร่พอ
+                                                            className={`flex items-center gap-1 text-xs font-bold ${isEnough ? 'text-emerald-400' : 'text-red-500'}`}
+                                                        >
                                                             <span>{req.material.replace('_', ' ').toUpperCase()}</span>
                                                             <span>({owned}/{req.amount})</span>
                                                         </div>

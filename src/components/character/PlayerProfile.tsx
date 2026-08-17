@@ -221,36 +221,40 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                         {activeTab === 'equipment' && (
                             <div>
                                 <h4 className="text-lg font-bold text-slate-200 mb-4">Equipped Gear</h4>
+                                {/* 🟢 คืนค่า Grid Layout 4 คอลัมน์แบบเดิมที่สวยงาม */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {equipmentSlots.map((slot) => {
                                         const equippedItem = getEquippedItem(slot);
-
-                                        // 🟢 แก้จาก 'item' เป็น 'equippedItem' ให้ถูกต้อง
-                                        console.log(`Slot: ${slot}, Item:`, equippedItem);
-
                                         const borderStyle = equippedItem ? getRarityColor(equippedItem.rarity) : 'border-slate-700';
 
                                         return (
                                             <div
                                                 key={slot}
-                                                className={`relative h-24 bg-slate-800 border-2 ${borderStyle} rounded-lg p-2 group transition-all hover:border-slate-500 cursor-pointer`}
-                                                onMouseEnter={() => equippedItem && setHoveredItem(equippedItem)}
-                                                onMouseLeave={() => setHoveredItem(null)}
+                                                className={`relative h-24 bg-slate-800 border-2 ${borderStyle} rounded-lg p-2 transition-all hover:border-slate-500 cursor-pointer flex flex-col justify-between`}
+                                                // 🟢 เปลี่ยนมาใช้ระบบคลิก สลับเปิด-ปิด ปัญหาเรื่องเมาส์ชนขอบจะหายขาด 100%
+                                                onClick={() => {
+                                                    if (equippedItem) {
+                                                        setHoveredItem(hoveredItem?.name === equippedItem.name ? null : equippedItem);
+                                                    }
+                                                }}
                                             >
-                                                <span className="capitalize text-[10px] text-slate-500 font-bold block mb-1">{slot}</span>
+                                                <span className="capitalize text-[10px] text-slate-500 font-bold block pointer-events-none">
+                                                    {slot}
+                                                </span>
+
                                                 {equippedItem ? (
-                                                    <>
+                                                    <div className="flex flex-col items-center justify-center my-auto pointer-events-none">
                                                         <img
                                                             src={equippedItem.icon}
                                                             alt={equippedItem.name}
-                                                            className="w-10 h-10 object-contain mx-auto"
+                                                            className="w-10 h-10 object-contain pointer-events-none"
                                                         />
-                                                        <span className="text-emerald-400 text-[10px] truncate block text-center mt-1">
+                                                        <span className="text-emerald-400 text-[10px] truncate w-full text-center mt-1 pointer-events-none">
                                                             {equippedItem.name}
                                                         </span>
-                                                    </>
+                                                    </div>
                                                 ) : (
-                                                    <div className="flex items-center justify-center h-full">
+                                                    <div className="flex items-center justify-center h-full pointer-events-none">
                                                         <span className="text-slate-600 text-xs">Empty</span>
                                                     </div>
                                                 )}
@@ -386,24 +390,73 @@ export const PlayerProfile = ({ player, finalStats, totalOpens }: PlayerProfileP
                 </div>
             </div>
 
-            {/* Hover Tooltip Item */}
+            {/* Hover Tooltip Item - คลิกพื้นหลังเพื่อปิด */}
             {hoveredItem && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-none">
-                    <div className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 cursor-pointer"
+                    onClick={() => setHoveredItem(null)}
+                >
+                    <div
+                        className="w-80 p-6 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl cursor-default text-left"
+                        onClick={(e) => e.stopPropagation()} // ป้องกันไม่ให้คลิกโดนตัวกล่องแล้วเผลอปิด
+                    >
+                        {/* ชื่อไอเทม */}
                         <div className="font-bold text-slate-200 text-lg mb-1">{hoveredItem.name}</div>
-                        <div className="text-xs text-slate-400 mb-3 pb-2 border-b border-slate-800">{hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}</div>
 
+                        {/* ระดับและความหายาก */}
+                        <div className="text-xs text-slate-400 mb-3 pb-2 border-b border-slate-800">
+                            {hoveredItem.rarity} • Lv.{hoveredItem.itemLevel || 1}
+                        </div>
+
+                        {/* แสดงสเตตัสหลัก (Stats) */}
                         {Object.entries(hoveredItem.stats || {}).filter(([_, value]) => Number(value) > 0).length > 0 && (
                             <div className="space-y-1.5 mb-3">
                                 {Object.entries(hoveredItem.stats)
                                     .filter(([_, value]) => Number(value) > 0)
                                     .map(([stat, value]) => (
-                                        // 🟢 เพิ่ม border-b และ py-1 เพื่อให้มีเส้นคั่นและมีพื้นที่หายใจระหว่างแถว
                                         <div key={stat} className="flex justify-between text-xs py-1 border-b border-slate-800/60 last:border-b-0">
                                             <span className="text-slate-400 uppercase">{stat}</span>
                                             <span className="text-emerald-400 font-mono">+{value as number}</span>
                                         </div>
                                     ))}
+                            </div>
+                        )}
+
+                        {/* Element Bonus */}
+                        {hoveredItem.elementBonus && (
+                            <div className="mb-2.5 pb-2 border-b border-slate-800 text-xs">
+                                <div className="text-slate-400 mb-1 font-semibold">Element Bonus:</div>
+                                <div className="flex justify-between text-sky-400 font-mono">
+                                    <span>
+                                        {typeof hoveredItem.elementBonus === 'object' && hoveredItem.elementBonus !== null
+                                            ? (hoveredItem.elementBonus.type || hoveredItem.elementBonus.element || 'Element')
+                                            : 'Element'}
+                                    </span>
+                                    <span>
+                                        +{typeof hoveredItem.elementBonus === 'object' && hoveredItem.elementBonus !== null
+                                            ? (hoveredItem.elementBonus.value || 0)
+                                            : (hoveredItem.elementBonus || 0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Race Bonus */}
+                        {hoveredItem.raceBonus && (
+                            <div className="text-xs">
+                                <div className="text-slate-400 mb-1 font-semibold">Race Bonus:</div>
+                                <div className="flex justify-between text-amber-400 font-mono">
+                                    <span>
+                                        {typeof hoveredItem.raceBonus === 'object' && hoveredItem.raceBonus !== null
+                                            ? (hoveredItem.raceBonus.type || hoveredItem.raceBonus.race || 'Race')
+                                            : 'Race'}
+                                    </span>
+                                    <span>
+                                        +{typeof hoveredItem.raceBonus === 'object' && hoveredItem.raceBonus !== null
+                                            ? (hoveredItem.raceBonus.value || 0)
+                                            : (hoveredItem.raceBonus || 0)}%
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>

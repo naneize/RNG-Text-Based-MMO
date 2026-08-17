@@ -18,6 +18,9 @@ import { getTotalStatsWithBreakdown } from './utils/combat';
 import './utils/statSimulator';
 import { useCharacterDashboard } from './hooks/useCharacterDashboard';
 import { LoadingScreen } from './components/LoadingScreen';
+import { GlobalAnnouncement } from './components/GlobalAnnouncement';
+import { AdminPanel } from './components/AdminPanel';
+
 
 function App() {
   const { currentPage, collectionData, player } = useGameStore();
@@ -103,6 +106,9 @@ function App() {
       ) : (
         /* 🎮 เข้าสู่ตัวเกมหลัก (จะไม่มีเสียง BGM แล้ว เงียบสงบ) */
         <div className="flex bg-slate-950 min-h-screen text-white relative">
+          <GlobalAnnouncement />
+          <AdminPanel />
+
           <Sidebar />
 
           <main className="flex-1 p-8">

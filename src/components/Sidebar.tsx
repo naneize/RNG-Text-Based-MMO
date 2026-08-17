@@ -11,7 +11,6 @@ export const Sidebar = () => {
     const { user, userProfile, logout } = useAuthStore();
     const { selectedBoss, bossEffectiveStats, finalStatsSnapshot } = useBattleStore();
 
-    // 🟢 เช็กว่าเกมกำลังรันอยู่บน iframe ของแพลตฟอร์มภายนอก (เช่น CrazyGames) หรือไม่
     const isEmbedded = (() => {
         try {
             return window.self !== window.top || window.location.hostname.includes('crazygames');
@@ -36,40 +35,44 @@ export const Sidebar = () => {
     const hasActiveBattle = selectedBoss && bossEffectiveStats && finalStatsSnapshot;
 
     return (
-        <div className="w-64 h-screen bg-slate-950 border-r border-slate-800 p-4 flex flex-col gap-2">
-            <h1 className="text-xl font-bold text-white mb-6">RNG-Text-Based MMO</h1>
-            {menu.map((item) => (
-                <button
-                    key={item.id}
-                    onClick={() => setCurrentPage(item.id)}
-                    className={`p-3 rounded-lg text-left transition flex items-center gap-3 ${currentPage === item.id
-                        ? 'bg-emerald-900 text-white'
-                        : 'text-slate-400 hover:bg-slate-900'
-                        }`}
-                >
-                    {item.icon && <span className="text-lg">{item.icon}</span>}
-                    {item.label}
-                </button>
-            ))}
+        /* 
+          1. เปลี่ยนจาก h-screen เป็น h-full และใช้ sticky top-0 เพื่อให้เส้นกรอบยาวเต็มความสูงของหน้าจอเสมอ 
+          2. เพิ่ม overflow-y-auto ให้สามารถเลื่อนดูเนื้อหาใน sidebar ได้หากหน้าจอเล็กเกินไป
+        */
+        <div className="w-64 h-screen sticky top-0 bg-slate-950 border-r border-slate-800 p-4 flex flex-col gap-2 overflow-y-auto">
+            <h1 className="text-xl font-bold text-white mb-6 shrink-0">RNG-Text-Based MMO</h1>
 
-            {/* ดันส่วนผู้เล่น + ปุ่ม Logout และ Privacy ไปอยู่ล่างสุดของ sidebar */}
-            <div className="mt-auto pt-4 border-t border-slate-800 space-y-3">
+            {/* ส่วนเมนูหลัก */}
+            <div className="flex flex-col gap-2 shrink-0">
+                {menu.map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => setCurrentPage(item.id)}
+                        className={`p-3 rounded-lg text-left transition flex items-center gap-3 ${currentPage === item.id
+                            ? 'bg-emerald-900 text-white'
+                            : 'text-slate-400 hover:bg-slate-900'
+                            }`}
+                    >
+                        {item.icon && <span className="text-lg">{item.icon}</span>}
+                        {item.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* ⚔️ เรียกใช้ BattleWidget แบบฝังใน Sidebar โดยตรง */}
+            {/* ส่วนล่างของ Sidebar */}
+            <div className="mt-auto pt-4 border-t border-slate-800 space-y-3 shrink-0">
                 {hasActiveBattle && (
                     <div className="relative w-full">
                         <BattleWidget isSidebarMode={true} />
                     </div>
                 )}
 
-                {/* Account Info */}
                 {(userProfile || user) && (
                     <p className="text-emerald-400 text-xs px-1 truncate font-medium">
                         Account : {userProfile?.username || user?.email || user?.displayName || 'ผู้เล่น'}
                     </p>
                 )}
 
-                {/* 🟢 ซ่อนปุ่ม Logout ถ้าเล่นบนเว็บพอร์ทัลภายนอก (CrazyGames) */}
                 {!isEmbedded && (
                     <button
                         node-type="logout"
@@ -80,7 +83,6 @@ export const Sidebar = () => {
                     </button>
                 )}
 
-                {/* 🟢 ข้อความ Terms & Privacy สำหรับให้ผู้ตรวจ CrazyGames เห็น */}
                 <div className="pt-2 border-t border-slate-900 text-center flex flex-col gap-1">
                     <p className="text-[10px] text-slate-400 leading-tight">
                         By playing, you agree to our{' '}

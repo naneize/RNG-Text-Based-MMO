@@ -346,7 +346,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     }
     else if (template.slot === 'helm') {
         stats.def = getStatWithVariation(10, baseMult, itemLevel, 1.5);
-        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 3);
+        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 5);
         stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');
@@ -601,7 +601,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     }
     else if (template.slot === 'helm') {
         stats.def = getStatWithVariation(10, baseMult, itemLevel, 1.5);
-        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 3);
+        stats.maxHp = getStatWithVariation(80, baseMult, itemLevel, 5);
         stats.hit = getStatWithVariation(7, baseMult, itemLevel, 0.5);
         baseStatsSet.add('def');
         baseStatsSet.add('maxHp');

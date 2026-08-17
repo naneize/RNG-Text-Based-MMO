@@ -182,7 +182,16 @@ export const ItemDetailModal = ({
                     {/* 🟢 ใช้ targetSlotKey ดึงข้อมูลชิ้นที่สวมใส่อยู่จริง */}
                     {(() => {
                         return equippedInSlot ? (
-                            <div className="text-[10px] text-amber-500 text-center mb-4 font-bold border-b border-slate-700 pb-2">EQUIPPED: {equippedInSlot.name}</div>
+                            <div className="flex flex-col items-center justify-center text-xs mb-4 border-b border-slate-700 pb-3 gap-1">
+                                <span className="text-[10px] text-amber-500 font-bold tracking-wider">EQUIPPED ITEM</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-slate-200 font-bold">{equippedInSlot.name}</span>
+                                    {/* 🟢 เปลี่ยนเป็นโทนสีเขียว (Emerald) ให้เข้ากับฝั่งซ้าย */}
+                                    <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold shadow-[inset_0_0_8px_rgba(16,185,129,0.1)]">
+                                        Lv.{equippedInSlot.itemLevel || 1}
+                                    </span>
+                                </div>
+                            </div>
                         ) : null;
                     })()}
 
