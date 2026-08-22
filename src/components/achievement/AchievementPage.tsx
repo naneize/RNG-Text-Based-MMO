@@ -143,7 +143,7 @@ export const AchievementPage: React.FC = () => {
                                                 if (rew.type === 'equipment') {
                                                     const rarityText = rew.rarity ? `${rew.rarity} ` : '';
                                                     const levelText = rew.itemLevel ? ` Lv.${rew.itemLevel}` : '';
-                                                    const iconSrc = itemData?.icon || `/Icons/Equipments/${rew.itemId}.png`;
+                                                    const iconSrc = itemData?.icon || `./Icons/Equipments/${rew.itemId}.png`;
 
                                                     return (
                                                         <span key={idx} className="inline-flex items-center gap-1">

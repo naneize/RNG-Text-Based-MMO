@@ -93,7 +93,7 @@ function App() {
   return (
     <div onClick={playBGM}>
       {/* 🎶 เครื่องเล่น BGM (จะเล่นเฉพาะ Login, Setup, Loading) */}
-      <audio ref={audioRef} src="/Audio/Forgotten_Throne.mp3" loop preload="auto" />
+      <audio ref={audioRef} src="./Audio/Forgotten_Throne.mp3" loop preload="auto" />
 
       {isAuthLoading ? (
         <LoadingScreen onFinished={() => setIsGameReady(true)} />

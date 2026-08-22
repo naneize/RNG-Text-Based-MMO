@@ -30,7 +30,7 @@ export const BattleScreen = () => {
 
     useEffect(() => {
         // 1. สร้าง Audio Object และกำหนดให้ loop ได้
-        const battleAudio = new Audio('/Audio/BattleLoop.mp3'); // 👈 เปลี่ยน Path เสียงของคุณ
+        const battleAudio = new Audio('./Audio/BattleLoop.mp3'); // 👈 เปลี่ยน Path เสียงของคุณ
         battleAudio.loop = true;
         battleAudio.volume = 0.3; // ปรับระดับเสียง (0.0 - 1.0)
 
@@ -81,7 +81,7 @@ export const BattleScreen = () => {
     // เลือก Background ตามธาตุของบอส (Water, Fire หรือค่าเริ่มต้นถ้าไม่ตรง)
     const currentBg = useMemo(() => {
         console.log("Selected Boss Data:", selectedBoss);
-        if (!selectedBoss) return '/Icons/Backgrounds/Main_BG_1.png';
+        if (!selectedBoss) return './Icons/Backgrounds/Main_BG_1.png';
 
         // สมมติว่า element ของบอสเก็บเป็น string เช่น 'Water', 'Fire' หรือภาษาไทย
         // ปรับเงื่อนไขให้ตรงกับข้อมูลในโปรเจกต์ของคุณ (เช่น .toLowerCase())
@@ -89,13 +89,13 @@ export const BattleScreen = () => {
         console.log("Detected Element:", element);
 
         if (element === 'water' || element === 'ธาตุน้ำ') {
-            return '/Icons/Backgrounds/BG_BOSS_WATER.png'; // 👈 เปลี่ยนเป็น path รูป BG ธาตุน้ำของคุณ
+            return './Icons/Backgrounds/BG_BOSS_WATER.png'; // 👈 เปลี่ยนเป็น path รูป BG ธาตุน้ำของคุณ
         } else if (element === 'fire' || element === 'ธาตุไฟ') {
-            return '/Icons/Backgrounds/BG_BOSS_FIRE.png'; // 👈 เปลี่ยนเป็น path รูป BG ธาตุไฟของคุณ
+            return './Icons/Backgrounds/BG_BOSS_FIRE.png'; // 👈 เปลี่ยนเป็น path รูป BG ธาตุไฟของคุณ
         }
 
         // Fallback: ถ้าไม่ใช่ 2 ธาตุนี้ ให้ใช้รูปสุ่มหรือรูปเริ่มต้น
-        return '/Icons/Backgrounds/Main_BG_1.png';
+        return './Icons/Backgrounds/Main_BG_1.png';
     }, [selectedBoss]);
 
     if (!selectedBoss || !bossEffectiveStats || !finalStatsSnapshot) {
@@ -144,7 +144,7 @@ export const BattleScreen = () => {
                                         src={selectedBoss.imagePath}
                                         alt={selectedBoss.name}
                                         className="relative w-full h-48 object-cover p-0 [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_85%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_85%)]"
-                                        onError={(e) => (e.currentTarget.src = '/Icons/Monsters/default.png')}
+                                        onError={(e) => (e.currentTarget.src = './Icons/Monsters/default.png')}
                                     />
                                 </div>
                                 <h2 className="text-2xl text-white font-bold mt-2 drop-shadow-lg">{selectedBoss.name}</h2>

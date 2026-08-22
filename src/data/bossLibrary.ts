@@ -13,7 +13,7 @@ const generateBoss = (index: number, archetype: typeof bossArchetypes[0], levelI
     const bossName = names[levelIndex] || names[names.length - 1];
     const race = raceList[levelIndex] || raceList[levelIndex % raceList.length];
 
-    const randomImage = bossImages[bossId] || '/Icons/Monsters/Drake.svg';
+    const randomImage = bossImages[bossId] || './Icons/Monsters/Drake.svg';
 
     const levelMultiplier = 1 + (level - 5) * 0.15;
     const combatMultiplier = 1 + (level - 5) * 0.18;

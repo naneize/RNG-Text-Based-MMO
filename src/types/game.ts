@@ -207,7 +207,7 @@ export interface Boss {
 export interface MaterialTemplate {
     id: string; // เช่น 'iron_ore'
     name: string;
-    icon: string; // เช่น '/Icons/Materials/iron_ore.svg'
+    icon: string; // เช่น './Icons/Materials/iron_ore.svg'
     description: string;
 }
 

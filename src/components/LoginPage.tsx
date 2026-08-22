@@ -64,8 +64,8 @@ export const LoginPage = () => {
                     playsInline
                     className="w-full h-full object-cover"
                 >
-                    <source src="/Icons/Backgrounds/202608131618.webm" type="video/webm" />
-                    <img src={`/Icons/Backgrounds/${currentBg}`} alt="Background Fallback" className="w-full h-full object-cover" />
+                    <source src="./Icons/Backgrounds/202608131618.webm" type="video/webm" />
+                    <img src={`./Icons/Backgrounds/${currentBg}`} alt="Background Fallback" className="w-full h-full object-cover" />
                 </video>
 
                 <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-stone-950/60 backdrop-blur-sm' : 'bg-stone-950/0 backdrop-blur-none'}`} />

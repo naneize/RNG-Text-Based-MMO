@@ -23,12 +23,12 @@ export const MaterialModal = ({ selectedMaterial, setSelectedMaterial }: Materia
                 <div className="relative mb-4">
                     <div className="absolute inset-0 bg-amber-500/5 rounded-full blur-md" />
                     <img
-                        src={`/Icons/Materials/${selectedMaterial.name.toLowerCase().replace(/ /g, '_')}.png`}
+                        src={`./Icons/Materials/${selectedMaterial.name.toLowerCase().replace(/ /g, '_')}.png`}
                         alt={selectedMaterial.name}
                         className="w-28 h-28 mx-auto object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] relative z-10"
                         onError={(e) => {
                             console.error("Image not found:", e.currentTarget.src);
-                            e.currentTarget.src = '/Icons/default_material.png';
+                            e.currentTarget.src = './Icons/default_material.png';
                         }}
                     />
                 </div>

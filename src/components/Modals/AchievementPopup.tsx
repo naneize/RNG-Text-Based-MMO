@@ -9,7 +9,7 @@ export const AchievementPopup: React.FC = () => {
     const isFirstRender = useRef(true);
 
     const playUnlockSound = () => {
-        const audio = new Audio('/Audio/achievement-unlocked.wav');
+        const audio = new Audio('./Audio/achievement-unlocked.wav');
         audio.volume = 0.3;
         audio.play().catch((err) => {
             console.log("Audio play blocked:", err);

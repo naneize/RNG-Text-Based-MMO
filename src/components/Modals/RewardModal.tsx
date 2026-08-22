@@ -87,7 +87,7 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
                             const iconSrc = materialData?.icon
                                 || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.icon : null)
                                 || (reward as any).icon
-                                || `/Icons/Materials/${targetId}.svg`;
+                                || `./Icons/Materials/${targetId}.svg`;
 
                             const displayName = materialData?.name
                                 || (typeStr === 'item' || typeStr === 'skill' ? reward.itemData?.name : null)

@@ -15,12 +15,12 @@ export const SkillModal = ({ selectedSkill, setSelectedSkill }: SkillModalProps)
                 </span>
 
                 <img
-                    src={`/Icons/Skills/${selectedSkill.name.toLowerCase().replace(/ /g, '_')}.svg`}
+                    src={`./Icons/Skills/${selectedSkill.name.toLowerCase().replace(/ /g, '_')}.svg`}
                     alt={selectedSkill.name}
                     className="w-20 h-20 mx-auto mb-4 object-contain"
                     onError={(e) => {
                         console.error("Image not found:", e.currentTarget.src);
-                        e.currentTarget.src = '/Icons/default_skill.svg';
+                        e.currentTarget.src = './Icons/default_skill.svg';
                     }}
                 />
 

@@ -35,7 +35,7 @@ export const UsernameSetupPage = () => {
             {/* 🖼️ Live Video Background (ใช้ตัวเดียวกันเป๊ะ) */}
             <div className="absolute inset-0 z-0 opacity-100">
                 <video autoPlay loop muted playsInline className="w-full h-full object-cover">
-                    <source src="/Icons/Backgrounds/202608131618.webm" type="video/webm" />
+                    <source src="./Icons/Backgrounds/202608131618.webm" type="video/webm" />
                 </video>
                 {/* เกลี่ยแสงขอบมืดให้ตัวหนังสือเด่นขึ้น โดยอมโทนแดงเข้มนิดๆ ด้านล่าง */}
                 <div className="absolute inset-0 bg-radial from-transparent via-stone-950/40 to-black/80" />

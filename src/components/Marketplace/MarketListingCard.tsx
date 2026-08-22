@@ -17,7 +17,7 @@ const getCurrencyData = (currencyId: string) => {
 
     // ถ้าไม่มี icon หรือเป็นค่าว่าง ให้ใส่ค่าเริ่มต้น หรือปรับ Path ให้ถูกต้องตามโครงสร้างโปรเจกต์
     if (!iconPath) {
-        iconPath = `/Icons/${currencyId}.png`; // ปรับตามโครงสร้างโฟลเดอร์จริงของคุณ
+        iconPath = `./Icons/${currencyId}.png`; // ปรับตามโครงสร้างโฟลเดอร์จริงของคุณ
     }
 
     return {

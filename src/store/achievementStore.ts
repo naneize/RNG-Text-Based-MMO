@@ -24,7 +24,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         description: 'Roll and obtain your first equipment item.',
         category: 'starter',
         rewardTitle: 'First Adventurer',
-        rewardFrame: '/Icons/Frames/frame_01.png',
+        rewardFrame: './Icons/Frames/frame_01.png',
         reward: [
             { type: 'material', itemId: 'iron_ore', amount: 10 },
             { type: 'material', itemId: 'steel_ingot', amount: 5 }
@@ -50,7 +50,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         title: 'Overkill',
         description: 'Deal over 10,000 damage with a single normal attack.',
         category: 'combat',
-        rewardFrame: '/Icons/Frames/frame_10.png',
+        rewardFrame: './Icons/Frames/frame_10.png',
         rewardTitle: 'The Destroyer', // 🟢 ฉายาที่จะได้รับ
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 5 },
@@ -67,7 +67,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         description: 'Obtain your first Epic item.',
         category: 'starter',
         rewardTitle: 'Epic Seeker',
-        rewardFrame: '/Icons/Frames/frame_02.png',
+        rewardFrame: './Icons/Frames/frame_02.png',
         reward: [
             { type: 'material', itemId: 'celestial_shard', amount: 5 },
             { type: 'material', itemId: 'void_essence', amount: 3 }
@@ -82,7 +82,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         description: 'Obtain your first Legendary item.',
         category: 'starter',
         rewardTitle: 'Legendary Hunter',
-        rewardFrame: '/Icons/Frames/frame_06.png',
+        rewardFrame: './Icons/Frames/frame_06.png',
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 5 },
             { type: 'material', itemId: 'primordial_essence', amount: 3 }
@@ -171,7 +171,7 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         description: 'Defeat your very first boss.',
         category: 'starter',
         rewardTitle: 'Boss Slayer',
-        rewardFrame: '/Icons/Frames/frame_07.png',
+        rewardFrame: './Icons/Frames/frame_07.png',
         reward: [
             { type: 'material', itemId: 'ancient_rune', amount: 10 },
             { type: 'material', itemId: 'primordial_essence', amount: 5 },

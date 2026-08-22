@@ -58,15 +58,15 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-y-auto pr-1 flex-grow">
                         {sortedDropTable.map((item: any, index: number) => {
-                            let iconPath = '/Icons/Items/default.png';
+                            let iconPath = './Icons/Items/default.png';
 
                             if (item.type === 'material') {
-                                iconPath = `/Icons/Materials/${item.itemId}.png`;
+                                iconPath = `./Icons/Materials/${item.itemId}.png`;
                             } else if (item.type === 'skill') {
                                 const foundSkill = SKILL_POOL.find((s: any) => s.id === item.itemId);
-                                iconPath = foundSkill?.icon || `/Icons/Skills/skill-${item.itemId}.svg`;
+                                iconPath = foundSkill?.icon || `./Icons/Skills/skill-${item.itemId}.svg`;
                             } else if (item.type === 'item') {
-                                iconPath = `/Icons/Equipments/${item.itemId}.png`;
+                                iconPath = `./Icons/Equipments/${item.itemId}.png`;
                             }
 
                             const bossLevel = boss.level || 1;
@@ -82,7 +82,7 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                                                 alt={item.itemId}
                                                 className="w-full h-full object-contain"
                                                 onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = '/Icons/Items/default.png';
+                                                    (e.target as HTMLImageElement).src = './Icons/Items/default.png';
                                                 }}
                                             />
                                         </div>
@@ -193,9 +193,9 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                             const getBossCardBg = (element: string) => {
                                 const el = element?.toLowerCase();
                                 if (el === 'water' || el === 'ธาตุน้ำ') {
-                                    return 'url(/Icons/Backgrounds/BG_BOSS_WATER.png)';
+                                    return 'url(./Icons/Backgrounds/BG_BOSS_WATER.png)';
                                 } else if (el === 'fire' || el === 'ธาตุไฟ') {
-                                    return 'url(/Icons/Backgrounds/BG_BOSS_FIRE.png)';
+                                    return 'url(./Icons/Backgrounds/BG_BOSS_FIRE.png)';
                                 }
                                 return 'none';
                             };
@@ -221,7 +221,7 @@ export const AdventureLobby = ({ onSelectBoss, playerCP }: { onSelectBoss: (boss
                                                 alt={boss.name}
                                                 className="relative w-full h-full object-cover [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]"
                                                 onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = '/Icons/Monsters/Drake.svg';
+                                                    (e.target as HTMLImageElement).src = './Icons/Monsters/Drake.svg';
                                                 }}
                                             />
                                         </div>

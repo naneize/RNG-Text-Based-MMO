@@ -85,7 +85,7 @@ export const DidYouKnowModal: React.FC<DidYouKnowModalProps> = ({
                     {/* ไอคอนแบบไม่มีกรอบซ้อน ปล่อยลอยเด่น */}
                     <div className="shrink-0 pt-0.5">
                         <img
-                            src="/Icons/Backgrounds/note.png"
+                            src="./Icons/Backgrounds/note.png"
                             alt="Note Icon"
                             className="w-10 h-10 object-contain drop-shadow-[0_2px_6px_rgba(245,158,11,0.4)]"
                         />
