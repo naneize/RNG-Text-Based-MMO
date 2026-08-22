@@ -76,7 +76,7 @@ interface TransferResult {
 
 interface GameState {
     currentPage: 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile';
-    setCurrentPage: (page: 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile') => void;
+    setCurrentPage: (page: 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile' | 'tower') => void;
     player: Player;
     addItem: (item: Item) => void;
     addMaterial: (name: string, amount: number) => void;

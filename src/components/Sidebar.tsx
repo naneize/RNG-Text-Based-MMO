@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useBattleStore } from '../store/battleStore';
 import { BattleWidget } from './BattleWidget';
 
-type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile';
+type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile' | 'tower';
 
 export const Sidebar = () => {
     const { currentPage, setCurrentPage } = useGameStore();
@@ -23,6 +23,7 @@ export const Sidebar = () => {
         { id: 'home', label: 'Main' },
         { id: 'profile', label: 'Player Profile' },
         { id: 'adventure', label: 'Boss Lobby' },
+        { id: 'tower', label: 'Boss Tower' },
         { id: 'collection', label: 'Items Collection' },
         { id: 'achievement', label: 'Achievements' },
         ...(user && !isEmbedded ? [{ id: 'marketplace' as PageType, label: 'Marketplace' }] : []),

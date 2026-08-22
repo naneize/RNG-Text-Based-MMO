@@ -3,6 +3,7 @@ import { useBattleStore } from '../store/battleStore';
 import { useGameStore } from '../store/gameStore';
 import { RewardModal } from '../components/Modals/RewardModal';
 import { classifyLogToken } from '../utils/battleLogStyles';
+import { useTowerStore } from '../store/towerStore';
 
 
 export const BattleScreen = () => {
@@ -24,6 +25,12 @@ export const BattleScreen = () => {
         isAutoFarm,     // 👈 ดึง isAutoFarm มาจากตรงนี้ได้เลย
         setAutoFarm     // 👈 ใช้ setAutoFarm สำหรับกำหนดค่า true/false ตรงๆ
     } = useBattleStore();
+
+    // 🗼 โหมด Boss Tower — สถานะจาก towerStore (ระบบต่อสู้ใช้ของเดิมทั้งหมด)
+    const towerActive = useTowerStore((s) => s.isActive);
+    const towerFloor = useTowerStore((s) => s.currentFloor);
+    const towerNextFloor = useTowerStore((s) => s.nextFloor);
+    const towerEndRun = useTowerStore((s) => s.endRun);
 
     const [showBossStats, setShowBossStats] = useState(false);
     const [showRewardModal, setShowRewardModal] = useState(false);
@@ -57,12 +64,16 @@ export const BattleScreen = () => {
         if (lastRewards && lastRewards.length > 0 && !isVictory) {
             setShowRewardModal(true);
             setIsVictory(true);
+            // 🗼 ใน tower: ชัยชนะ = ผ่านชั้น → บันทึก checkpoint + รางวัลวัสดุ + คิดเลือดค้าง
+            if (useTowerStore.getState().isActive) {
+                useTowerStore.getState().completeFloor();
+            }
         }
     }, [rewardTick, isVictory]);
 
-    // ระบบ Auto Farm: เมื่อบอสตายและเปิด Auto Farm ไว้ ให้กดเริ่มสู้ใหม่อัตโนมัติ
+    // ระบบ Auto Farm: เมื่อบอสตายและเปิด Auto Farm ไว้ ให้กดเริ่มสู้ใหม่อัตโนมัติ (ห้ามใช้ใน tower)
     useEffect(() => {
-        if (isAutoFarm && bossHp <= 0 && !isFighting && selectedBoss && finalStatsSnapshot) {
+        if (!useTowerStore.getState().isActive && isAutoFarm && bossHp <= 0 && !isFighting && selectedBoss && finalStatsSnapshot) {
             const timer = setTimeout(() => {
                 setIsVictory(false);
                 const player = useGameStore.getState().player;
@@ -72,10 +83,16 @@ export const BattleScreen = () => {
         }
     }, [isAutoFarm, bossHp, isFighting, selectedBoss, finalStatsSnapshot, startBattle]);
 
-    // ปิด Auto Farm หากผู้เล่นตาย
+    // ปิด Auto Farm หากผู้เล่นตาย — และใน tower: ตาย = จบรัน + เด้งกลับหน้า Boss Tower ทันที
     useEffect(() => {
         if (playerHp <= 0) {
-            setAutoFarm(false); // 👈 เปลี่ยนมาใช้ setAutoFarm(false) ตรงนี้ครับ
+            setAutoFarm(false);
+            if (useTowerStore.getState().isActive) {
+                useTowerStore.getState().endRun('death');
+                // เคลียร์ battle ค้างแล้วพากลับ lobby — สรุปรันจะโชว์ที่ TowerPage อัตโนมัติ
+                useBattleStore.getState().leaveBattle();
+                useGameStore.getState().setCurrentPage('tower');
+            }
         }
     }, [playerHp, setAutoFarm]);
 
@@ -123,10 +140,48 @@ export const BattleScreen = () => {
             <div className="relative z-10">
                 {/* Header: ปุ่ม Back อยู่บนสุด */}
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={leaveBattle} className="text-stone-400 hover:text-white font-medium transition cursor-pointer">
-                        ← Back
+                    <button
+                        onClick={() => {
+                            if (towerActive) {
+                                // อยู่ใน tower เท่านั้นที่กลับหน้า tower
+                                towerEndRun('exit');
+                                leaveBattle();
+                                useGameStore.getState().setCurrentPage('tower');
+                            } else {
+                                // เบทปกติ: ออกจากต่อสู้ = กลับ Boss Lobby
+                                leaveBattle();
+                            }
+                        }}
+                        className="text-stone-400 hover:text-white font-medium transition cursor-pointer"
+                    >
+                        {towerActive ? '← Abandon Run' : '← Back'}
                     </button>
                 </div>
+
+                {/* 🗼 Tower Banner: บอกชั้นปัจจุบัน + modifier ของชั้นนี้ (โชว์คำอธิบายตลอด ไม่ต้อง hover) */}
+                {towerActive && towerFloor && (
+                    <div className="mb-4 bg-stone-950/80 border border-amber-900/70 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-black/40 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-amber-400 font-extrabold tracking-widest text-sm drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                                FLOOR {towerFloor.floor}
+                            </span>
+                            {towerFloor.isBossFloor && (
+                                <span className="text-[10px] font-extrabold bg-amber-500 text-stone-950 px-2 py-0.5 rounded animate-pulse">
+                                    BOSS FLOOR
+                                </span>
+                            )}
+                            <span className="text-[10px] text-stone-400 ml-auto">
+                                HP carry: {Math.round(useTowerStore.getState().runPlayerHpPercent * 100)}%
+                            </span>
+                        </div>
+                        {towerFloor.modifiers.map((m) => (
+                            <div key={m.id} className="flex items-baseline gap-2">
+                                <span className="text-[11px] text-rose-300 font-bold whitespace-nowrap drop-shadow-[0_0_4px_rgba(251,113,133,0.3)]">◈ {m.name}</span>
+                                <span className="text-[10px] text-amber-100/80">{m.description}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Grid 2 คอลัมน์ (ซ้าย: Status & Controls, ขวา: Battle Log) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
@@ -154,30 +209,32 @@ export const BattleScreen = () => {
                                 </span>
                             </div>
 
-                            {/* Toggle Boss Stats */}
+                            {/* Toggle Boss Stats — Auto Farm ซ่อนใน tower เพราะเป็นคอนเทนต์ active */}
                             <div className="flex justify-between items-center mb-2">
-                                <button
-                                    onClick={() => setAutoFarm(!isAutoFarm)}
-                                    className="flex items-center gap-2 text-xs font-bold transition cursor-pointer select-none group"
-                                >
-                                    {/* กล่อง Checkbox จำลอง */}
-                                    <div className={`w-4 h-4 rounded flex items-center justify-center border transition ${isAutoFarm
-                                        ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.6)] text-white'
-                                        : 'bg-stone-800 border-stone-700 group-hover:border-stone-600 text-transparent'
-                                        }`}>
-                                        {/* ไอคอนติ๊กถูก (SVG) จะแสดงเฉพาะตอนเปิด Auto Farm */}
-                                        <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    {/* ตัวหนังสือ Auto Farm จะกระพริบแสงเรืองๆ นุ่มนวลโดยที่บรรทัดไม่ขยับ */}
-                                    <span className={`transition-all duration-300 ${isAutoFarm
-                                        ? 'text-emerald-400 font-extrabold drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse'
-                                        : 'text-stone-300'
-                                        }`}>
-                                        Auto Farm
-                                    </span>
-                                </button>
+                                {!towerActive && (
+                                    <button
+                                        onClick={() => setAutoFarm(!isAutoFarm)}
+                                        className="flex items-center gap-2 text-xs font-bold transition cursor-pointer select-none group"
+                                    >
+                                        {/* กล่อง Checkbox จำลอง */}
+                                        <div className={`w-4 h-4 rounded flex items-center justify-center border transition ${isAutoFarm
+                                            ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.6)] text-white'
+                                            : 'bg-stone-800 border-stone-700 group-hover:border-stone-600 text-transparent'
+                                            }`}>
+                                            {/* ไอคอนติ๊กถูก (SVG) จะแสดงเฉพาะตอนเปิด Auto Farm */}
+                                            <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+                                        {/* ตัวหนังสือ Auto Farm จะกระพริบแสงเรืองๆ นุ่มนวลโดยที่บรรทัดไม่ขยับ */}
+                                        <span className={`transition-all duration-300 ${isAutoFarm
+                                            ? 'text-emerald-400 font-extrabold drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse'
+                                            : 'text-stone-300'
+                                            }`}>
+                                            Auto Farm
+                                        </span>
+                                    </button>
+                                )}
 
                                 <button
                                     onClick={() => setShowBossStats(!showBossStats)}
@@ -247,40 +304,87 @@ export const BattleScreen = () => {
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 mt-4 pt-4 border-t border-stone-800/80">
-                            <button
-                                onClick={() => {
-                                    if (bossHp <= 0) {
-                                        clearRewards();
-                                        setIsVictory(false);
-                                        const player = useGameStore.getState().player;
-                                        startBattle(selectedBoss, finalStatsSnapshot, player.equippedItems);
-                                    } else {
-                                        setFighting(!isFighting);
-                                    }
-                                }}
-                                disabled={playerHp <= 0}
-                                className={`flex-grow py-3 rounded-lg font-bold text-sm transition-all shadow-md cursor-pointer ${bossHp <= 0
-                                    ? 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/30 hover:shadow-amber-400/50 animate-pulse'
-                                    : isFighting
-                                        ? 'bg-red-600 hover:bg-red-500 shadow-red-500/25'
-                                        : 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/25 hover:shadow-amber-400/50'
-                                    } disabled:bg-stone-800 disabled:text-stone-500 disabled:cursor-not-allowed disabled:shadow-none`}
-                            >
-                                {bossHp <= 0
-                                    ? 'Fight Again'
-                                    : playerHp <= 0
-                                        ? 'Defeated...'
-                                        : isFighting
-                                            ? 'Stop Fighting'
-                                            : 'Start Battle'}
-                            </button>
+                            {towerActive ? (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            if (playerHp <= 0) return;
+                                            if (bossHp <= 0) {
+                                                // ขึ้นชั้นถัดไป — รีเซ็ตสถานะ victory ให้ modal รางวัลชั้นใหม่เด้งได้
+                                                setIsVictory(false);
+                                                clearRewards();
+                                                towerNextFloor();
+                                            } else {
+                                                setFighting(!isFighting);
+                                            }
+                                        }}
+                                        disabled={playerHp <= 0}
+                                        className={`flex-grow py-3 rounded-lg font-extrabold text-sm transition-all cursor-pointer ${playerHp <= 0
+                                            ? 'bg-stone-800 text-stone-500 cursor-not-allowed'
+                                            : bossHp <= 0
+                                                ? 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/30 animate-pulse'
+                                                : isFighting
+                                                    ? 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25'
+                                                    : 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/25'
+                                            }`}
+                                    >
+                                        {playerHp <= 0
+                                            ? '☠ Run Ended'
+                                            : bossHp <= 0
+                                                ? `NEXT FLOOR — F.${(towerFloor?.floor ?? 0) + 1} ➔`
+                                                : isFighting
+                                                    ? 'Stop Fighting'
+                                                    : 'Start Battle'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            // กลับ lobby ของ tower โดย run ยังอยู่ (แค่พักการต่อสู้)
+                                            setFighting(false);
+                                            useGameStore.getState().setCurrentPage('tower');
+                                        }}
+                                        className="px-4 py-3 bg-stone-800 hover:bg-stone-700 border border-amber-900/60 rounded-lg text-white text-sm font-bold transition cursor-pointer"
+                                    >
+                                        Tower
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            if (bossHp <= 0) {
+                                                clearRewards();
+                                                setIsVictory(false);
+                                                const player = useGameStore.getState().player;
+                                                startBattle(selectedBoss, finalStatsSnapshot, player.equippedItems);
+                                            } else {
+                                                setFighting(!isFighting);
+                                            }
+                                        }}
+                                        disabled={playerHp <= 0}
+                                        className={`flex-grow py-3 rounded-lg font-bold text-sm transition-all shadow-md cursor-pointer ${bossHp <= 0
+                                            ? 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/30 hover:shadow-amber-400/50 animate-pulse'
+                                            : isFighting
+                                                ? 'bg-red-600 hover:bg-red-500 shadow-red-500/25'
+                                                : 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/25 hover:shadow-amber-400/50'
+                                            } disabled:bg-stone-800 disabled:text-stone-500 disabled:cursor-not-allowed disabled:shadow-none`}
+                                    >
+                                        {bossHp <= 0
+                                            ? 'Fight Again'
+                                            : playerHp <= 0
+                                                ? 'Defeated...'
+                                                : isFighting
+                                                    ? 'Stop Fighting'
+                                                    : 'Start Battle'}
+                                    </button>
 
-                            <button
-                                onClick={leaveBattle}
-                                className="px-4 py-3 bg-stone-800 hover:bg-stone-700 border border-amber-900/60 rounded-lg text-white text-sm font-bold transition cursor-pointer"
-                            >
-                                Lobby
-                            </button>
+                                    <button
+                                        onClick={leaveBattle}
+                                        className="px-4 py-3 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-white text-sm font-bold transition cursor-pointer"
+                                    >
+                                        Lobby
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 

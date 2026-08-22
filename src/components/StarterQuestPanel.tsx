@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import { materialLibrary } from '../data/materialLibrary';
 import { itemLibrary } from '../data/itemLibrary';
 
-type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile';
+type PageType = 'home' | 'adventure' | 'collection' | 'achievement' | 'marketplace' | 'profile' | 'tower';
 
 const QUEST_ORDER = [
     'FIRST_EQUIP',

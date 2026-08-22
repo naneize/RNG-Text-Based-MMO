@@ -26,7 +26,28 @@ export interface TraitContext {
     playerMaxHp: number;              // HP สูงสุดของผู้เล่น
     isCrit?: boolean;                 // ติดคริติคอลหรือไม่
     isMiss?: boolean;                 // ตีวืดหรือไม่
+    currentRound?: number;            // รอบปัจจุบันของเบท (ใช้คำนวณ cooldown ของ trait)
 }
+
+// ⏳ ระบบ Cooldown ของ Trait — เก็บ "รอบที่ trait ทำงานล่าสุด" แยกตาม trait id
+// (module-level state เพราะ trait เป็นข้อมูล static ที่ใช้ร่วมกันทั้งเบท)
+const traitCooldowns: Record<string, number> = {};
+
+export const clearTraitCooldowns = () => {
+    Object.keys(traitCooldowns).forEach((key) => delete traitCooldowns[key]);
+};
+
+const hasMeaningfulResult = (result: EquipmentTraitResult): boolean =>
+    Boolean(
+        result.extraDamage ||
+        result.healAmount ||
+        result.shieldAmount ||
+        result.reflectDamage ||
+        result.damageReductionPercent ||
+        result.damageReductionFlat ||
+        result.buff ||
+        result.log
+    );
 
 // 3. Helper Functions สำหรับสร้าง Trait แต่ละประเภท
 
@@ -203,6 +224,7 @@ const createThornsTrait = (
     rarity: EquipmentTrait['rarity'],
     allowedSlots: EquipmentSlot[],
     reflectPercentOfDef: number,
+    cooldownRounds: number,
     loreText: string
 ): EquipmentTrait => ({
     id,
@@ -211,7 +233,8 @@ const createThornsTrait = (
     trigger: 'on_take_damage',
     rarity,
     lore: loreText,
-    description: `When hit, reflects damage equal to ${reflectPercentOfDef}% of your DEF back to the attacker.`,
+    cooldown: cooldownRounds,
+    description: `When hit, reflects damage equal to ${reflectPercentOfDef}% of your DEF back to the attacker. Can only activate once every ${cooldownRounds} rounds.`,
     effect: (ctx: TraitContext) => {
         const defVal = ctx.defender.def || 0;
         const reflectDamage = Math.max(1, Math.floor(defVal * (reflectPercentOfDef / 100)));
@@ -260,6 +283,7 @@ const createEmergencyShieldTrait = (
     allowedSlots: EquipmentSlot[],
     hpThresholdPercent: number,
     healPercentOfMaxHp: number,
+    cooldownRounds: number,
     loreText: string
 ): EquipmentTrait => ({
     id,
@@ -268,7 +292,8 @@ const createEmergencyShieldTrait = (
     trigger: 'on_take_damage',
     rarity,
     lore: loreText,
-    description: `When HP drops below ${hpThresholdPercent}%, immediately restores ${healPercentOfMaxHp}% of Max HP when damaged.`,
+    cooldown: cooldownRounds,
+    description: `When HP drops below ${hpThresholdPercent}%, restores ${healPercentOfMaxHp}% of Max HP when damaged. Can only activate once every ${cooldownRounds} rounds.`,
     effect: (ctx: TraitContext) => {
         const currentHpPercent = (ctx.playerHp / (ctx.playerMaxHp || 1)) * 100;
         if (currentHpPercent <= hpThresholdPercent) {
@@ -490,13 +515,13 @@ export const EQUIPMENT_TRAIT_POOL: EquipmentTrait[] = [
 
     // ----------------- ARMOR / SHIELD / HELM / CLOAK -----------------
     // Thorns (Armor / Shield / Helm / Cloak)
-    createThornsTrait('thorns_c', 'Spiked Shell', 'Common', ['armor', 'shield', 'helm', 'cloak'], 20,
+    createThornsTrait('thorns_c', 'Spiked Shell', 'Common', ['armor', 'shield', 'helm', 'cloak'], 20, 2,
         "Sharp jagged edges that sting attackers upon impact."),
-    createThornsTrait('thorns_r', 'Barbed Carapace', 'Rare', ['armor', 'shield', 'helm', 'cloak'], 35,
+    createThornsTrait('thorns_r', 'Barbed Carapace', 'Rare', ['armor', 'shield', 'helm', 'cloak'], 30, 2,
         "Reinforced barbed plating designed to puncture anything that strikes it."),
-    createThornsTrait('thorns_e', 'Bramble Fortress', 'Epic', ['armor', 'shield', 'helm', 'cloak'], 55,
+    createThornsTrait('thorns_e', 'Bramble Fortress', 'Epic', ['armor', 'shield', 'helm', 'cloak'], 45, 2,
         "Entangled thorny armor pulsating with protective retaliatory energy."),
-    createThornsTrait('thorns_l', 'Titan Retaliation', 'Legendary', ['armor', 'shield', 'helm', 'cloak'], 80,
+    createThornsTrait('thorns_l', 'Titan Retaliation', 'Legendary', ['armor', 'shield', 'helm', 'cloak'], 60, 2,
         "An ancient behemoth aegis that turns every incoming blow into crushing reflection."),
 
     // Damage Mitigation (Armor / Shield / Helm / Cloak)
@@ -510,23 +535,23 @@ export const EQUIPMENT_TRAIT_POOL: EquipmentTrait[] = [
         "The celestial barrier of gods, deflecting devastating strikes with absolute ease."),
 
     // Emergency Shield / Heal (Armor / Shield / Helm)
-    createEmergencyShieldTrait('emergency_shield_c', 'Last Stand', 'Common', ['armor', 'shield', 'helm'], 30, 15,
+    createEmergencyShieldTrait('emergency_shield_c', 'Last Stand', 'Common', ['armor', 'shield', 'helm'], 30, 12, 3,
         "Adrenaline kicks in when wounded, quickly binding minor fractures."),
-    createEmergencyShieldTrait('emergency_shield_r', 'Survivor Resilience', 'Rare', ['armor', 'shield', 'helm'], 35, 25,
+    createEmergencyShieldTrait('emergency_shield_r', 'Survivor Resilience', 'Rare', ['armor', 'shield', 'helm'], 35, 16, 3,
         "A fierce survival instinct that surges vitality at the brink of death."),
-    createEmergencyShieldTrait('emergency_shield_e', 'Phoenix Heart', 'Epic', ['armor', 'shield', 'helm'], 40, 40,
+    createEmergencyShieldTrait('emergency_shield_e', 'Phoenix Heart', 'Epic', ['armor', 'shield', 'helm'], 40, 20, 3,
         "Reborn from the ashes of mortal danger with renewed life."),
-    createEmergencyShieldTrait('emergency_shield_l', 'Divine Intervention', 'Legendary', ['armor', 'shield', 'helm'], 45, 60,
+    createEmergencyShieldTrait('emergency_shield_l', 'Divine Intervention', 'Legendary', ['armor', 'shield', 'helm'], 45, 25, 4,
         "A miraculous blessing that restores your vitality when on the verge of defeat."),
 
-    // Regen (Cloak / Helm)
-    createRegenTrait('regen_c', 'Lesser Mending', 'Common', ['cloak', 'helm'], 2,
+    // Regen (Cloak / Helm) — ทุกรอบแต่ค่าต่ำ เพราะเดิม 10%/รอบทำให้ build เลือดเป็นอมตะ
+    createRegenTrait('regen_c', 'Lesser Mending', 'Common', ['cloak', 'helm'], 1,
         "Subtle healing threads woven into the fabric."),
-    createRegenTrait('regen_r', 'Restorative Aura', 'Rare', ['cloak', 'helm'], 4,
+    createRegenTrait('regen_r', 'Restorative Aura', 'Rare', ['cloak', 'helm'], 2,
         "A gentle glowing warmth that eases fatigue round by round."),
-    createRegenTrait('regen_e', 'Verdant Life', 'Epic', ['cloak', 'helm'], 6,
+    createRegenTrait('regen_e', 'Verdant Life', 'Epic', ['cloak', 'helm'], 3,
         "Nature's blessing steadily regenerating vital organs during battle."),
-    createRegenTrait('regen_l', 'Fountain of Eternity', 'Legendary', ['cloak', 'helm'], 10,
+    createRegenTrait('regen_l', 'Fountain of Eternity', 'Legendary', ['cloak', 'helm'], 4,
         "Boundless life essence that makes mortal wounds fade away effortlessly."),
 
     // ----------------- BOOTS -----------------
@@ -641,7 +666,20 @@ export const resolveEquipmentTraits = (
         const trait = getTraitById(traitId);
         if (!trait || trait.trigger !== trigger) return;
 
+        // ⏳ ตรวจ cooldown — ถ้ายังไม่ครบจำนวนรอบห่าง ให้ข้าม trait นี้ไป
+        if (trait.cooldown && context.currentRound !== undefined) {
+            const lastUsedRound = traitCooldowns[trait.id];
+            if (lastUsedRound !== undefined && context.currentRound - lastUsedRound < trait.cooldown) {
+                return;
+            }
+        }
+
         const result = trait.effect(context);
+
+        // บันทึกเวลาที่ trait ทำงานจริง (ผลว่าง ๆ ไม่นับ เช่น Emergency Shield ที่เลือดยังไม่ต่ำพอ)
+        if (trait.cooldown && context.currentRound !== undefined && hasMeaningfulResult(result)) {
+            traitCooldowns[trait.id] = context.currentRound;
+        }
 
         if (result.extraDamage) aggregatedResult.extraDamage = (aggregatedResult.extraDamage || 0) + result.extraDamage;
         if (result.healAmount) aggregatedResult.healAmount = (aggregatedResult.healAmount || 0) + result.healAmount;

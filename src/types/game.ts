@@ -126,6 +126,8 @@ export interface EquipmentTrait {
     rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
     description: string;
     lore?: string;
+    // cooldown จำนวนรอบห่างระหว่างการ trigger (บังคับใช้ใน resolveEquipmentTraits ผ่าน TraitContext.currentRound)
+    cooldown?: number;
     effect: any; // ฟังก์ชันเอฟเฟกต์
 }
 

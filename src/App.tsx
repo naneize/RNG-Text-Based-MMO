@@ -4,6 +4,7 @@ import { CharacterDashboard } from './components/character/CharacterDashboard';
 import { useGameStore } from './store/gameStore';
 import { CollectionPage } from './components/collection/CollectionPage';
 import { AdventurePage } from './pages/AdventureScreen';
+import { TowerPage } from './pages/TowerPage';
 import { AchievementPage } from './components/achievement/AchievementPage';
 import { AchievementPopup } from './components/Modals/AchievementPopup';
 import { useAuthStore, initAuthListener } from './store/authStore';
@@ -117,6 +118,7 @@ function App() {
             {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}
             {currentPage === 'adventure' && <AdventurePage />}
             {currentPage === 'achievement' && <AchievementPage />}
+            {currentPage === 'tower' && <TowerPage />}
             {currentPage === 'marketplace' && <MarketplacePage />}
           </main>
 

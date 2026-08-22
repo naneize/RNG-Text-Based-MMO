@@ -1,7 +1,7 @@
 // store/battleStore.ts
 import { create } from 'zustand';
 import { calculateDamage, getEquippedBonus, getEffectiveStats } from '../utils/combat';
-import { resolveEquipmentTraits, type TraitContext } from '../data/equipmentTraits';
+import { resolveEquipmentTraits, clearTraitCooldowns, type TraitContext } from '../data/equipmentTraits';
 import { useAchievementStore } from './achievementStore';
 import { useGameStore } from './gameStore';
 import type { Stats, Player, Boss, Item } from '../types/game';
@@ -52,6 +52,7 @@ interface BattleState {
 let battleIntervalId: ReturnType<typeof setInterval> | null = null;
 let battleTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let activeBuffs: ActiveBuff[] = [];
+let battleRound = 0; // ตัวนับรอบปัจจุบัน (1 tick = 1 รอบ) ใช้คำนวณ cooldown ของ trait
 
 const clearBattleTimers = () => {
     if (battleIntervalId) clearInterval(battleIntervalId);
@@ -82,6 +83,8 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     startBattle: (boss, finalStats, equippedItems) => {
         clearBattleTimers();
         activeBuffs = [];
+        battleRound = 0;
+        clearTraitCooldowns();
 
         set({ lastRewards: [], rewardTick: 0 });
 
@@ -120,6 +123,8 @@ export const useBattleStore = create<BattleState>((set, get) => ({
     leaveBattle: () => {
         clearBattleTimers();
         activeBuffs = [];
+        battleRound = 0;
+        clearTraitCooldowns();
         set({
             selectedBoss: null,
             bossEffectiveStats: null,
@@ -137,6 +142,8 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     const { selectedBoss, bossEffectiveStats, finalStatsSnapshot, equippedItemsSnapshot } = state;
     if (!selectedBoss || !bossEffectiveStats || !finalStatsSnapshot || !equippedItemsSnapshot) return;
     if (state.bossHp <= 0 || state.playerHp <= 0) return;
+
+    battleRound += 1;
 
     useAchievementStore.getState().checkCondition('CHECK_FIRST_BATTLE');
 
@@ -213,6 +220,7 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
         baseDamage: 0,
         playerHp: newPlayerHp,
         playerMaxHp: finalStatsSnapshot.maxHp || 100,
+            currentRound: battleRound,
     };
     const turnStartTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_turn_start', turnStartContext);
     if (turnStartTraits.healAmount && turnStartTraits.healAmount > 0) {
@@ -228,6 +236,7 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
             baseDamage: dmgToBoss,
             playerHp: newPlayerHp,
             playerMaxHp: finalStatsSnapshot.maxHp || 100,
+            currentRound: battleRound,
             isCrit: playerResult.isCrit,
             isMiss: playerResult.isMiss,
         };
@@ -321,6 +330,7 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
             baseDamage: baseDmgToPlayer,
             playerHp: finalPlayerHp,
             playerMaxHp: finalStatsSnapshot.maxHp || 100,
+            currentRound: battleRound,
             isCrit: bossResult.isCrit,
             isMiss: bossResult.isMiss,
         };
