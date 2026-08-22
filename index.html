@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Debug: โชว์ error ตอน boot บนจอ (กรณี crash ก่อน React render เช่นใน iframe sandbox)
+      window.addEventListener('error', function (e) {
+        var d = document.createElement('pre');
+        d.id = 'boot-error';
+        d.style.cssText = 'color:#f87171;background:#1c1917;padding:12px;font-size:12px;white-space:pre-wrap;z-index:99999;position:relative';
+        d.textContent = 'BOOT ERROR: ' + (e.message || '(no message)') + '\n' + (e.error && e.error.stack ? e.error.stack : '');
+        document.body.appendChild(d);
+      });
+    </script>
     <title>RNG — Text-Based MMO</title>
     <!-- ฟอนต์หัวข้อธีม dark fantasy (ตัวสลักหิน) — body ยังใช้ sans เดิมเพื่อความอ่านง่ายของ stat/log -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

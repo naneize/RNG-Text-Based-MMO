@@ -26,7 +26,7 @@ export const useCharacterDashboard = () => {
     const synergyBonusList = [...getEffectiveStatsInfo(), ...getSynergyInfo()];
     const [isAutoActive, setIsAutoActive] = useState(false);
     const isAutoRef = useRef(isAutoActive);
-    const workerRef = useRef<Worker | null>(null);
+    const workerRef = useRef<any>(null);
 
     const executeSingleRoll = async () => {
         // ดึงสถานะและฟังก์ชันทั้งหมดจาก Store (รวมถึงระบบ Pity)
@@ -114,11 +114,60 @@ export const useCharacterDashboard = () => {
     };
 
     useEffect(() => {
-        // 1. สร้าง Worker ขึ้นมา
-        const worker = new Worker(
-            new URL('../workers/lootWorker.ts', import.meta.url),
-            { type: 'module' }
-        );
+        // 1. สร้าง Worker ขึ้นมา — ใน iframe แบบ sandbox (itch.io / CrazyGames) การ new Worker จะโดน
+        // SecurityError เพราะ origin เป็น null จึงต้องมี fallback เป็น timer บน main thread
+        // ที่จำลอง message protocol ของ lootWorker (START_AUTO/STOP_AUTO -> PROGRESS/TICK_ROLL) แทน
+        let worker: Worker | { postMessage: (msg: any) => void; terminate: () => void; onmessage: ((e: MessageEvent) => void) | null };
+
+        const createFallbackWorker = () => {
+            let interval: any = null;
+            let coolingDown = false;
+            let handler: ((e: MessageEvent) => void) | null = null;
+
+            return {
+                set onmessage(fn: ((e: MessageEvent) => void) | null) { handler = fn; },
+                get onmessage() { return handler; },
+                postMessage(msg: any) {
+                    const { action, duration = 2500 } = msg || {};
+                    if (action === 'START_AUTO') {
+                        clearInterval(interval);
+                        coolingDown = false;
+                        let elapsed = 0;
+                        interval = setInterval(() => {
+                            if (coolingDown) return;
+                            elapsed += 30;
+                            const progress = Math.min((elapsed / duration) * 100, 100);
+                            handler?.({ data: { action: 'PROGRESS', progress } } as MessageEvent);
+                            if (elapsed >= duration) {
+                                handler?.({ data: { action: 'TICK_ROLL' } } as MessageEvent);
+                                coolingDown = true;
+                                elapsed = 0;
+                                setTimeout(() => { coolingDown = false; }, 800);
+                            }
+                        }, 30);
+                    }
+                    if (action === 'STOP_AUTO') {
+                        clearInterval(interval);
+                        coolingDown = false;
+                        interval = null;
+                    }
+                },
+                terminate() {
+                    clearInterval(interval);
+                    interval = null;
+                },
+            };
+        };
+
+        try {
+            worker = new Worker(
+                new URL('../workers/lootWorker.ts', import.meta.url),
+                { type: 'module' }
+            );
+        } catch {
+            console.warn('Web Worker unavailable (sandboxed iframe) — using main-thread loot timer fallback.');
+            worker = createFallbackWorker();
+        }
         workerRef.current = worker;
 
         // 2. 🟢 เช็คและกำหนด onmessage ด้วย optional chaining (?.) เพื่อป้องกัน Error ตอนที่ ref เป็น null
