@@ -26,7 +26,7 @@ export const CharacterDashboard = () => {
         lootedItem, setLootedItem, filter, setFilter, showCombine, setShowCombine,
         showBonusModal, setShowBonusModal, isLooting, progress, synergyBonusList,
         getCombinedBonuses, getDropChance, handleLoot, slots, filterOptions,
-        filteredInventory, getRarityColor, equippedItem, equipItem, unequipItem, transferItemStat,
+        filteredInventory, getRarityColor, equipItem, unequipItem, transferItemStat,
         epicPity, legendPity, toggleAutoLoot, isAutoActive, totalOpens, handleSellItem
     } = useCharacterDashboard();
 
@@ -47,8 +47,7 @@ export const CharacterDashboard = () => {
             {/* 👇 นำ StarterQuestPanel มาวางไว้ตรงนี้ เป็นบรรทัดแรกสุดของหน้าจอเลยครับ! */}
             <StarterQuestPanel />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-900 rounded-xl border border-slate-700 shadow-xl">
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-stone-950 border border-amber-950/50 shadow-[0_0_20px_rgba(0,0,0,0.5)] rounded-xl">
                 {/* 📌 คอลัมน์ที่ 1: CharacterStats + ปุ่ม World Chat (รวมอยู่ในกล่องเดียว) */}
                 <div className="flex flex-col gap-4">
 
@@ -60,23 +59,23 @@ export const CharacterDashboard = () => {
                     />
 
                     {/* 🌍 World Chat (สไตล์ Slate เรียบหรู + จุดกระพริบสีเขียวบอกสถานะออนไลน์) */}
+                    {/* 🌍 World Chat Button (ธีม Crimson & Amber) */}
                     <button
                         onClick={() => setIsChatOpen(true)}
-                        className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700/80 shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 px-4 bg-stone-950 hover:bg-amber-950/40 text-amber-200 hover:text-amber-100 font-extrabold rounded-xl border border-amber-900/60 hover:border-amber-600 shadow-lg shadow-amber-950/20 transition flex items-center justify-center gap-2 cursor-pointer group"
                     >
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        WORLD CHAT
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse group-hover:scale-110 transition-transform"></span>
+                        <span className="tracking-wide">WORLD CHAT</span>
                     </button>
 
-                    {/* 🏆 Leaderboard (สไตล์ Slate เรียบหรู + จุดกระพริบสีทอง/ส้ม) */}
+                    {/* 🏆 Leaderboard Button (ธีม Crimson & Amber) */}
                     <button
                         onClick={() => setIsLeaderboardOpen(true)}
-                        className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-700/80 shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 px-4 bg-stone-950 hover:bg-amber-950/40 text-amber-200 hover:text-amber-100 font-extrabold rounded-xl border border-amber-900/60 hover:border-amber-600 shadow-lg shadow-amber-950/20 transition flex items-center justify-center gap-2 cursor-pointer group"
                     >
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                        LEADERBOARD
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse group-hover:scale-110 transition-transform"></span>
+                        <span className="tracking-wide">LEADERBOARD</span>
                     </button>
-
 
                 </div>
 

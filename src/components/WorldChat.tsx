@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../store/chatStore';
 import type { ChatMessage } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
-import { formatMessageTime, formatFullDate } from '../utils/dateFormatter';
+import { formatMessageTime } from '../utils/dateFormatter';
 import { ItemDetailModal } from './Modals/ItemDetailModal';
 import { CharacterStats } from './character/CharacterStats';
-import type { Item, Player } from '../types/game';
+import type { Item } from '../types/game';
 
 interface WorldChatProps {
     onClose?: () => void;
@@ -17,7 +17,7 @@ const REACTION_EMOJIS = ['👍', '🔥', '❤️', '😂', '👑', '💯'];
 
 export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
     const { messages, sendMessage, deleteMessage, clearChat, toggleReaction, onlineUsers, subscribeToOnlineUsers } = useChatStore();
-    const { userProfile, user } = useAuthStore();
+    const { userProfile } = useAuthStore();
 
     const [inputText, setInputText] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -72,13 +72,13 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
     const getRarityColor = (rarity: string) => {
         switch (rarity?.toLowerCase()) {
             case 'legendary':
-                return 'text-orange-500 border-orange-700 bg-orange-700/40 font-semibold';
+                return 'text-amber-400 border-amber-600 bg-amber-950/60 font-semibold';
             case 'epic':
-                return 'text-purple-300 border-purple-600 bg-purple-700/40 font-semibold';
+                return 'text-purple-300 border-purple-600 bg-purple-950/60 font-semibold';
             case 'rare':
-                return 'text-blue-400 border-blue-600 bg-blue-700/40 font-semibold';
+                return 'text-blue-400 border-blue-600 bg-blue-950/60 font-semibold';
             default:
-                return 'text-slate-200 border-slate-500 bg-slate-800/80';
+                return 'text-amber-200/80 border-amber-950 bg-stone-900';
         }
     };
 
@@ -99,14 +99,14 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
     };
 
     return (
-        <div className="relative flex flex-col h-[500px] w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div className="relative flex flex-col h-[500px] w-full max-w-2xl bg-stone-950 border border-amber-900/80 rounded-2xl overflow-hidden shadow-2xl shadow-amber-950/40 text-amber-100">
             {/* Header */}
-            <div className="bg-slate-800/80 px-4 py-3 border-b border-slate-700/50 flex justify-between items-center gap-4">
+            <div className="bg-stone-900 px-4 py-3.5 border-b border-amber-950/80 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-white font-bold text-sm tracking-wider flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <h2 className="text-amber-400 font-extrabold text-sm tracking-wider uppercase flex items-center gap-2 drop-shadow">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                         WORLD CHAT
-                        <span className="text-xs bg-emerald-900/60 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded-full font-normal">
+                        <span className="text-[11px] bg-amber-950/60 text-amber-300 border border-amber-800/60 px-2 py-0.5 rounded-full font-semibold">
                             Online : {onlineUsers.length}
                         </span>
                     </h2>
@@ -115,7 +115,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => clearChat()}
-                        className="px-3 h-7 bg-slate-700/50 hover:bg-red-600/80 text-slate-300 hover:text-white rounded-lg flex items-center justify-center text-xs font-semibold transition cursor-pointer"
+                        className="px-3 h-7 bg-stone-900 hover:bg-amber-950 border border-amber-950 text-amber-400/80 hover:text-amber-300 rounded-xl flex items-center justify-center text-xs font-semibold transition cursor-pointer"
                     >
                         Clear Chat
                     </button>
@@ -123,7 +123,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="w-7 h-7 bg-slate-700/50 hover:bg-red-600/80 text-slate-300 hover:text-white rounded-lg flex items-center justify-center text-sm font-bold transition cursor-pointer"
+                            className="w-7 h-7 bg-stone-900 hover:bg-amber-950 border border-amber-950 text-amber-400/80 hover:text-amber-300 rounded-xl flex items-center justify-center text-sm font-bold transition cursor-pointer"
                         >
                             ✕
                         </button>
@@ -132,9 +132,9 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
             </div>
 
             {/* Message List */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
                 {messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+                    <div className="flex items-center justify-center h-full text-amber-500/60 text-sm">
                         No messages yet. Say something to the world!
                     </div>
                 ) : (
@@ -151,7 +151,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                 <div className={`flex items-start gap-3 ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                                     {/* Avatar */}
                                     <div className="relative w-11 h-11 shrink-0 flex items-center justify-center cursor-pointer">
-                                        <img src={msg.avatar || '/default-avatar.png'} alt={msg.username} className="w-9 h-9 rounded-full object-cover" />
+                                        <img src={msg.avatar || '/default-avatar.png'} alt={msg.username} className="w-9 h-9 rounded-full object-cover border border-amber-900/50" />
                                         {msg.frame && <img src={msg.frame} alt="frame" className="absolute inset-0 w-full h-full pointer-events-none scale-150" />}
                                     </div>
 
@@ -162,56 +162,58 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                             {msg.role === 'developer' ? (
                                                 <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[11px] px-1.5 py-0.5 rounded font-mono font-bold">DEV</span>
                                             ) : (
-                                                <span className="text-xs font-bold text-indigo-300 hover:underline cursor-pointer">{msg.username}</span>
+                                                <span className="text-xs font-bold text-amber-300 hover:underline cursor-pointer">{msg.username}</span>
                                             )}
-                                            <span className="text-[10px] text-slate-500">{formatMessageTime(msg.createdAt)}</span>
+                                            <span className="text-[10px] text-amber-500/60">{formatMessageTime(msg.createdAt)}</span>
                                         </div>
 
                                         {/* กล่องข้อความ */}
                                         <div className={`flex items-center gap-2 ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                                             {isMyMessage && (
-                                                <button onClick={() => deleteMessage(msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-500 text-xs p-1 cursor-pointer">🗑️</button>
+                                                <button onClick={() => deleteMessage(msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-500/60 hover:text-amber-400 text-xs p-1 cursor-pointer">🗑️</button>
                                             )}
 
-                                            <div className={`px-3 py-2 rounded-2xl text-sm break-words flex flex-col gap-1.5 ${isMyMessage ? 'bg-emerald-700 text-white rounded-br-none border border-emerald-600' : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50'}`}>
+                                            <div className={`px-3.5 py-2.5 rounded-2xl text-sm break-words flex flex-col gap-1.5 shadow-md ${isMyMessage
+                                                ? 'bg-amber-950/60 text-amber-100 rounded-br-none border border-amber-700/60'
+                                                : 'bg-stone-900 text-amber-200 rounded-bl-none border border-amber-950'
+                                                }`}>
                                                 {msg.text && <span>{msg.text}</span>}
                                                 {msg.item && (
-                                                    <button onClick={() => setInspectingItem(msg.item!)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold ${getRarityColor(msg.item.rarity)}`}>
+                                                    <button onClick={() => setInspectingItem(msg.item!)} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${getRarityColor(msg.item.rarity)}`}>
                                                         <img
                                                             src={msg.item.icon || '/default-item-icon.png'}
                                                             alt={msg.item.name}
                                                             className="w-5 h-5 object-contain"
                                                             onError={(e) => {
-                                                                // ถ้าโหลดรูปไม่ขึ้น ให้เปลี่ยนไปใช้รูปไอคอนสำรองอัตโนมัติทันที
                                                                 (e.target as HTMLImageElement).src = '/default-item-icon.png';
                                                             }}
-                                                        />                                                        <span>[{msg.item.name}]</span>
-                                                        <span className="text-[10px] underline opacity-80 text-white font-normal">Click to view</span>
+                                                        />
+                                                        <span>[{msg.item.name}]</span>
+                                                        <span className="text-[10px] underline opacity-80 font-normal">Click to view</span>
                                                     </button>
                                                 )}
                                                 {msg.playerStats && (
-                                                    <button onClick={() => setInspectingPlayerStats(msg.playerStats!)} className="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold bg-slate-900/80 border-emerald-500/50 text-emerald-300">
+                                                    <button onClick={() => setInspectingPlayerStats(msg.playerStats!)} className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold bg-stone-950 border-amber-700/60 text-amber-300 hover:bg-amber-950/40 transition cursor-pointer">
                                                         <div className="flex flex-col text-left">
                                                             <span>Inspect {msg.playerStats.username}'s Stats</span>
-                                                            <span className="text-[10px] text-slate-400">Click to view stats</span>
+                                                            <span className="text-[10px] text-amber-500/70">Click to view stats</span>
                                                         </div>
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Reactions Component ที่ถูกกู้คืนกลับมา */}
-                                        <div className={`relative flex items-center gap-1.5 mt-1 flex-wrap ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                                            {/* แสดงรายการ Reaction ที่คนอื่นหรือเรากดไปแล้ว */}
+                                        {/* Reactions Component */}
+                                        <div className={`relative flex items-center gap-1.5 mt-1.5 flex-wrap ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                                             {reactionSummary.map(([emoji, count]) => {
                                                 const hasReactedThis = myReaction === emoji;
                                                 return (
                                                     <button
                                                         key={emoji}
                                                         onClick={() => userProfile && toggleReaction(msg.id, emoji)}
-                                                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition cursor-pointer ${hasReactedThis
-                                                            ? 'bg-emerald-900/50 border-emerald-500 text-white'
-                                                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700'
+                                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs border transition cursor-pointer ${hasReactedThis
+                                                            ? 'bg-amber-900/60 border-amber-500 text-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                                                            : 'bg-stone-900 border-amber-950 text-amber-300/80 hover:bg-amber-950/50'
                                                             }`}
                                                     >
                                                         <span>{emoji}</span>
@@ -225,7 +227,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                                 <div className="relative">
                                                     <button
                                                         onClick={() => setOpenReactionPickerFor(openReactionPickerFor === msg.id ? null : msg.id)}
-                                                        className="w-6 h-6 bg-slate-800/60 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white rounded-full flex items-center justify-center text-xs transition cursor-pointer"
+                                                        className="w-6 h-6 bg-stone-900 hover:bg-amber-950 border border-amber-950 text-amber-400/80 hover:text-amber-300 rounded-full flex items-center justify-center text-xs transition cursor-pointer"
                                                         title="React"
                                                     >
                                                         😀
@@ -235,7 +237,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                                     {openReactionPickerFor === msg.id && (
                                                         <div
                                                             ref={reactionPickerRef}
-                                                            className={`absolute bottom-full mb-1 bg-slate-800 border border-slate-700 p-1.5 rounded-xl shadow-xl flex gap-1 z-30 ${isMyMessage ? 'right-0' : 'left-0'
+                                                            className={`absolute bottom-full mb-1 bg-stone-900 border border-amber-900/80 p-2 rounded-xl shadow-2xl flex gap-1 z-30 ${isMyMessage ? 'right-0' : 'left-0'
                                                                 }`}
                                                         >
                                                             {REACTION_EMOJIS.map((emoji) => (
@@ -245,7 +247,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                                                         toggleReaction(msg.id, emoji);
                                                                         setOpenReactionPickerFor(null);
                                                                     }}
-                                                                    className="w-7 h-7 flex items-center justify-center hover:bg-slate-700 rounded-lg text-sm transition cursor-pointer"
+                                                                    className="w-7 h-7 flex items-center justify-center hover:bg-amber-950 rounded-lg text-sm transition cursor-pointer"
                                                                 >
                                                                     {emoji}
                                                                 </button>
@@ -265,7 +267,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
             </div>
 
             {/* Input Form & Emoji Picker */}
-            <div className="relative p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
+            <div className="relative p-3.5 bg-stone-900 border-t border-amber-950/80 flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                     <button
                         type="button"
@@ -276,7 +278,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                 useChatStore.getState().shareStatsToChat();
                             }
                         }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-emerald-600/50 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                        className="bg-stone-950 hover:bg-amber-950 border border-amber-700/60 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
                     >
                         <span>📊</span> Share My Stats
                     </button>
@@ -285,14 +287,14 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                 {showEmojiPicker && (
                     <div
                         ref={emojiPickerRef}
-                        className="absolute bottom-full left-3 mb-2 bg-slate-800 border border-slate-700 p-2 rounded-xl shadow-lg grid grid-cols-8 gap-1.5 z-20"
+                        className="absolute bottom-full left-3 mb-2 bg-stone-900 border border-amber-900/80 p-2.5 rounded-2xl shadow-2xl grid grid-cols-8 gap-1.5 z-20"
                     >
                         {FREE_EMOJIS.map((emoji) => (
                             <button
                                 key={emoji}
                                 type="button"
                                 onClick={() => addEmoji(emoji)}
-                                className="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded-lg text-lg transition cursor-pointer"
+                                className="w-8 h-8 flex items-center justify-center hover:bg-amber-950 rounded-xl text-lg transition cursor-pointer"
                             >
                                 {emoji}
                             </button>
@@ -304,7 +306,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                     <button
                         type="button"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition cursor-pointer flex items-center justify-center"
+                        className="bg-stone-950 hover:bg-amber-950 border border-amber-950 text-amber-400 px-3 py-2 rounded-xl text-sm transition cursor-pointer flex items-center justify-center"
                         title="Add Emoji"
                     >
                         😀
@@ -316,12 +318,12 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                         onChange={(e) => setInputText(e.target.value)}
                         placeholder="Type a message..."
                         maxLength={200}
-                        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600"
+                        className="flex-1 bg-stone-950 border border-amber-950 rounded-xl px-3.5 py-2 text-sm text-amber-100 placeholder-amber-500/50 focus:outline-none focus:border-amber-600 shadow-inner"
                     />
 
                     <button
                         type="submit"
-                        className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition cursor-pointer"
+                        className="bg-amber-600 hover:bg-amber-500 text-stone-950 px-4 py-2 rounded-xl text-sm font-extrabold transition cursor-pointer shadow-lg"
                     >
                         Send
                     </button>
@@ -330,7 +332,7 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
 
             {/* Modal หน้าต่างดูไอเทม */}
             {inspectingItem && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
                     <ItemDetailModal
                         selectedItem={inspectingItem}
                         setSelectedItem={() => setInspectingItem(null)}
@@ -349,14 +351,14 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
             {/* Modal หน้าต่างส่อง Stats ผู้เล่นอื่น */}
             {inspectingPlayerStats && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
-                        <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
-                            <h3 className="text-white font-bold text-lg flex items-center gap-3">
+                    <div className="bg-stone-950 border border-amber-900/80 rounded-2xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative text-amber-100">
+                        <div className="flex justify-between items-center mb-4 border-b border-amber-950 pb-3">
+                            <h3 className="text-amber-400 font-extrabold text-lg flex items-center gap-3">
                                 <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
                                     <img
                                         src={inspectingPlayerStats.avatar || '/default-avatar.png'}
                                         alt={inspectingPlayerStats.username}
-                                        className="w-8 h-8 rounded-full object-cover"
+                                        className="w-8 h-8 rounded-full object-cover border border-amber-900/50"
                                     />
                                     {inspectingPlayerStats.frame && (
                                         <img
@@ -366,11 +368,11 @@ export const WorldChat = ({ onClose, onShareStats }: WorldChatProps) => {
                                         />
                                     )}
                                 </div>
-                                <span>Inspecting : <span className="text-emerald-400">{inspectingPlayerStats.username}</span></span>
+                                <span>Inspecting : <span className="text-amber-300">{inspectingPlayerStats.username}</span></span>
                             </h3>
                             <button
                                 onClick={() => setInspectingPlayerStats(null)}
-                                className="w-8 h-8 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-lg flex items-center justify-center font-bold transition cursor-pointer"
+                                className="w-8 h-8 bg-stone-900 hover:bg-amber-950 border border-amber-950 text-amber-400/80 hover:text-amber-300 rounded-xl flex items-center justify-center font-bold transition cursor-pointer"
                             >
                                 ✕
                             </button>

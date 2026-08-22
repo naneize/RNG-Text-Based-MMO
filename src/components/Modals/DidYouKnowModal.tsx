@@ -45,7 +45,7 @@ export const DidYouKnowModal: React.FC<DidYouKnowModalProps> = ({
 
     // ⏱️ ระบบตั้งเวลาสุ่มเด้งอัตโนมัติ (1 นาที)
     useEffect(() => {
-        const intervalTime = 1 * 60 * 1000;
+        const intervalTime = 5 * 60 * 1000;
 
         const timer = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * tips.length);
@@ -75,7 +75,7 @@ export const DidYouKnowModal: React.FC<DidYouKnowModalProps> = ({
     return (
         <div className="fixed top-6 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-5 duration-300 pointer-events-none">
             {/* กล่องหลักสไตล์ Dark Fantasy UI */}
-            <div className="bg-slate-950/90 backdrop-blur-xl border-2 border-amber-500/50 rounded-2xl p-4 shadow-[0_0_25px_rgba(245,158,11,0.15)] text-white relative pointer-events-auto overflow-hidden">
+            <div className="bg-stone-950/90 backdrop-blur-xl border-2 border-amber-500/50 rounded-2xl p-4 shadow-[0_0_25px_rgba(245,158,11,0.15)] text-white relative pointer-events-auto overflow-hidden">
 
                 {/* แสงเรืองรองพื้นหลังมุมขวาบน */}
                 <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -97,11 +97,11 @@ export const DidYouKnowModal: React.FC<DidYouKnowModalProps> = ({
                             <h4 className="text-sm font-extrabold tracking-wide text-amber-400 uppercase drop-shadow">
                                 Adventurer's Note
                             </h4>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-100 border border-amber-500/30 font-medium">
                                 Tip
                             </span>
                         </div>
-                        <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-normal">
+                        <p className="text-amber-200 text-xs md:text-sm leading-relaxed font-normal">
                             {currentTip || tips[0]}
                         </p>
                     </div>

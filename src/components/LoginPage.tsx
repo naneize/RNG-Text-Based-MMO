@@ -68,24 +68,32 @@ export const LoginPage = () => {
                     <img src={`/Icons/Backgrounds/${currentBg}`} alt="Background Fallback" className="w-full h-full object-cover" />
                 </video>
 
-                <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-slate-950/40 backdrop-blur-xs' : 'bg-slate-950/0 backdrop-blur-none'}`} />
+                <div className={`absolute inset-0 transition-colors duration-500 ${hasStarted ? 'bg-stone-950/60 backdrop-blur-sm' : 'bg-stone-950/0 backdrop-blur-none'}`} />
             </div>
 
             {/* 🌟 หน้าแรก (Splash Screen) */}
             {!hasStarted ? (
                 <div className="relative z-10 flex flex-col items-center text-center animate-fadeIn">
                     <div className="mb-8">
-                        <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-wider mt-4 drop-shadow-[0_5px_20px_rgba(245,158,11,0.4)]">
-                            RNG-TEXT-BASED
+                        {/* ชื่อเกมสไตล์เดียวกับ Title Screen: ทองสลักหิน + glow */}
+                        <h1 className="font-display font-black text-6xl md:text-8xl leading-none tracking-wide text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_0_25px_rgba(245,158,11,0.45)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                            RNG
                         </h1>
-                        <p className="text-amber-100/70 text-sm md:text-base mt-2 tracking-wide drop-shadow-md">
+                        <div className="flex items-center justify-center gap-3 mt-3">
+                            <span className="h-px w-14 md:w-24 bg-gradient-to-r from-transparent to-amber-600/70" />
+                            <p className="font-display text-xs md:text-sm font-bold tracking-[0.45em] text-amber-300/80 uppercase pl-[0.45em]">
+                                Text-Based MMO
+                            </p>
+                            <span className="h-px w-14 md:w-24 bg-gradient-to-l from-transparent to-amber-600/70" />
+                        </div>
+                        <p className="text-amber-100/70 text-sm md:text-base mt-4 tracking-wide drop-shadow-md">
                             Embark on your text-based adventure, roll legendary gear, and conquer the realm.
                         </p>
                     </div>
 
                     <button
                         onClick={handleStartAdventure}
-                        className="group relative px-10 py-5 bg-gradient-to-b from-rose-950 via-red-950 to-slate-950 hover:from-rose-900 hover:to-red-900 text-amber-200 font-extrabold text-lg tracking-widest rounded-xl border-2 border-amber-500/90 hover:border-amber-300 shadow-[0_0_40px_rgba(220,38,38,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(245,158,11,0.7)] transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+                        className="group relative px-10 py-5 bg-gradient-to-b from-rose-950 via-red-950 to-stone-950 hover:from-rose-900 hover:to-red-900 text-amber-200 font-extrabold text-lg tracking-widest rounded-xl border-2 border-amber-500/90 hover:border-amber-300 shadow-[0_0_40px_rgba(220,38,38,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(245,158,11,0.7)] transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
                     >
                         <span className="flex items-center gap-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             START ADVENTURE
@@ -96,20 +104,20 @@ export const LoginPage = () => {
                     </p>
                 </div>
             ) : (
-                /* 🔐 หน้า Login / Register + Patch Notes */
+                /* 🔐 หน้า Login / Register + Patch Notes (ปรับธีมเป็น Dark Fantasy) */
                 <div className="relative z-10 w-full max-w-4xl flex flex-col lg:flex-row gap-6 items-stretch animate-fadeIn">
 
-                    <div className="w-full lg:w-1/2 p-8 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 shadow-2xl flex flex-col justify-between">
+                    <div className="w-full lg:w-1/2 p-8 bg-stone-950/80 backdrop-blur-lg rounded-xl border border-amber-600/30 shadow-[0_0_30px_rgba(0,0,0,0.8)] flex flex-col justify-between">
                         <div>
                             <div className="text-center mb-6">
-                                <h1 className="text-2xl font-bold text-white mb-1">
-                                    RNG-Text-Based
+                                <h1 className="font-display text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-600 mb-1 tracking-widest uppercase drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                                    RNG — Text-Based MMO
                                 </h1>
                                 <div className="flex items-center justify-center gap-2 mt-1">
-                                    <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full font-mono">
-                                        Version : 0.0.4
+                                    <span className="text-[10px] bg-red-950 text-amber-400 border border-amber-800/50 px-2 py-0.5 rounded-full font-mono">
+                                        Version : 0.0.5
                                     </span>
-                                    <p className="text-slate-400 text-sm">
+                                    <p className="text-amber-400/60 text-sm italic">
                                         {isEmbedded ? 'Welcome Player' : (mode === 'login' ? 'Sign In' : 'Create Account')}
                                     </p>
                                 </div>
@@ -124,7 +132,7 @@ export const LoginPage = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
-                                            className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
+                                            className="p-3 rounded-lg bg-stone-900 border border-amber-900/50 text-amber-50 placeholder-amber-700 focus:outline-none focus:border-amber-500 text-sm [&:-webkit-autofill]:bg-stone-900 [&:-webkit-autofill]:text-amber-50 [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#0f172a_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:#fef3c7]"
                                         />
                                         <input
                                             type="password"
@@ -133,7 +141,7 @@ export const LoginPage = () => {
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
                                             minLength={6}
-                                            className="p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-600 text-sm"
+                                            className="p-3 rounded-lg bg-stone-900 border border-amber-900/50 text-amber-50 placeholder-amber-700 focus:outline-none focus:border-amber-500 text-sm [&:-webkit-autofill]:bg-stone-900 [&:-webkit-autofill]:text-amber-50 [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#0f172a_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:#fef3c7]"
                                         />
 
                                         {error && (
@@ -143,22 +151,22 @@ export const LoginPage = () => {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="p-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition disabled:opacity-50 mt-1 cursor-pointer"
+                                            className="p-3 rounded-lg bg-gradient-to-r from-red-900 to-rose-950 hover:from-red-800 hover:to-rose-900 text-amber-100 font-bold text-sm transition disabled:opacity-50 mt-1 cursor-pointer border border-amber-700/50"
                                         >
                                             {isSubmitting ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
                                         </button>
                                     </form>
 
                                     <div className="flex items-center gap-3 my-4">
-                                        <div className="flex-1 h-px bg-slate-800" />
-                                        <span className="text-slate-500 text-xs">OR</span>
-                                        <div className="flex-1 h-px bg-slate-800" />
+                                        <div className="flex-1 h-px bg-amber-900/30" />
+                                        <span className="text-amber-700 text-xs">OR</span>
+                                        <div className="flex-1 h-px bg-amber-900/30" />
                                     </div>
 
                                     <button
                                         onClick={handleGoogleLogin}
                                         disabled={isSubmitting}
-                                        className="w-full p-3 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                        className="w-full p-3 rounded-lg bg-stone-900 hover:bg-stone-800 text-amber-100 font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2 border border-amber-900/50 cursor-pointer"
                                     >
                                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                                             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
@@ -169,41 +177,40 @@ export const LoginPage = () => {
                                         Continue with Google
                                     </button>
 
-                                    <p className="text-slate-400 text-sm text-center mt-6">
+                                    <p className="text-amber-500/70 text-sm text-center mt-6">
                                         {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
                                         <button
                                             onClick={switchMode}
-                                            className="text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
+                                            className="text-amber-300 hover:text-amber-100 underline font-medium cursor-pointer"
                                         >
                                             {mode === 'login' ? 'Sign Up' : 'Sign In'}
                                         </button>
                                     </p>
                                 </>
                             ) : (
-                                <div className="text-center py-6 text-slate-300">
+                                <div className="text-center py-6 text-amber-200/70 italic">
                                     <p className="mb-4 text-sm">Ready to play on CrazyGames!</p>
                                 </div>
                             )}
 
                             <button
                                 onClick={loginAsGuest}
-                                className="w-full mt-3 p-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                                className="w-full mt-3 p-3 rounded-lg bg-gradient-to-r from-red-900 to-rose-950 hover:from-red-800 hover:to-rose-900 text-amber-100 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer border border-amber-700/50"
                             >
-                                Play Game (Guest)
+                                Play as Guest
                             </button>
                         </div>
 
-                        {/* 🟢 ส่วนที่เพิ่ม: ข้อความ Terms & Conditions และ Privacy Policy สำหรับผ่านตรวจ CrazyGames */}
-                        <div className="mt-6 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-1.5">
-                            <p className="text-[11px] text-slate-400">
+                        <div className="mt-6 pt-4 border-t border-amber-900/30 text-center flex flex-col gap-1.5">
+                            <p className="text-[11px] text-amber-700">
                                 By playing, you agree to our{' '}
-                                <span className="text-emerald-400 underline cursor-pointer">Terms & Conditions</span>{' '}
+                                <span className="text-amber-500 underline cursor-pointer">Terms & Conditions</span>{' '}
                                 and{' '}
-                                <span className="text-emerald-400 underline cursor-pointer">Privacy Policy</span>.
+                                <span className="text-amber-500 underline cursor-pointer">Privacy Policy</span>.
                             </p>
-                            <p className="text-[10px] text-slate-500">
+                            <p className="text-[10px] text-amber-800">
                                 Icons provided by{' '}
-                                <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-emerald-400 underline">
+                                <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-400 underline">
                                     Game-Icons.net
                                 </a>
                             </p>

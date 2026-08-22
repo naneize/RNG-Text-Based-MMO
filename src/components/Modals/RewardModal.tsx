@@ -29,7 +29,7 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
                 return 'text-blue-400 font-semibold';
             case 'common':
             default:
-                return 'text-slate-400';
+                return 'text-stone-400';
         }
     };
 
@@ -59,7 +59,7 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             {/* ปรับพื้นหลังให้เข้มขึ้น ตัดขอบด้วยสีทองแดงตุ่นๆ (Amber-700/40) ให้ดูพรีเมียมแต่ไม่แสบตา */}
-            <div className="relative bg-[#0b0f19] border border-amber-700/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+            <div className="relative bg-[#12100e] border border-amber-700/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
 
                 <div className="relative z-10">
                     {/* หัวข้อ Victory เปลี่ยนเป็นสีทองอมส้มหม่นๆ ดูขลังขึ้น */}
@@ -98,12 +98,12 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
                             const rarityColorClass = getRarityColor(itemRarity);
 
                             return (
-                                <div key={index} className="flex items-center justify-between bg-slate-900/80 hover:bg-slate-900 p-2.5 px-3 rounded-xl border border-slate-800 transition">
+                                <div key={index} className="flex items-center justify-between bg-stone-900/80 hover:bg-stone-900 p-2.5 px-3 rounded-xl border border-stone-800 transition">
                                     <div className="flex items-center gap-3">
                                         <img
                                             src={iconSrc}
                                             alt="reward-icon"
-                                            className="w-9 h-9 object-contain bg-slate-950 border border-slate-800 rounded-lg p-1"
+                                            className="w-9 h-9 object-contain bg-stone-950 border border-stone-800 rounded-lg p-1"
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = '/placeholder.png';
                                             }}
@@ -113,7 +113,7 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
                                         </span>
                                     </div>
 
-                                    <span className={`text-xs font-semibold px-2 py-1 rounded bg-slate-950/50 border border-slate-800 ${typeStr === 'material' ? 'text-amber-300/80' : rarityColorClass}`}>
+                                    <span className={`text-xs font-semibold px-2 py-1 rounded bg-stone-950/50 border border-stone-800 ${typeStr === 'material' ? 'text-amber-300/80' : rarityColorClass}`}>
                                         {typeStr === 'material'
                                             ? `x${reward.amount || 1}`
                                             : itemRarity}
@@ -126,7 +126,7 @@ export const RewardModal = ({ rewards, onClose, newRollCapUnlocked }: RewardModa
                     {/* ปุ่ม GOT IT เปลี่ยนเป็นโทนดาร์กตัดขอบทองหม่น สบายตากว่าเดิม */}
                     <button
                         onClick={onClose}
-                        className="w-full bg-slate-800 hover:bg-slate-700 border border-amber-600/50 py-2.5 rounded-xl text-amber-200 font-bold tracking-wide transition-all cursor-pointer shadow-md"
+                        className="w-full bg-stone-800 hover:bg-stone-700 border border-amber-600/50 py-2.5 rounded-xl text-amber-200 font-bold tracking-wide transition-all cursor-pointer shadow-md"
                     >
                         GOT IT
                     </button>

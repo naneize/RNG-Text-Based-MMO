@@ -67,7 +67,7 @@ export const MarketplacePage = () => {
     // ✅ Block page if user is a guest (not authenticated via real Firebase Auth)
     if (!user) {
         return (
-            <div className="text-center text-slate-400 mt-20">
+            <div className="text-center text-stone-400 mt-20">
                 <p className="text-lg font-bold text-white mb-2">Marketplace</p>
                 <p>You must log in with a real account (not Guest) to use the marketplace.</p>
             </div>
@@ -97,9 +97,9 @@ export const MarketplacePage = () => {
     ];
 
     return (
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto font-serif">
             {toast && (
-                <div className="bg-slate-800 border border-emerald-600 text-emerald-300 text-sm p-3 rounded-lg mb-4">
+                <div className="bg-stone-900/90 border border-amber-600/50 text-amber-200 text-sm p-3 rounded-lg mb-4 shadow-inner">
                     {toast}
                 </div>
             )}
@@ -109,20 +109,20 @@ export const MarketplacePage = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => setTab('browse')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold cursor-pointer transition ${tab === 'browse' ? 'bg-emerald-800 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold cursor-pointer transition ${tab === 'browse' ? 'bg-amber-800 text-amber-100 shadow-[0_0_10px_rgba(217,119,6,0.4)] border border-amber-600/50' : 'bg-stone-900/80 text-amber-500/70 hover:text-amber-200 border border-amber-950'}`}
                     >
                         Browse Market
                     </button>
                     <button
                         onClick={() => setTab('mine')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold cursor-pointer transition ${tab === 'mine' ? 'bg-emerald-800 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold cursor-pointer transition ${tab === 'mine' ? 'bg-amber-800 text-amber-100 shadow-[0_0_10px_rgba(217,119,6,0.4)] border border-amber-600/50' : 'bg-stone-900/80 text-amber-500/70 hover:text-amber-200 border border-amber-950'}`}
                     >
                         My Listings ({myListings.length})
                     </button>
                 </div>
                 <button
                     onClick={() => setShowSellModal(true)}
-                    className="px-4 py-2 rounded-lg text-sm font-bold bg-amber-700 hover:bg-amber-600 text-white cursor-pointer transition"
+                    className="px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-red-900 to-rose-950 hover:from-red-800 hover:to-rose-900 text-amber-100 cursor-pointer transition border border-amber-700/50 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                 >
                     Sell Item
                 </button>
@@ -135,8 +135,8 @@ export const MarketplacePage = () => {
                         key={slot.value}
                         onClick={() => setSelectedSlot(slot.value)}
                         className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition ${selectedSlot === slot.value
-                            ? 'bg-blue-600 text-white shadow'
-                            : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                            ? 'bg-amber-700 text-amber-50 shadow border border-amber-500/60'
+                            : 'bg-stone-900/80 text-amber-500/70 hover:bg-stone-800 hover:text-amber-200 border border-amber-950'
                             }`}
                     >
                         {slot.label}
@@ -157,7 +157,7 @@ export const MarketplacePage = () => {
                     />
                 ))}
                 {displayList.length === 0 && (
-                    <div className="col-span-full text-center text-slate-500 py-16">
+                    <div className="col-span-full text-center text-amber-600/60 py-16 italic">
                         {tab === 'browse' ? 'No items match this filter in the marketplace.' : "You haven't listed any items matching this filter."}
                     </div>
                 )}

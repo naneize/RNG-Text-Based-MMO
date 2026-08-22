@@ -20,7 +20,7 @@ export const GlobalAnnouncement = () => {
                     setLatestAnnouncement(data);
                     setIsVisible(true);
 
-                    // ซ่อนกล่องข้อความอัตโนมัติหลังผ่านไป 10 วินาที
+                    // ซ่อนกล่องข้อความอัตโนมัติหลังผ่านไป 15 วินาที
                     const timer = setTimeout(() => {
                         setIsVisible(false);
                     }, 15000);
@@ -36,15 +36,16 @@ export const GlobalAnnouncement = () => {
     if (!isVisible || !latestAnnouncement) return null;
 
     return (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-950/95 border-2 border-amber-400/80 text-white px-7 py-4 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.25)] backdrop-blur-md transition-all duration-300 max-w-xl w-full text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="text-amber-400 font-extrabold uppercase tracking-widest text-xs bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 shadow-sm">
-                    📢 DEVELOPER ANNOUNCEMENT
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-stone-950/95 border-2 border-amber-400/80 text-white px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.25)] backdrop-blur-md transition-all duration-300 max-w-2xl w-full">
+            {/* จัดทุกอย่างให้อยู่ในบรรทัดเดียวด้วย Flex */}
+            <div className="flex items-center justify-center gap-3">
+                <span className="shrink-0 text-amber-400 font-extrabold uppercase tracking-widest text-xs bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 shadow-sm">
+                    📢 ANNOUNCEMENT
                 </span>
+                <p className="text-sm font-medium text-white tracking-wide truncate">
+                    {latestAnnouncement.message}
+                </p>
             </div>
-            <p className="text-base font-bold text-white tracking-wide drop-md">
-                {latestAnnouncement.message}
-            </p>
         </div>
     );
 };

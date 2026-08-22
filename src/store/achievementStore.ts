@@ -2,12 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AchievementProgress } from '../types/achievement';
 import { useGameStore } from './gameStore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { generateRandomItem } from '../utils/itemGenerator';
+import { itemLibrary } from '../data/itemLibrary';
 
 interface AchievementState {
     achievements: Record<string, AchievementProgress>;
     unlockAchievement: (id: string) => void;
     claimReward: (id: string) => void;
     checkCondition: (conditionKey: string, data?: any) => void;
+    resetAchievements: () => void;
+    loadAchievements: (uid: string) => Promise<void>; // ✅ เพิ่ม
+    saveAchievements: (uid: string) => Promise<void>;  // ✅ เพิ่ม
 }
 
 const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
@@ -88,11 +95,15 @@ const INITIAL_ACHIEVEMENTS: Record<string, AchievementProgress> = {
         id: 'QUEST_ROLL_10',
         title: 'Keep Rolling',
         description: 'Roll for loot 10 times.',
-        category: 'starter', // ✅ category ใหม่ แยกจาก collection/combat เดิม
-        rewardTitle: undefined,
+        category: 'starter',
         reward: [
-            { type: 'material', itemId: 'iron_ore', amount: 15 },
-            { type: 'material', itemId: 'magic_dust', amount: 10 },
+            // 🟢 เปลี่ยนจากของเดิมที่เป็น Material มาเป็นไอเทมอาวุธ Legendary เลเวล 300
+            {
+                type: 'equipment',
+                itemId: 'spear',      // 🟢 เลือก itemId ของอาวุธจาก itemLibrary ที่ต้องการแจก
+                rarity: 'Legendary',       // 🟢 ล็อกความหายากเป็น Legendary
+                itemLevel: 300             // 🟢 กำหนดเลเวล 300 ตามต้องการ
+            }
         ],
         isUnlocked: false,
         isClaimed: false,
@@ -175,7 +186,6 @@ export const useAchievementStore = create<AchievementState>()(
     persist(
         (set, get) => ({
             achievements: INITIAL_ACHIEVEMENTS,
-
             unlockAchievement: (id) => {
                 const current = get().achievements[id];
                 if (current && !current.isUnlocked) {
@@ -186,8 +196,51 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                     }));
                     console.log(`Achievement Unlocked: ${current.title}!`);
+
+                    // ✅ save อัตโนมัติถ้า login จริง (guest = auth.currentUser เป็น null อยู่แล้ว ข้ามไปเฉยๆ)
+                    const uid = auth.currentUser?.uid;
+                    if (uid) get().saveAchievements(uid);
                 }
             },
+
+            resetAchievements: () => {
+                set({ achievements: INITIAL_ACHIEVEMENTS });
+                console.log('Achievements have been reset for a new account.');
+            },
+
+            // ✅ เพิ่มใหม่ — โหลด achievement ของ uid นี้จาก Firestore (เหมือน gameStore.loadUserData)
+            // ถ้าไม่เคยมีข้อมูลเลย (account ใหม่จริงๆ) จะได้ INITIAL_ACHIEVEMENTS โดยอัตโนมัติ
+            loadAchievements: async (uid: string) => {
+                try {
+                    const docRef = doc(db, 'players', uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists() && docSnap.data().achievements) {
+                        // รวมกับ INITIAL_ACHIEVEMENTS เผื่อมี quest ใหม่ที่ผู้เล่นเก่ายังไม่มีในเซฟ (เหมือน migrate เดิม)
+                        set({
+                            achievements: {
+                                ...INITIAL_ACHIEVEMENTS,
+                                ...docSnap.data().achievements,
+                            }
+                        });
+                    } else {
+                        set({ achievements: INITIAL_ACHIEVEMENTS });
+                    }
+                } catch (err) {
+                    console.error('Error loading achievements:', err);
+                    set({ achievements: INITIAL_ACHIEVEMENTS });
+                }
+            },
+
+            // ✅ เพิ่มใหม่ — บันทึก achievement ปัจจุบันลง Firestore (players/{uid}) เหมือน field อื่นๆ ที่ gameStore เก็บอยู่แล้ว
+            saveAchievements: async (uid: string) => {
+                try {
+                    const docRef = doc(db, 'players', uid);
+                    await setDoc(docRef, { achievements: get().achievements }, { merge: true });
+                } catch (err) {
+                    console.error('Error saving achievements:', err);
+                }
+            },
+
 
             claimReward: (id) => {
                 const current = get().achievements[id];
@@ -199,30 +252,47 @@ export const useAchievementStore = create<AchievementState>()(
                         }
                     }));
 
-                    // 🟢 1. ตรวจสอบและแจก Reward ปกติใน Array (Material ฯลฯ)
+                    // 1. แจก Reward (รองรับทั้ง Material และ Equipment)
                     if (current.reward && Array.isArray(current.reward)) {
                         current.reward.forEach((rew) => {
-                            const { type, itemId, amount } = rew;
+                            const { type, itemId, amount, rarity, itemLevel } = rew;
+
+                            // เคสที่ 1: แจก Material
                             if (type === 'material' && itemId) {
-                                useGameStore.getState().addMaterial(itemId, amount);
-                                console.log(`Reward Claimed: Added ${amount} of ${itemId} to inventory.`);
+                                useGameStore.getState().addMaterial(itemId, amount ?? 1);
+                            }
+
+                            // เคสที่ 2: แจก Equipment (ล็อกไอเทมตรงเป๊ะด้วย itemId)
+                            else if (type === 'equipment' && itemId) {
+                                const targetLevel = Number(itemLevel) || 300;
+                                const targetRarity = rarity || 'Legendary';
+
+                                // 🟢 เรียกใช้ generateRandomItem พร้อมส่ง itemId ไปล็อกประเภทตั้งแต่ต้นทาง
+                                const generatedItem = generateRandomItem(targetRarity, targetLevel, itemId);
+
+                                if (generatedItem) {
+                                    // เพิ่มเข้ากระเป๋าผู้เล่นได้ทันที
+                                    useGameStore.getState().addItem(generatedItem);
+                                    console.log(`Reward Claimed: Added ${generatedItem.name} (Level ${generatedItem.itemLevel}) to inventory.`);
+                                }
                             }
                         });
                     }
 
-                    // 🟢 2. เพิ่มเช็ครางวัลพิเศษ (rewardFrame) ตรงนี้
+                    // 2. รางวัลพิเศษ (Frame/Title)
                     if (current.rewardFrame) {
-                        // ตัวอย่าง: บันทึกลง Store ของผู้เล่นว่าปลดล็อก Frame นี้แล้ว
-                        // (ปรับเปลี่ยนชื่อฟังก์ชันตาม Store ของคุณ เช่น unlockFrame หรืออัปเดต Profile)
-                        // ตัวอย่างเช่น: useAuthStore.getState().unlockFrame(current.rewardFrame);
-                        console.log(`Reward Claimed: Unlocked frame -> ${current.rewardFrame}`);
+                        console.log(`Unlocked frame -> ${current.rewardFrame}`);
                     }
-
-                    // 🟢 3. (แถม) เช็ค rewardTitle เผื่อระบบ Title ใช้เงื่อนไขเดียวกัน
                     if (current.rewardTitle) {
-                        console.log(`Reward Claimed: Unlocked title -> ${current.rewardTitle}`);
+                        console.log(`Unlocked title -> ${current.rewardTitle}`);
                     }
 
+                    // 3. บันทึกลง Firestore อัตโนมัติทันทีที่กดรับรางวัล
+                    const uid = auth.currentUser?.uid;
+                    if (uid) {
+                        get().saveAchievements(uid);
+                        console.log("Achievements auto-saved to Firestore.");
+                    }
                 }
             },
 
@@ -331,42 +401,37 @@ export const useAchievementStore = create<AchievementState>()(
             }
         }),
         {
-            name: 'achievement-storage', // ชื่อ key เดิม
-
-            version: 5, // 🟢 ขยับเป็น version 5 เพราะเพิ่มเควส Transfer ใหม่
+            name: 'achievement-storage',
+            version: 6, // 🟢 1. ขยับเวอร์ชันเป็น 6
             migrate: (persistedState: any, version: number) => {
-                if (version < 2) {
+                console.log("Migrating state, version:", version, "Current state:", persistedState);
+
+                if (!persistedState) {
                     return { achievements: INITIAL_ACHIEVEMENTS };
                 }
-                if (version < 3) {
+
+                let newState = persistedState;
+
+                // 🟢 2. ปรับเป็น version < 6 เพื่อให้บล็อกนี้ทำงานกับผู้เล่นที่ค้างอยู่เวอร์ชัน 5
+                if (version < 6) {
+                    const existingAchievements = persistedState?.achievements || {};
+
                     return {
+                        ...persistedState,
                         achievements: {
-                            ...INITIAL_ACHIEVEMENTS,
-                            ...persistedState.achievements,
-                        }
-                    };
-                }
-                if (version < 4) {
-                    // 🟢 เพิ่มบล็อกนี้สำหรับอัปเดตเวอร์ชันล่าสุด เพื่อดึงเควสใหม่มารวมกับเซฟเก่าโดยไม่ล้างความคืบหน้าเดิม
-                    return {
-                        achievements: {
-                            ...INITIAL_ACHIEVEMENTS,
-                            ...persistedState.achievements,
+                            ...INITIAL_ACHIEVEMENTS, // เอาค่าตั้งต้นใหม่ทั้งหมดก่อน (รวมรางวัลอาวุธเลเวล 300)
+                            ...existingAchievements, // เอาเซฟเก่ามาทับ
+                            // 🟢 3. บังคับอัปเดตเฉพาะเควส QUEST_ROLL_10 ให้ใช้รางวัลใหม่ชัวร์ๆ (แม้ในเซฟเก่าจะกดรับไปแล้วหรือยัง)
+                            QUEST_ROLL_10: {
+                                ...INITIAL_ACHIEVEMENTS['QUEST_ROLL_10'],
+                                isUnlocked: existingAchievements['QUEST_ROLL_10']?.isUnlocked ?? false,
+                                isClaimed: existingAchievements['QUEST_ROLL_10']?.isClaimed ?? false,
+                            }
                         }
                     };
                 }
 
-                // 🟢 เพิ่มบล็อกสำหรับเวอร์ชัน 5
-                if (version < 5) {
-                    return {
-                        achievements: {
-                            ...INITIAL_ACHIEVEMENTS,
-                            ...persistedState.achievements,
-                        }
-                    };
-                }
-
-                return persistedState;
+                return newState;
             },
         }
     )

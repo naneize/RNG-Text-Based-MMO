@@ -324,7 +324,7 @@ export const useCharacterDashboard = () => {
             case 'Legendary': return 'border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.3)]';
             case 'Epic': return 'border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]';
             case 'Rare': return 'border-blue-500';
-            default: return 'border-slate-700';
+            default: return 'border-ember-100';
         }
     };
 

@@ -67,71 +67,77 @@ export const BonusDetailModal = ({ setShowBonusModal, getCombinedBonuses, equipp
     const combined = getCombinedBonuses(equippedItems);
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] p-4" onClick={() => setShowBonusModal(false)}>
-            {/* ขยายความกว้างสูงสุดเป็น max-w-xl เพื่อรองรับการแสดงผลแบบ 2 Column */}
-            <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <h3 className="text-white font-bold text-lg mb-4 text-center border-b border-slate-700 pb-2">ACTIVE BONUSES</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4" onClick={() => setShowBonusModal(false)}>
+            {/* กล่องหลักธีม Dark Fantasy */}
+            <div className="bg-stone-950 border border-amber-900/80 p-6 rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto shadow-2xl shadow-amber-950/40 text-amber-100" onClick={e => e.stopPropagation()}>
+                <h3 className="text-amber-400 font-extrabold text-base tracking-wider mb-4 text-center border-b border-amber-950 pb-2 uppercase">
+                    Active Bonuses
+                </h3>
 
-                {/* เปลี่ยนเป็น Grid 2 Column สำหรับหน้าจอขนาด md ขึ้นไป */}
+                {/* Grid 2 Column */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Elemental Multipliers */}
-                    <div className="bg-blue-900/20 p-3 rounded border border-blue-900/30">
-                        <div className="text-[10px] text-blue-400 uppercase font-bold mb-1">Elemental Multipliers</div>
+                    <div className="bg-stone-900/90 p-3.5 rounded-xl border border-amber-950/60 shadow-sm">
+                        <div className="text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-2">Elemental Multipliers</div>
                         {elementsList.length > 0 ? (
                             <div className="space-y-1.5">
                                 {elementsList.map((b, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-300 truncate pr-2">
-                                            • {b.itemName} <span className="text-slate-500 text-[10px]">({b.slot})</span>
+                                        <span className="text-stone-300 truncate pr-2">
+                                            • {b.itemName} <span className="text-amber-500/60 text-[10px]">({b.slot})</span>
                                         </span>
-                                        <span className="text-emerald-400 font-mono font-bold whitespace-nowrap">+{b.value}% <span className="text-blue-300">({b.type})</span></span>
+                                        <span className="text-amber-400 font-mono font-bold whitespace-nowrap">
+                                            +{b.value}% <span className="text-amber-200">({b.type})</span>
+                                        </span>
                                     </div>
                                 ))}
                             </div>
                         ) : combined.elements.length > 0 ? (
                             combined.elements.map((b, i) => (
-                                <div key={i} className="flex justify-between text-sm text-white">
+                                <div key={i} className="flex justify-between text-xs text-stone-300">
                                     <span>{b.type}</span>
-                                    <span className="text-emerald-400 font-bold">+{b.value}%</span>
+                                    <span className="text-amber-400 font-bold font-mono">+{b.value}%</span>
                                 </div>
                             ))
                         ) : (
-                            <div className="text-xs text-slate-500 italic">No elemental bonuses</div>
+                            <div className="text-xs text-stone-500 italic">No elemental bonuses</div>
                         )}
                     </div>
 
                     {/* Race Multipliers */}
-                    <div className="bg-amber-900/20 p-3 rounded border border-amber-900/30">
-                        <div className="text-[10px] text-amber-400 uppercase font-bold mb-1">Race Multipliers</div>
+                    <div className="bg-stone-900/90 p-3.5 rounded-xl border border-amber-950/60 shadow-sm">
+                        <div className="text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-2">Race Multipliers</div>
                         {racesList.length > 0 ? (
                             <div className="space-y-1.5">
                                 {racesList.map((b, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-300 truncate pr-2">
-                                            • {b.itemName} <span className="text-slate-500 text-[10px]">({b.slot})</span>
+                                        <span className="text-stone-300 truncate pr-2">
+                                            • {b.itemName} <span className="text-amber-500/60 text-[10px]">({b.slot})</span>
                                         </span>
-                                        <span className="text-emerald-400 font-mono font-bold whitespace-nowrap">+{b.value}% <span className="text-amber-200">({b.type})</span></span>
+                                        <span className="text-amber-400 font-mono font-bold whitespace-nowrap">
+                                            +{b.value}% <span className="text-amber-200">({b.type})</span>
+                                        </span>
                                     </div>
                                 ))}
                             </div>
                         ) : combined.races.length > 0 ? (
                             combined.races.map((b, i) => (
-                                <div key={i} className="flex justify-between text-sm text-white">
+                                <div key={i} className="flex justify-between text-xs text-stone-300">
                                     <span>{b.type}</span>
-                                    <span className="text-emerald-400 font-bold">+{b.value}%</span>
+                                    <span className="text-amber-400 font-bold font-mono">+{b.value}%</span>
                                 </div>
                             ))
                         ) : (
-                            <div className="text-xs text-slate-500 italic">No race bonuses</div>
+                            <div className="text-xs text-stone-500 italic">No race bonuses</div>
                         )}
                     </div>
                 </div>
 
                 <button
                     onClick={() => setShowBonusModal(false)}
-                    className="mt-6 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-xs font-bold transition-colors"
+                    className="mt-6 w-full py-2.5 bg-stone-900 hover:bg-stone-800 border border-amber-900/80 rounded-xl text-amber-300 text-xs font-bold tracking-wider uppercase transition-all shadow-sm cursor-pointer"
                 >
-                    CLOSE
+                    Close
                 </button>
             </div>
         </div>

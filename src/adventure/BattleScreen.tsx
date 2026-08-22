@@ -100,9 +100,9 @@ export const BattleScreen = () => {
 
     if (!selectedBoss || !bossEffectiveStats || !finalStatsSnapshot) {
         return (
-            <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 max-w-2xl mx-auto text-white text-center">
+            <div className="bg-stone-900 p-6 rounded-xl border border-stone-700 max-w-2xl mx-auto text-white text-center">
                 <p className="text-red-400 mb-4">No boss selected!</p>
-                <button onClick={leaveBattle} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold">
+                <button onClick={leaveBattle} className="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-lg text-white font-bold">
                     ← Back
                 </button>
             </div>
@@ -115,14 +115,14 @@ export const BattleScreen = () => {
             style={{ backgroundImage: `url(${currentBg})` }}
         >
             {/* Overlay ให้จางลง หรือเปลี่ยนเป็นโทนสีฟ้า/น้ำเพื่อให้เข้ากับธาตุน้ำ */}
-            <div className="absolute inset-0 bg-slate-950/5 bg-linear-to-b from-slate-950/0 via-slate-950/10 to-slate-950/30 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-linear-to-b from-stone-950/60 via-stone-950/40 to-stone-950/70 pointer-events-none"></div>
 
 
             {/* Content Wrapper */}
             <div className="relative z-10">
                 {/* Header: ปุ่ม Back อยู่บนสุด */}
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={leaveBattle} className="text-slate-400 hover:text-white font-medium transition cursor-pointer">
+                    <button onClick={leaveBattle} className="text-stone-400 hover:text-white font-medium transition cursor-pointer">
                         ← Back
                     </button>
                 </div>
@@ -132,13 +132,13 @@ export const BattleScreen = () => {
 
                     {/* ===================== กรอบซ้าย: BOSS & PLAYER STATUS ===================== */}
                     {/* แก้ไข: เปลี่ยน bg-black/20 เป็น bg-black/10 และลดเบลอเป็น backdrop-blur-[2px] */}
-                    <div className="flex flex-col justify-between bg-black/10 p-5 rounded-xl border border-white/10 hover:border-white/20 backdrop-blur-[2px] transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    <div className="flex flex-col justify-between bg-stone-950/70 p-5 rounded-xl border border-amber-900/60 hover:border-amber-700/70 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-black/40 hover:shadow-amber-900/20">
                         <div>
                             {/* Boss Avatar & Info */}
                             <div className="flex flex-col items-center mb-4">
                                 <div className="relative group w-full max-w-sm flex justify-center">
                                     {/* แสงออร่าด้านหลัง */}
-                                    <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full transform scale-75 pointer-events-none"></div>
+                                    <div className="absolute inset-0 bg-amber-500/20 blur-3xl rounded-full transform scale-75 pointer-events-none"></div>
 
                                     <img
                                         src={selectedBoss.imagePath}
@@ -148,7 +148,7 @@ export const BattleScreen = () => {
                                     />
                                 </div>
                                 <h2 className="text-2xl text-white font-bold mt-2 drop-shadow-lg">{selectedBoss.name}</h2>
-                                <span className="mt-1 px-3 py-0.5 bg-slate-800/60 border border-slate-700/50 rounded-full text-xs text-slate-300 font-bold uppercase tracking-widest shadow-inner">
+                                <span className="mt-1 px-3 py-0.5 bg-stone-800/60 border border-stone-700/50 rounded-full text-xs text-stone-300 font-bold uppercase tracking-widest shadow-inner">
                                     Level {selectedBoss.level}
                                 </span>
                             </div>
@@ -162,7 +162,7 @@ export const BattleScreen = () => {
                                     {/* กล่อง Checkbox จำลอง */}
                                     <div className={`w-4 h-4 rounded flex items-center justify-center border transition ${isAutoFarm
                                         ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.6)] text-white'
-                                        : 'bg-slate-800 border-slate-700 group-hover:border-slate-600 text-transparent'
+                                        : 'bg-stone-800 border-stone-700 group-hover:border-stone-600 text-transparent'
                                         }`}>
                                         {/* ไอคอนติ๊กถูก (SVG) จะแสดงเฉพาะตอนเปิด Auto Farm */}
                                         <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -172,7 +172,7 @@ export const BattleScreen = () => {
                                     {/* ตัวหนังสือ Auto Farm จะกระพริบแสงเรืองๆ นุ่มนวลโดยที่บรรทัดไม่ขยับ */}
                                     <span className={`transition-all duration-300 ${isAutoFarm
                                         ? 'text-emerald-400 font-extrabold drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse'
-                                        : 'text-slate-300'
+                                        : 'text-stone-300'
                                         }`}>
                                         Auto Farm
                                     </span>
@@ -180,7 +180,7 @@ export const BattleScreen = () => {
 
                                 <button
                                     onClick={() => setShowBossStats(!showBossStats)}
-                                    className="text-xs text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
+                                    className="text-xs text-amber-400 hover:text-amber-300 font-medium cursor-pointer"
                                 >
                                     {showBossStats ? 'Hide Boss Stats' : 'Show Boss Stats'}
                                 </button>
@@ -188,10 +188,10 @@ export const BattleScreen = () => {
 
                             {/* Boss Stats Details */}
                             {showBossStats && (
-                                <div className="space-y-3 mb-4 p-3 bg-slate-900/90 rounded border border-slate-800 text-xs animate-fadeIn">
+                                <div className="space-y-3 mb-4 p-3 bg-stone-900/90 rounded border border-stone-800 text-xs animate-fadeIn">
                                     <div>
-                                        <p className="text-blue-400 font-bold border-b border-slate-800 pb-1 mb-1">Combat Power</p>
-                                        <div className="grid grid-cols-2 gap-1.5 text-slate-400">
+                                        <p className="text-amber-400 font-bold border-b border-stone-800 pb-1 mb-1">Combat Power</p>
+                                        <div className="grid grid-cols-2 gap-1.5 text-stone-400">
                                             <p>ATK: <span className="text-white">{bossEffectiveStats.atk.toLocaleString()}</span></p>
                                             <p>DEF: <span className="text-white">{bossEffectiveStats.def.toLocaleString()}</span></p>
                                             <p>RES: <span className="text-white">{bossEffectiveStats.res.toLocaleString()}</span></p>
@@ -200,16 +200,16 @@ export const BattleScreen = () => {
                                             <p>HIT: <span className="text-white">{bossEffectiveStats.hit.toLocaleString()}</span></p>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 border-t border-slate-800/80 pt-2">
+                                    <div className="grid grid-cols-2 gap-2 border-t border-stone-800/80 pt-2">
                                         <div>
                                             <p className="text-red-400 font-bold mb-1">Critical</p>
-                                            <p className="text-slate-400">Crit.Rate : <span className="text-white">{selectedBoss.stats.critRate}%</span></p>
-                                            <p className="text-slate-400">Crit.Dmg : <span className="text-white">{selectedBoss.stats.critDmg}%</span></p>
+                                            <p className="text-stone-400">Crit.Rate : <span className="text-white">{selectedBoss.stats.critRate}%</span></p>
+                                            <p className="text-stone-400">Crit.Dmg : <span className="text-white">{selectedBoss.stats.critDmg}%</span></p>
                                         </div>
                                         <div>
                                             <p className="text-yellow-400 font-bold mb-1">Attributes</p>
-                                            <p className="text-slate-400">Element : <span className="text-white">{selectedBoss.element}</span></p>
-                                            <p className="text-slate-400">Race : <span className="text-white">{selectedBoss.race}</span></p>
+                                            <p className="text-stone-400">Element : <span className="text-white">{selectedBoss.element}</span></p>
+                                            <p className="text-stone-400">Race : <span className="text-white">{selectedBoss.race}</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -217,11 +217,11 @@ export const BattleScreen = () => {
 
                             {/* Boss HP Bar */}
                             <div className="mb-3">
-                                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                <div className="flex justify-between text-xs text-stone-400 mb-1">
                                     <span className="font-semibold text-red-400">Boss HP :</span>
                                     <span>{(bossHp ?? 0).toLocaleString()} / {bossEffectiveStats.maxHp.toLocaleString()}</span>
                                 </div>
-                                <div className="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden border border-slate-700 shadow-inner">
+                                <div className="w-full bg-stone-900 h-3.5 rounded-full overflow-hidden border border-stone-700 shadow-inner">
                                     <div
                                         className="bg-gradient-to-r from-red-700 to-red-500 h-full transition-all duration-300"
                                         style={{ width: `${Math.max(0, (bossHp / bossEffectiveStats.maxHp) * 100)}%` }}
@@ -231,11 +231,11 @@ export const BattleScreen = () => {
 
                             {/* Player HP Bar */}
                             <div className="mb-4">
-                                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                <div className="flex justify-between text-xs text-stone-400 mb-1">
                                     <span className="font-semibold text-emerald-400">Player HP :</span>
                                     <span>{playerHp.toLocaleString()} / {(finalStatsSnapshot.maxHp || 1).toLocaleString()}</span>
                                 </div>
-                                <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700 shadow-inner">
+                                <div className="w-full bg-stone-900 h-2.5 rounded-full overflow-hidden border border-stone-700 shadow-inner">
                                     <div
                                         className="bg-emerald-500 h-full transition-all duration-300"
                                         style={{ width: `${Math.max(0, (playerHp / (finalStatsSnapshot.maxHp || 1)) * 100)}%` }}
@@ -245,7 +245,7 @@ export const BattleScreen = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800/80">
+                        <div className="flex gap-2 mt-4 pt-4 border-t border-stone-800/80">
                             <button
                                 onClick={() => {
                                     if (bossHp <= 0) {
@@ -259,11 +259,11 @@ export const BattleScreen = () => {
                                 }}
                                 disabled={playerHp <= 0}
                                 className={`flex-grow py-3 rounded-lg font-bold text-sm transition-all shadow-md cursor-pointer ${bossHp <= 0
-                                    ? 'bg-emerald-600 hover:bg-emerald-500 animate-pulse'
+                                    ? 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/30 hover:shadow-amber-400/50 animate-pulse'
                                     : isFighting
-                                        ? 'bg-red-600 hover:bg-red-500'
-                                        : 'bg-emerald-600 hover:bg-emerald-500'
-                                    } disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed`}
+                                        ? 'bg-red-600 hover:bg-red-500 shadow-red-500/25'
+                                        : 'bg-amber-600 hover:bg-amber-500 text-stone-950 shadow-amber-500/25 hover:shadow-amber-400/50'
+                                    } disabled:bg-stone-800 disabled:text-stone-500 disabled:cursor-not-allowed disabled:shadow-none`}
                             >
                                 {bossHp <= 0
                                     ? 'Fight Again'
@@ -276,7 +276,7 @@ export const BattleScreen = () => {
 
                             <button
                                 onClick={leaveBattle}
-                                className="px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-white text-sm font-bold transition cursor-pointer"
+                                className="px-4 py-3 bg-stone-800 hover:bg-stone-700 border border-amber-900/60 rounded-lg text-white text-sm font-bold transition cursor-pointer"
                             >
                                 Lobby
                             </button>
@@ -285,16 +285,16 @@ export const BattleScreen = () => {
 
                     {/* ===================== กรอบขวา: BATTLE LOG ===================== */}
 
-                    <div className="flex flex-col h-full bg-slate-950/20 p-4 rounded-xl border border-slate-800 backdrop-blur-[2px] min-h-[380px] max-h-[520px]">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pb-2 border-b border-slate-800 flex items-center gap-2">
+                    <div className="flex flex-col h-full bg-stone-950/70 p-4 rounded-xl border border-stone-800 hover:border-amber-900/60 backdrop-blur-sm min-h-[380px] max-h-[520px]">
+                        <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 pb-2 border-b border-stone-800 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                             Battle Log
                         </h3>
 
                         {/* Log Container */}
-                        <div className="grow overflow-y-auto pr-1 text-xs space-y-1.5 scrollbar-thin scrollbar-thumb-slate-700">
+                        <div className="grow overflow-y-auto pr-1 text-xs space-y-1.5 scrollbar-thin scrollbar-thumb-stone-700">
                             {battleLog.length === 0 ? (
-                                <div className="h-full flex items-center justify-center text-slate-600 italic">
+                                <div className="h-full flex items-center justify-center text-stone-600 italic">
                                     Click "Start Battle" to begin combat...
                                 </div>
                             ) : (
@@ -311,7 +311,7 @@ export const BattleScreen = () => {
                                             <div key={i} className={`p-1.5 rounded leading-relaxed ${baseStyle}`}>
                                                 {parts.map((part, index) =>
                                                     part.toLowerCase().includes('missed') ? (
-                                                        <span key={index} className="text-slate-400 italic font-normal">
+                                                        <span key={index} className="text-stone-400 italic font-normal">
                                                             {part}
                                                         </span>
                                                     ) : (
@@ -330,15 +330,26 @@ export const BattleScreen = () => {
                                             ? 'text-emerald-300'
                                             : 'text-red-300';
 
-                                    // 🟢 ปรับ Regex ให้รองรับรูปแบบโบนัส, สกิล และเอฟเฟกต์เสริมทั้งหมดที่คุณเพิ่งเพิ่มเข้าไป
-                                    const parts = log.text.split(/(\(CRIT!\)|Crit Rate\s*\+\d+%|\[[^\]]+\]|\(Elem\+\d+%|\bRace\+\d+%\b|\bWeakness\+\d+%\b|\bSkillElem\+\d+%|\bSkillRace\+\d+%\b|activated [^!]+!|\+\d+ bonus damage from (?:LUK|AGI|STR|INT|DEX|VIT)!|\b\d+ damage\b)/g);
+                                    // 🟢 ปรับ Regex ให้ครอบคลุม Trait ใหม่ทั้งหมด (Thorns, Absorbed, Dodged Counter, Emergency Heal, Berserk, Gambler, etc.)
+                                    const parts = log.text.split(/(\(CRIT!\)|Crit Rate\s*\+\d+%|\[[^\]]+\]|\(Elem\+\d+%|\bRace\+\d+%\b|\bWeakness\+\d+%\b|\bSkillElem\+\d+%|\bSkillRace\+\d+%\b|activated [^!]+!|\+\d+ bonus damage from (?:LUK|AGI|STR|INT|DEX|VIT)!|Thorns reflected \d+ damage(?: back)?!|Iron guard absorbed \d+% incoming damage!|Emergency Aegis triggered! Restored \d+ HP!|Rejuvenated \+\d+ HP!|Dodged & Countered for \d+ damage!|Wind dance flow! Crit Rate \+\d+% for \d+ rounds!|Berserk rage! \([^)]+\)|Gambler's Jackpot! \+\d+ bonus damage!|Additional attack deals \d+% extra damage!|Pierced \d+% armor for \d+ rounds!|Enemy armor ignored for \d+ rounds!|Enemy stunned!|Lifesteal! \([^)]+\)|\b\d+ damage\b)/g);
 
                                     return (
                                         <div key={i} className={`p-1.5 rounded leading-relaxed ${baseStyle} ${defaultTextColor}`}>
                                             {parts.map((part, index) => {
                                                 if (!part) return null;
 
-                                                // 1. ข้อความในวงเล็บเหลี่ยม [...] เช่น ชื่อสกิล หรือ บัฟ Active
+                                                if (part.includes('Weakness')) {
+                                                    return (
+                                                        <span key={index} className="text-emerald-400 font-bold">
+                                                            {part.split('(')[0]}
+                                                            <span className="text-amber-200 font-bold mx-0.5">
+                                                                ({part.split('(')[1]}
+                                                            </span>
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 1. ข้อความในวงเล็บเหลี่ยม [...] เช่น ชื่อสกิล, Trait Tag หรือ บัฟ Active
                                                 if (part.startsWith('[') && part.endsWith(']')) {
                                                     return (
                                                         <span key={index} className="text-purple-300 font-bold drop-shadow-[0_0_6px_rgba(192,132,252,0.5)] mx-0.5">
@@ -356,8 +367,71 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // 3. Crit Rate เพิ่มเติม
-                                                if (part.includes('Crit Rate')) {
+                                                // 3. Thorns Reflect (หนามสะท้อนดาเมจ)
+                                                if (part.includes('Thorns reflected')) {
+                                                    return (
+                                                        <span key={index} className="text-orange-400 font-bold drop-shadow-[0_0_6px_rgba(251,146,60,0.4)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 4. Damage Absorbed / Iron Guard (ลดทอนดาเมจเกราะ)
+                                                if (part.includes('absorbed') || part.includes('Iron guard')) {
+                                                    return (
+                                                        <span key={index} className="text-teal-300 font-bold drop-shadow-[0_0_6px_rgba(94,234,212,0.4)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 5. Dodged & Countered (หลบแล้วสวนกลับ)
+                                                if (part.includes('Dodged & Countered')) {
+                                                    return (
+                                                        <span key={index} className="text-cyan-300 font-extrabold drop-shadow-[0_0_6px_rgba(103,232,249,0.5)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 6. Healing, Aegis & Regen (ฮีลฉุกเฉิน / ฟื้นฟูเลือด / Lifesteal)
+                                                if (part.includes('Emergency Aegis') || part.includes('Rejuvenated') || part.includes('Lifesteal!')) {
+                                                    return (
+                                                        <span key={index} className="text-lime-400 font-bold drop-shadow-[0_0_6px_rgba(163,230,53,0.4)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 7. Berserk Rage & Gambler's Jackpot
+                                                if (part.includes('Berserk rage') || part.includes("Gambler's Jackpot")) {
+                                                    return (
+                                                        <span key={index} className="text-fuchsia-400 font-extrabold drop-shadow-[0_0_6px_rgba(232,121,249,0.5)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 8. Armor Pierce & Armor Ignored
+                                                if (part.includes('Pierced') || part.includes('armor ignored')) {
+                                                    return (
+                                                        <span key={index} className="text-rose-400 font-bold drop-shadow-[0_0_6px_rgba(251,113,133,0.4)] mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 9. Additional Attack (ตีเบิ้ล)
+                                                if (part.includes('Additional attack deals')) {
+                                                    return (
+                                                        <span key={index} className="text-indigo-300 font-bold mx-0.5">
+                                                            {part}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // 10. Crit Rate & Wind Dance
+                                                if (part.includes('Crit Rate') || part.includes('Wind dance flow')) {
                                                     return (
                                                         <span key={index} className="text-amber-300 font-bold drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] mx-0.5">
                                                             {part}
@@ -365,16 +439,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // 4. Lifesteal
-                                                if (part.includes('Lifesteal!')) {
-                                                    return (
-                                                        <span key={index} className="text-lime-400 font-bold drop-shadow-[0_0_6px_rgba(163,230,53,0.4)] ml-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 5. สถานะ Stun
+                                                // 11. สถานะ Stun
                                                 if (part.includes('stunned') || part.includes('Stun')) {
                                                     return (
                                                         <span key={index} className="text-yellow-300 font-bold drop-shadow-[0_0_6px_rgba(253,224,71,0.5)] ml-0.5">
@@ -383,8 +448,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-
-                                                // 6. ชื่อสกิลที่ทำงาน (activated ...) - ลดความสว่างและลดเงาเรืองแสงลง
+                                                // 12. ชื่อสกิลที่ทำงาน (activated ...)
                                                 if (part.startsWith('activated ')) {
                                                     return (
                                                         <span key={index} className="text-cyan-400/90 font-medium mx-0.5">
@@ -393,7 +457,7 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // 7. โบนัสดาเมจจาก Stat (LUK, AGI, ฯลฯ) - ใช้สีฟ้าที่นุ่มนวลขึ้น ไม่มีเงาฟุ้ง
+                                                // 13. โบนัสดาเมจจาก Stat (LUK, AGI, ฯลฯ)
                                                 if (part.includes('bonus damage from')) {
                                                     return (
                                                         <span key={index} className="text-sky-400/90 font-normal mx-0.5">
@@ -402,11 +466,10 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // 8. โบนัสประเภทต่างๆ ในวงเล็บสรุป (Elem+, Race+, Weakness+, SkillElem+, SkillRace+)
+                                                // 14. โบนัสประเภทต่างๆ ในวงเล็บสรุป (Elem+, Race+, Weakness+, SkillElem+, SkillRace+)
                                                 if (
                                                     part.startsWith('Elem+') ||
                                                     part.startsWith('Race+') ||
-                                                    part.startsWith('Weakness+') ||
                                                     part.startsWith('SkillElem+') ||
                                                     part.startsWith('SkillRace+')
                                                 ) {
@@ -417,8 +480,8 @@ export const BattleScreen = () => {
                                                     );
                                                 }
 
-                                                // 9. เน้นตัวเลขดาเมจหลัก
-                                                if (part.endsWith('damage') && !part.includes('bonus')) {
+                                                // 15. เน้นตัวเลขดาเมจหลัก
+                                                if (part.endsWith('damage') && !part.includes('bonus') && !part.includes('Thorns') && !part.includes('Countered') && !part.includes('absorbed')) {
                                                     return (
                                                         <span key={index} className="text-emerald-400 font-bold">
                                                             {part}

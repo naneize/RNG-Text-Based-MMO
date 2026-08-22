@@ -1,32 +1,59 @@
 @import "tailwindcss";
 
-/* ใช้ layer เพื่อให้แน่ใจว่า Style ของเราถูกประมวลผลทีหลัง Tailwind */
+/* ฟอนต์เอกลักษณ์เกม (Cinzel = อักษรสลักหิน) ใช้ทั้งโปรเจกต์ */
+@theme {
+  --font-display: "Cinzel", "Times New Roman", serif;
+  /* ผ่าน --font-sans ทับ = ทุก component ที่ไม่ได้ระบุ font เอง (ค่า default ของ Tailwind) กลายเป็น Cinzel หมด */
+  --font-sans: "Cinzel", "Times New Roman", serif;
+  /* ตัวเลข (จุดที่ใช้ font-mono) ก็เป็น Cinzel ด้วย — ฟอนต์เดียวทั้งเกม */
+  --font-mono: "Cinzel", "Times New Roman", serif;
+}
+
 @layer base {
+  /* หัวข้อทุกตัวในเกมเป็นธีม dark fantasy อัตโนมัติ ไม่ต้องแก้ทีละ component */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #0f172a !important;
+    background: #0e0c0a !important;
+    /* พื้นหลังรางเลื่อน เข้มสนิทเกือบดำ */
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #334155 !important;
+    background: #451a03 !important;
+    /* ตัวเลื่อน ใช้สีน้ำตาลเข้ม/ทองไหม้ (Amber-950 แบบสว่างขึ้นนิดนึง) */
     border-radius: 4px;
+    border: 1px solid #78350f;
+    /* เพิ่มขอบทองแดงให้ดูมีมิติแฟนตาซี */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569 !important;
+    background: #d97706 !important;
+    /* เวลาเอาเมาส์ชี้ เปลี่ยนเป็นสีทองอำพันสว่างเด่นขึ้น */
   }
-  
 }
 
 @keyframes firework {
-  0% { transform: scale(0); opacity: 1; }
-  50% { opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 .firework-particle {
@@ -41,6 +68,7 @@
   0% {
     width: 0%;
   }
+
   100% {
     width: 100%;
   }

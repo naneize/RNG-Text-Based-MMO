@@ -90,34 +90,34 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
 
     return (
         <div
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4"
             onClick={!isRerolling ? onClose : undefined}
         >
             <div
-                className="bg-slate-900 border border-slate-700 p-6 rounded-xl w-full max-w-lg text-white shadow-2xl space-y-4"
+                className="bg-stone-950 border-2 border-amber-900/60 p-6 rounded-2xl w-full max-w-lg text-amber-100 shadow-2xl space-y-4"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="text-lg font-bold text-amber-400">Reroll Stat</h3>
+                <h3 className="text-lg font-extrabold text-amber-100 tracking-wide">REROLL STAT</h3>
 
-                <div className={`p-3 bg-slate-800 rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center gap-3`}>
-                    {item.icon && <img src={item.icon} alt={item.name} className="w-10 h-10 object-contain" />}
+                <div className={`p-3 bg-stone-900 rounded-xl border-2 ${getRarityColor(item.rarity)} flex items-center gap-3 shadow-md`}>
+                    {item.icon && <img src={item.icon} alt={item.name} className="w-10 h-10 object-contain drop-shadow" />}
                     <div>
-                        <div className="text-sm font-bold text-slate-100">{item.name}</div>
-                        <div className="text-[10px] text-slate-400 uppercase">Lv.{item.itemLevel ?? 1} · {item.rarity}</div>
+                        <div className="text-sm font-bold text-amber-100 tracking-wide">{item.name}</div>
+                        <div className="text-[10px] text-amber-500/80 font-bold uppercase tracking-wider">Lv.{item.itemLevel ?? 1} · {item.rarity}</div>
                     </div>
                 </div>
 
                 {isRerolling ? (
                     <div className="py-8 flex flex-col items-center justify-center space-y-4">
-                        <div className="text-amber-400 font-bold text-sm animate-pulse">
+                        <div className="text-amber-400 font-bold text-sm animate-pulse tracking-wider">
                             Forging new attributes...
                         </div>
                         <div className="w-full space-y-1">
-                            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
-                                <span>Progress</span>
-                                <span className="font-bold text-amber-400">{Math.round(progress)}%</span>
+                            <div className="flex justify-between text-[11px] text-amber-500/80 font-mono font-bold">
+                                <span>PROGRESS</span>
+                                <span className="text-amber-400">{Math.round(progress)}%</span>
                             </div>
-                            <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                            <div className="w-full h-2.5 bg-stone-900 rounded-full overflow-hidden border border-amber-950">
                                 <div
                                     className="h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-all duration-75 ease-linear rounded-full"
                                     style={{ width: `${progress}%` }}
@@ -132,18 +132,18 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
 
                         return (
                             <div className={`p-4 rounded-xl border text-xs space-y-2 shadow-lg ${isPositive
-                                ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200'
+                                ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-200'
                                 : isNegative
-                                    ? 'bg-rose-950/30 border-rose-500/50 text-rose-200'
-                                    : 'bg-slate-900 border-slate-800 text-slate-200'
+                                    ? 'bg-rose-950/40 border-rose-500/60 text-rose-200'
+                                    : 'bg-stone-900 border-amber-950 text-amber-200'
                                 }`}>
                                 <div className="font-bold flex items-center gap-1.5 text-sm">
                                     <span>{isPositive ? 'Reroll Improved' : isNegative ? 'Reroll Decreased' : 'Reroll Complete'}</span>
                                 </div>
-                                <p className="font-mono text-slate-300 leading-relaxed bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+                                <p className="font-mono text-amber-100/90 leading-relaxed bg-stone-900/80 p-2.5 rounded-lg border border-amber-950/80 shadow-inner">
                                     {result.message.split('(')[0]}
                                     {result.message.includes('(') && (
-                                        <span className={`font-bold ${isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-slate-400'}`}>
+                                        <span className={`font-bold ${isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-amber-400'}`}>
                                             ({result.message.split('(')[1]}
                                         </span>
                                     )}
@@ -153,11 +153,10 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                     })()
                 ) : (
                     <>
-                        <div className="text-xs font-semibold text-slate-300">
+                        <div className="text-xs font-bold text-amber-200/90 tracking-wide">
                             {selected ? "Selected Target:" : "Select Stat to Reroll:"}
                         </div>
 
-                        {/* แสดงผลเป็น Grid สี่เหลี่ยมผืนผ้า 2 คอลัมน์ หรือแสดงการ์ดเดี่ยวคู่กับปุ่ม Change ทางขวา */}
                         <div className={selected ? "flex gap-2 items-stretch" : "grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1"}>
                             {(selected ? [selected] : statOptions).map((opt, idx) => {
                                 const label = opt.kind === 'stat' ? String(opt.key).toUpperCase() : opt.label;
@@ -168,11 +167,9 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                                 const haveCount = player.materials[matId] || 0;
                                 const enough = haveCount >= baseCost;
 
-                                // --- ดึง Range ตามที่ ItemDetailModal ใช้จริง ---
                                 let minVal = 1;
                                 let maxVal = 100;
                                 if (opt.kind === 'stat') {
-                                    // ส่ง object item เข้าไปตามที่ getFullStatRanges ต้องการ
                                     const statRanges = getFullStatRanges({
                                         slot: item.slot,
                                         weaponType: item.weaponType,
@@ -190,39 +187,37 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                                     maxVal = specialRange.max;
                                 }
                                 const isMax = opt.value >= maxVal;
-                                // ----------------------------------------------
 
                                 return (
                                     <div key={idx} className={selected ? "flex-1 flex flex-col" : "flex flex-col"}>
                                         <button
                                             onClick={() => setSelected(isSelected ? null : opt)}
-                                            className={`w-full text-left p-2.5 rounded-lg border text-xs transition cursor-pointer flex flex-col justify-between h-full ${isSelected
-                                                ? 'border-emerald-500 bg-emerald-900/30 ring-1 ring-emerald-500'
-                                                : 'border-slate-700 bg-slate-800 hover:bg-slate-700'
+                                            className={`w-full text-left p-2.5 rounded-xl border text-xs transition cursor-pointer flex flex-col justify-between h-full shadow-md ${isSelected
+                                                ? 'border-amber-500 bg-amber-950/40 ring-1 ring-amber-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                                                : 'border-amber-900/60 bg-stone-900 hover:bg-amber-950/30'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-center w-full mb-1">
-                                                <span className="text-slate-300 font-bold truncate">{label}</span>
+                                                <span className="text-amber-200 font-bold truncate">{label}</span>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-slate-100 font-mono font-bold">{opt.value}</span>
+                                                    <span className="text-amber-100 font-mono font-extrabold">{opt.value}</span>
                                                     {isMax && (
-                                                        <span className="text-[9px] px-1 py-0.2 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded font-bold">
+                                                        <span className="text-[9px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded font-extrabold shadow-sm">
                                                             MAX
                                                         </span>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* แสดงผลช่วง Range */}
-                                            <div className="text-[10px] text-slate-400 mb-2 flex items-center gap-1.5 font-mono">
+                                            <div className="text-[10px] text-amber-500/80 mb-2 flex items-center gap-1.5 font-mono">
                                                 <span>Range:</span>
-                                                <span className="px-1.5 py-0.5 bg-slate-900/80 border border-slate-700/80 rounded text-slate-200 font-semibold">
+                                                <span className="px-1.5 py-0.5 bg-stone-950 border border-amber-950 rounded text-amber-200 font-bold">
                                                     {minVal}–{maxVal}
                                                 </span>
                                             </div>
 
-                                            <div className="flex items-center justify-between w-full pt-1.5 border-t border-slate-700/60 text-[10px]">
-                                                <span className="text-slate-400 flex items-center gap-1 truncate">
+                                            <div className="flex items-center justify-between w-full pt-1.5 border-t border-amber-950 text-[10px]">
+                                                <span className="text-amber-500/80 flex items-center gap-1 truncate font-medium">
                                                     {matDisplay.icon && <img src={matDisplay.icon} alt="" className="w-3.5 h-3.5 object-contain" />}
                                                     <span className="truncate">{matDisplay.name}</span>
                                                 </span>
@@ -235,35 +230,34 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                                 );
                             })}
 
-                            {/* ปุ่ม Change Selection ย้ายมาอยู่ด้านขวาเมื่อมีการเลือก Stat แล้ว */}
                             {selected && (
                                 <button
                                     onClick={() => setSelected(null)}
-                                    className="w-32 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center p-3 text-center shrink-0"
+                                    className="w-32 bg-stone-900 hover:bg-amber-950/40 border border-amber-900/60 hover:border-amber-700 text-amber-200 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center p-3 text-center shrink-0 shadow-md"
                                 >
                                     Change Selection
                                 </button>
                             )}
 
                             {!selected && statOptions.length === 0 && (
-                                <div className="col-span-2 text-center text-slate-500 text-xs py-4">This item has no rerollable stats.</div>
+                                <div className="col-span-2 text-center text-amber-500/60 text-xs py-4 font-medium">This item has no rerollable stats.</div>
                             )}
                         </div>
 
                         {selected && (
-                            <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700 space-y-2">
-                                <label className="flex items-center justify-between text-xs cursor-pointer">
-                                    <span className="text-slate-300">Use Primordial Essence (4x Cost)</span>
-                                    <input type="checkbox" checked={useUniversal} onChange={(e) => setUseUniversal(e.target.checked)} className="cursor-pointer" />
+                            <div className="bg-stone-900 p-3 rounded-xl border border-amber-900/60 space-y-2 shadow-inner">
+                                <label className="flex items-center justify-between text-xs cursor-pointer text-amber-200/90 font-medium">
+                                    <span>Use Primordial Essence (4x Cost)</span>
+                                    <input type="checkbox" checked={useUniversal} onChange={(e) => setUseUniversal(e.target.checked)} className="cursor-pointer accent-amber-500" />
                                 </label>
-                                <label className="flex items-center justify-between text-xs cursor-pointer">
-                                    <span className="text-slate-300">Safety Lock (Keep old if worse - 3x Cost)</span>
-                                    <input type="checkbox" checked={useSafetyLock} onChange={(e) => setUseSafetyLock(e.target.checked)} className="cursor-pointer" />
+                                <label className="flex items-center justify-between text-xs cursor-pointer text-amber-200/90 font-medium">
+                                    <span>Safety Lock (Keep old if worse - 3x Cost)</span>
+                                    <input type="checkbox" checked={useSafetyLock} onChange={(e) => setUseSafetyLock(e.target.checked)} className="cursor-pointer accent-amber-500" />
                                 </label>
 
-                                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-700">
-                                    <span className="text-slate-400">Required Total:</span>
-                                    <span className={`font-bold flex items-center gap-1.5 ${canAfford ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <div className="flex items-center justify-between text-xs pt-2 border-t border-amber-950">
+                                    <span className="text-amber-500/80 font-bold">Required Total:</span>
+                                    <span className={`font-bold flex items-center gap-1.5 font-mono ${canAfford ? 'text-amber-400' : 'text-rose-400'}`}>
                                         {getMaterialDisplay(materialId).icon && (
                                             <img src={getMaterialDisplay(materialId).icon} alt="" className="w-4 h-4 object-contain" />
                                         )}
@@ -275,18 +269,17 @@ export const RerollModal = ({ item, onClose, getRarityColor }: RerollModalProps)
                     </>
                 )}
 
-                {/* ซ่อนปุ่มด้านล่างทั้งหมดในขณะที่กำลัง Reroll */}
                 {!isRerolling && (
                     <div className="flex justify-end gap-2 pt-2">
                         {result ? (
-                            <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs cursor-pointer">Close</button>
+                            <button onClick={onClose} className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-stone-950 rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md border border-amber-400/50">Close</button>
                         ) : (
                             <>
-                                <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs cursor-pointer">Cancel</button>
+                                <button onClick={onClose} className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 active:bg-stone-950 text-amber-200 border border-amber-950 rounded-xl text-xs font-bold cursor-pointer transition shadow-sm">Cancel</button>
                                 <button
                                     onClick={handleConfirm}
                                     disabled={!selected || !canAfford}
-                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 rounded text-xs font-semibold cursor-pointer"
+                                    className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer shadow-md ${selected && canAfford ? 'bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-stone-950 border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-stone-900 text-amber-500/40 border border-amber-950 cursor-not-allowed'}`}
                                 >
                                     Confirm Reroll
                                 </button>

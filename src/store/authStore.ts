@@ -21,6 +21,7 @@ import {
     getDocs
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { useAchievementStore } from './achievementStore';
 
 interface UserProfile {
     uid: string;
@@ -72,10 +73,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     isLoading: true,
     error: null,
 
-    login: async (email, password) => {
+    register: async (email, password) => {
         set({ error: null });
         try {
-            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนเข้าสู่ระบบ
+            await setPersistence(auth, inMemoryPersistence);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await useAchievementStore.getState().loadAchievements(userCredential.user.uid); // ✅ แทน resetAchievements()
+            set({ userProfile: null });
+        } catch (err: any) {
+            set({ error: mapFirebaseError(err.code) });
+        }
+    },
+
+    login: async (email, password) => {
+
+        set({ error: null });
+        try {
             await setPersistence(auth, inMemoryPersistence);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             await get().fetchUserProfile(userCredential.user.uid);
@@ -86,49 +99,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // 🟢 ฟังก์ชันจำลองการเข้าสู่ระบบแบบ Guest
     loginAsGuest: () => {
-        set({ error: null });
+        // 🟢 ล้าง Achievement ของไอดีเก่าทิ้งก่อนสลับเป็น Guest
+        useAchievementStore.getState().resetAchievements();
 
-        // สร้างข้อมูลโปรไฟล์จำลองชั่วคราว
+        set({ error: null });
         const guestProfile: UserProfile = {
             uid: 'guest_' + Date.now(),
             email: null,
             username: 'Guest_' + Math.floor(1000 + Math.random() * 9000),
         };
 
-
-
-        // เซ็ตสถานะให้เหมือนล็อกอินผ่านแล้ว โดยใช้ object ปลอมหรือเซ็ต userProfile ตรงๆ
         set({
-            user: null, // ไม่มี Firebase User จริง
+            user: null,
             userProfile: guestProfile,
             isLoading: false,
         });
 
-        // (ทางเลือก) ถ้าต้องการเซ็ตชื่อผู้เล่นใน gameStore พร้อมกันด้วย
         useGameStore.setState((state) => ({
             player: {
                 ...state.player,
                 name: guestProfile.username,
             }
         }));
+
+        import('../firebase').then(({ analytics }) => {
+            if (analytics) {
+                import('firebase/analytics').then(({ setUserProperties, logEvent }) => {
+                    setUserProperties(analytics!, { account_type: 'guest' });
+                    logEvent(analytics!, 'guest_session_start');
+                });
+            }
+        });
     },
 
-    register: async (email, password) => {
-        set({ error: null });
-        try {
-            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนสมัครสมาชิก
-            await setPersistence(auth, inMemoryPersistence);
-            await createUserWithEmailAndPassword(auth, email, password);
-            set({ userProfile: null }); // สมัครใหม่ยังไม่มีชื่อ ต้องไปหน้าตั้งชื่อ
-        } catch (err: any) {
-            set({ error: mapFirebaseError(err.code) });
-        }
-    },
 
     loginWithGoogle: async () => {
+
         set({ error: null });
         try {
-            // 🟢 ตั้งค่าให้เซสชันจำกัดอยู่แค่ในแท็บนี้เท่านั้นก่อนล็อกอินด้วย Google
             await setPersistence(auth, inMemoryPersistence);
             const provider = new GoogleAuthProvider();
             const userCredential = await signInWithPopup(auth, provider);
@@ -141,8 +149,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     logout: async () => {
         try {
             const currentUid = useAuthStore.getState().user?.uid;
-
-            // ถ้ามี UID จริงๆ ค่อยสั่งเซฟข้อมูลลง Firestore
             if (currentUid) {
                 await useGameStore.getState().saveUserData(currentUid);
                 await signOut(auth);
@@ -151,9 +157,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             console.error("Failed to save game data before logout:", error);
         }
 
-        // ล้างสเตตัสทั้งหมด (ไม่ว่าจะเป็น User จริงหรือ Guest ก็เคลียร์เกลี้ยงเหมือนกัน)
         set({ user: null, userProfile: null });
         useGameStore.getState().resetGame();
+
+        // 🟢 แก้บรรทัดนี้ให้ทำงานจริง:
+        useAchievementStore.getState().resetAchievements();
     },
 
     clearError: () => set({ error: null }),
@@ -173,13 +181,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // 👤 ฟังก์ชันดึงข้อมูลโปรไฟล์จาก Firestore
     fetchUserProfile: async (uid: string) => {
+        await useAchievementStore.getState().loadAchievements(uid);
+
         try {
             const userRef = doc(db, 'users', uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
                 const data = userSnap.data() as UserProfile;
 
-                // 🟢 เช็คและกำกับยศ Developer จากอีเมลตอนดึงข้อมูล
                 const isDev = isUserDeveloper(data.email);
                 const profileWithRole = {
                     ...data,
@@ -319,31 +328,48 @@ function mapFirebaseError(code: string): string {
 // ผูก listener เช็ค session ค้าง — เรียกครั้งเดียวตอนแอปเริ่มทำงาน (ใน main.tsx)
 export const initAuthListener = () => {
     onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            const userSnap = await getDoc(userRef);
+        try {
+            if (firebaseUser) {
+                const userRef = doc(db, 'users', firebaseUser.uid);
+                const userSnap = await getDoc(userRef);
 
-            let profile: UserProfile | null = null;
-            if (userSnap.exists()) {
-                const data = userSnap.data() as UserProfile;
-                const isDev = isUserDeveloper(firebaseUser.email);
-                profile = {
-                    ...data,
-                    role: isDev ? 'developer' : 'player'
-                };
+                let profile: UserProfile | null = null;
+                if (userSnap.exists()) {
+                    const data = userSnap.data() as UserProfile;
+                    const isDev = isUserDeveloper(firebaseUser.email);
+                    profile = {
+                        ...data,
+                        role: isDev ? 'developer' : 'player'
+                    };
+                }
+
+                // 1. อัปเดตสถานะ Auth ลงใน Store ก่อน
+                useAuthStore.setState({
+                    user: firebaseUser,
+                    userProfile: profile,
+                    isLoading: false
+                });
+
+                // 2. โหลดข้อมูลเกมและ Achievement หลังจาก State พร้อมแล้ว
+                await useGameStore.getState().loadUserData(firebaseUser.uid);
+                await useAchievementStore.getState().loadAchievements(firebaseUser.uid);
+
+            } else {
+                // กรณีที่ไม่ได้ Login หรือทำการ Logout
+                useAuthStore.setState({ user: null, userProfile: null, isLoading: false });
+
+                // เคลียร์ข้อมูลเกมและ Achievement ทิ้ง เพื่อไม่ให้ข้อมูลค้างเวลาเปลี่ยนไอดี
+                useGameStore.getState().resetGame();
+                useAchievementStore.getState().resetAchievements(); // 👈 แนะนำให้เพิ่มบรรทัดนี้ด้วย
             }
-
+        } catch (error) {
+            console.error("Auth listener error:", error);
+            // ป้องกันแอปค้างหน้า Loading ถ้าเกิด Error ระหว่างดึงข้อมูลจาก Firestore
             useAuthStore.setState({
-                user: firebaseUser,
-                userProfile: profile,
+                user: null,
+                userProfile: null,
                 isLoading: false
             });
-
-            await useGameStore.getState().loadUserData(firebaseUser.uid);
-
-        } else {
-            useAuthStore.setState({ user: null, userProfile: null, isLoading: false });
-            useGameStore.getState().resetGame();
         }
     });
 };

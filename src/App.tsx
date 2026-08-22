@@ -104,14 +104,14 @@ function App() {
       ) : !isGameReady ? (
         <LoadingScreen onFinished={() => setIsGameReady(true)} />
       ) : (
-        /* 🎮 เข้าสู่ตัวเกมหลัก (จะไม่มีเสียง BGM แล้ว เงียบสงบ) */
-        <div className="flex bg-slate-950 min-h-screen text-white relative">
+        /* 🎮 เข้าสู่ตัวเกมหลัก (ปรับธีมหลักเป็น Dark Fantasy / Amber & Crimson) */
+        <div className="flex bg-stone-950 min-h-screen text-amber-100 relative selection:bg-rose-950 selection:text-amber-200">
           <GlobalAnnouncement />
           <AdminPanel />
 
           <Sidebar />
 
-          <main className="flex-1 p-8">
+          <main className="flex-1 p-8 overflow-y-auto">
             {currentPage === 'home' && <CharacterDashboard />}
             {currentPage === 'profile' && <PlayerProfile player={player} finalStats={finalStats} statBreakdown={statBreakdown} totalOpens={totalOpens} />}
             {currentPage === 'collection' && <CollectionPage collectionData={collectionData} />}

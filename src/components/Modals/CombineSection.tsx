@@ -34,7 +34,6 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     //#region เงื่อนไขการผสม
     const getCombineCost = (rarity: string): CombineCost => {
         switch (rarity) {
-
             case 'Epic':
                 return {
                     requirements: [
@@ -49,15 +48,14 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                 return { requirements: [], chance: 0 };
         }
     };
-
     //#endregion
 
     const getRarityColor = (rarity: string) => {
         switch (rarity) {
-            case 'Legendary': return 'border-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.3)]';
-            case 'Epic': return 'border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]';
-            case 'Rare': return 'border-blue-500';
-            default: return 'border-slate-700';
+            case 'Legendary': return 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]';
+            case 'Epic': return 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+            case 'Rare': return 'border-amber-600/60';
+            default: return 'border-amber-950/80';
         }
     };
 
@@ -102,7 +100,6 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
 
         const cost = getCombineCost(firstItem.rarity);
 
-        // 1. ตรวจสอบแร่ทุกชนิดใน requirements
         const isMaterialEnough = cost.requirements.every(req =>
             (player.materials[req.material] || 0) >= req.amount
         );
@@ -127,16 +124,12 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
         setTimeout(() => {
             clearInterval(timer);
 
-            // 2. หักแร่ทุกชนิดที่กำหนดไว้ (วนลูปหัก)
             cost.requirements.forEach(req => {
                 removeMaterial(req.material, req.amount);
             });
 
-            // 3. ลบไอเทมที่ใช้ผสม
             selectedUids.forEach(uid => removeItem(uid));
 
-
-            // 4. ตรวจสอบโอกาสสำเร็จ
             const roll = Math.random() * 100;
             if (roll <= cost.chance) {
                 const tierOrder = ['Epic', 'Legendary'];
@@ -149,10 +142,8 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                 let newItem;
                 let attempts = 0;
                 do {
-                    // 💡 ส่ง averageLevel เป็นพารามิเตอร์ตัวที่ 2 เข้าไปที่นี่
                     newItem = generateRandomItem(nextRarity, averageLevel);
                     attempts++;
-                    // เงื่อนไข: ถ้าไม่มี slot (แปลว่าเป็นแร่) หรือเป็น type/slot ที่เป็น skill ให้สุ่มใหม่
                 } while ((!newItem.slot || newItem.slot === 'skill' || newItem.slot === 'material') && attempts < 10);
 
                 addItem(newItem);
@@ -167,7 +158,6 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     };
 
     const handleAutoPick = (rarity: string) => {
-        // ถ้ามีของถูกเลือกอยู่แล้ว ต้องใช้ rarity เดียวกับที่เลือกไว้เท่านั้น
         if (selectedUids.length > 0) {
             const currentRarity = player.inventory.find(i => i.uid === selectedUids[0])?.rarity;
             if (currentRarity && currentRarity !== rarity) {
@@ -185,76 +175,71 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={isCombining ? undefined : onClose}>
-            <div className="bg-slate-900 border-2 border-gray-600 p-6 rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={isCombining ? undefined : onClose}>
+            <div className="bg-stone-950 border-2 border-amber-900/60 p-6 rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
                 {resultItem || combineFailed ? (
-                    <div className="text-center py-6">
-                        <div className={combineFailed ? "text-red-500 font-bold mb-4" : "text-green-500 font-bold mb-4"}>
+                    <div className="text-center py-6 flex flex-col items-center justify-center flex-1">
+                        <div className={`font-bold mb-4 text-base tracking-wide ${combineFailed ? "text-rose-500" : "text-amber-400"}`}>
                             {combineFailed ? "Combination Failed! Items lost." : "Combination Successful !"}
                         </div>
                         {resultItem && (
                             <>
-                                <div className={`w-24 h-24 mx-auto rounded-xl border-4 ${getRarityColor(resultItem.rarity)} flex items-center justify-center mb-4 bg-slate-800`}>
-                                    <img src={resultItem.icon} className="w-16 h-16" />
+                                <div className={`w-24 h-24 mx-auto rounded-xl border-2 ${getRarityColor(resultItem.rarity)} flex items-center justify-center mb-4 bg-stone-900 shadow-xl`}>
+                                    <img src={resultItem.icon} className="w-16 h-16 object-contain drop-shadow-md" />
                                 </div>
-                                <div className="text-white font-bold text-xl mb-2">{resultItem.name}</div>
+                                <div className="text-amber-100 font-bold text-xl mb-2 tracking-wide">{resultItem.name}</div>
 
                                 {resultItem.type !== 'material' && resultItem.type !== 'skill' && (
                                     <div className="mb-4">
-                                        <span className="bg-slate-800 text-emerald-400 text-[10px] px-3 py-1 rounded-full font-bold border border-slate-700 tracking-wider">
+                                        <span className="bg-amber-950/50 text-amber-300 text-[10px] px-3 py-1 rounded-full font-bold border border-amber-800/60 tracking-wider shadow-sm">
                                             LEVEL {resultItem.itemLevel ?? 1}
                                         </span>
                                     </div>
                                 )}
 
-                                {/* --- ส่วนที่เพิ่มเข้ามา: แสดง Stats ของไอเทมที่เพิ่งผสมได้ --- */}
-                                <div className="flex flex-col gap-2 mb-6">
-                                    {/* แถวที่ 1: Stats ปกติ */}
+                                <div className="flex flex-col gap-2 mb-6 w-full max-w-md">
                                     <div className="flex flex-wrap justify-center gap-2">
                                         {Object.entries(resultItem.stats || {})
                                             .filter(([_, v]) => (v as number) > 0)
                                             .map(([k, v]) => (
-                                                <div key={k} className="bg-slate-800 px-3 py-1 rounded border border-slate-700 text-xs">
-                                                    <span className="text-slate-400 mr-1">{k.toUpperCase()}</span>
-                                                    <span className="text-emerald-400 font-bold">+{v as number}</span>
+                                                <div key={k} className="bg-stone-900 px-3 py-1 rounded-lg border border-amber-950/80 text-xs shadow-sm">
+                                                    <span className="text-amber-500/80 mr-1 font-bold">{k.toUpperCase()}</span>
+                                                    <span className="text-amber-300 font-extrabold font-mono">+{v as number}</span>
                                                 </div>
                                             ))}
                                     </div>
 
-                                    {/* แถวที่ 2: โบนัสพิเศษ (Element & Race) */}
                                     {(resultItem.elementBonus || resultItem.raceBonus) && (
                                         <div className="flex flex-wrap justify-center gap-2">
                                             {resultItem.elementBonus && (
-                                                <div className="bg-blue-900/20 px-3 py-1 rounded border border-blue-700/30 text-xs flex items-center gap-1">
+                                                <div className="bg-blue-950/40 px-3 py-1 rounded-lg border border-blue-900/40 text-xs flex items-center gap-1 shadow-sm">
                                                     <span className="text-blue-400 font-bold uppercase">{resultItem.elementBonus.type}</span>
-                                                    <span className="text-emerald-400 font-bold">+{resultItem.elementBonus.value}%</span>
+                                                    <span className="text-amber-300 font-extrabold font-mono">+{resultItem.elementBonus.value}%</span>
                                                 </div>
                                             )}
                                             {resultItem.raceBonus && (
-                                                <div className="bg-amber-900/20 px-3 py-1 rounded border border-amber-700/30 text-xs flex items-center gap-1">
+                                                <div className="bg-amber-950/40 px-3 py-1 rounded-lg border border-amber-900/40 text-xs flex items-center gap-1 shadow-sm">
                                                     <span className="text-amber-400 font-bold uppercase">{resultItem.raceBonus.type}</span>
-                                                    <span className="text-emerald-400 font-bold">+{resultItem.raceBonus.value}%</span>
+                                                    <span className="text-amber-300 font-extrabold font-mono">+{resultItem.raceBonus.value}%</span>
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                                {/* -------------------------------------------------------- */}
-
                             </>
                         )}
-                        <button onClick={() => { setResultItem(null); setCombineFailed(false); }} className="w-32 py-2 bg-yellow-600 rounded-full font-bold text-white">GOT IT</button>
+                        <button onClick={() => { setResultItem(null); setCombineFailed(false); }} className="w-32 py-2.5 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 rounded-xl font-bold text-stone-950 transition-all text-xs cursor-pointer shadow-md border border-amber-400/50">GOT IT</button>
                     </div>
                 ) : (
                     <>
-                        <h2 className="text-xl font-bold text-yellow-500 mb-2 text-center">COMBINE STATION</h2>
+                        <h2 className="text-xl font-extrabold text-amber-100 mb-2 text-center tracking-wide">COMBINE STATION</h2>
 
                         <div className="flex gap-2 mb-4 justify-center">
                             {['Epic'].map((rarity) => (
                                 <button
                                     key={rarity}
                                     onClick={() => handleAutoPick(rarity)}
-                                    className={`px-3 py-1 bg-slate-700 text-white text-xs rounded border ${getRarityColor(rarity)}`}
+                                    className={`px-4 py-1.5 bg-stone-900 text-amber-200 text-xs font-bold rounded-lg border border-amber-900/60 hover:bg-amber-950/40 transition cursor-pointer shadow-sm`}
                                 >
                                     AUTO-PICK {rarity.toUpperCase()}
                                 </button>
@@ -262,65 +247,63 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                         </div>
 
                         {isCombining && (
-                            <div className="w-full h-2 bg-slate-800 rounded-full mb-4 overflow-hidden">
-                                <div className="h-full bg-yellow-500 transition-all duration-75" style={{ width: `${progress}%` }} />
+                            <div className="w-full h-2 bg-stone-900 rounded-full mb-4 overflow-hidden border border-amber-950">
+                                <div className="h-full bg-amber-500 transition-all duration-75 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${progress}%` }} />
                             </div>
                         )}
 
-                        <div className="flex flex-wrap gap-2 mb-4 flex-1 overflow-y-auto pr-1">
-                            {validItems.map(item => (
-                                <button key={item.uid} onClick={() => toggleItem(item.uid)}
-                                    className={`w-20 h-28 rounded border-2 p-1 flex flex-col items-center justify-between relative overflow-hidden ${selectedUids.includes(item.uid) ? 'border-green-500 bg-slate-800' : `${getRarityColor(item.rarity)} bg-slate-800/50`}`}>
+                        <div className="flex flex-wrap gap-2.5 mb-4 flex-1 overflow-y-auto pr-1 content-start">
+                            {validItems.map(item => {
+                                const isSelected = selectedUids.includes(item.uid);
+                                return (
+                                    <button key={item.uid} onClick={() => toggleItem(item.uid)}
+                                        className={`w-20 h-28 rounded-xl border-2 p-1.5 flex flex-col items-center justify-between relative overflow-hidden transition cursor-pointer shadow-md ${isSelected ? 'border-emerald-500 bg-stone-900 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : `${getRarityColor(item.rarity)} bg-stone-900/90`}`}>
 
-                                    {item.type !== 'skill' && item.slot !== 'skill' && (
-                                        <span className="absolute top-0.5 left-0.5 bg-slate-900/90 text-emerald-400 text-[8px] font-extrabold px-1 py-0.5 rounded border border-slate-700 leading-none z-20 shadow">
-                                            Lv.{item.itemLevel ?? 1}
-                                        </span>
-                                    )}
+                                        {item.type !== 'skill' && item.slot !== 'skill' && (
+                                            <span className="absolute top-1 left-1 bg-stone-950 text-emerald-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-amber-950 leading-none z-20 shadow-sm">
+                                                Lv.{item.itemLevel ?? 1}
+                                            </span>
+                                        )}
 
-                                    <img src={item.icon} className="w-8 h-8 object-contain" />
+                                        <img src={item.icon} className="w-8 h-8 object-contain mt-1 drop-shadow" />
 
-                                    {/* --- ส่วนที่เพิ่มเข้ามา: แสดง Stats --- */}
-                                    <div className="text-[7px] text-slate-300 w-full leading-tight text-center">
-                                        {Object.entries(item.stats)
-                                            .filter(([_, v]) => (v as number) > 0)
-                                            .map(([k, v]) => (
-                                                <div key={k} className="flex justify-between px-1">
-                                                    <span>{k.toUpperCase()}</span>
-                                                    <span className="text-emerald-400 font-bold">+{v}</span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                    {/* --------------------------------- */}
+                                        <div className="text-[7px] text-amber-200/80 w-full leading-tight text-center font-mono">
+                                            {Object.entries(item.stats)
+                                                .filter(([_, v]) => (v as number) > 0)
+                                                .map(([k, v]) => (
+                                                    <div key={k} className="flex justify-between px-0.5">
+                                                        <span className="text-amber-500/70">{k.toUpperCase()}</span>
+                                                        <span className="text-amber-300 font-bold">+{v}</span>
+                                                    </div>
+                                                ))}
+                                        </div>
 
-                                    <div className="text-[8px] font-bold text-yellow-500 truncate w-full mt-1">{item.name}</div>
-                                </button>
-                            ))}
+                                        <div className="text-[8px] font-extrabold text-amber-100 truncate w-full mt-0.5 text-center">{item.name}</div>
+                                    </button>
+                                );
+                            })}
                         </div>
 
-
                         {selectedUids.length === 10 && (
-                            <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700 mb-4 mx-2">
-                                <div className="flex justify-between items-center text-xs">
-                                    {/* โชว์โอกาสสำเร็จ พร้อมเปลี่ยนสีตามความเสี่ยง */}
+                            <div className="bg-stone-900 p-3 rounded-xl border border-amber-900/60 mb-4 mx-2 shadow-inner">
+                                <div className="flex flex-col gap-2 text-xs">
                                     {(() => {
                                         const rarity = player.inventory.find(i => i.uid === selectedUids[0])?.rarity || 'Common';
                                         const cost = getCombineCost(rarity);
 
                                         const getChanceColor = (chance: number) => {
                                             if (chance >= 100) return 'text-emerald-400';
-                                            if (chance >= 20) return 'text-yellow-400';
-                                            return 'text-red-500 font-extrabold animate-pulse';
+                                            if (chance >= 20) return 'text-amber-400';
+                                            return 'text-rose-500 font-extrabold animate-pulse';
                                         };
 
                                         return (
-                                            <div className={`font-bold ${getChanceColor(cost.chance)}`}>
+                                            <div className={`font-bold text-center sm:text-left ${getChanceColor(cost.chance)}`}>
                                                 Success Rate : {cost.chance}%
                                             </div>
                                         );
                                     })()}
 
-                                    {/* โชว์แร่ที่ต้องการ */}
                                     {(() => {
                                         const rarity = player.inventory.find(i => i.uid === selectedUids[0])?.rarity || 'Common';
                                         const cost = getCombineCost(rarity);
@@ -328,8 +311,8 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                                         if (!cost.requirements || cost.requirements.length === 0) return null;
 
                                         return (
-                                            <div className="flex flex-wrap gap-3 items-center">
-                                                <span className="text-xs text-slate-400">Requires :</span>
+                                            <div className="flex flex-wrap gap-3 items-center justify-center sm:justify-start pt-1 border-t border-amber-950/80">
+                                                <span className="text-xs text-amber-500/80 font-bold">Requires :</span>
                                                 {cost.requirements.map((req) => {
                                                     const owned = player.materials[req.material] || 0;
                                                     const isEnough = owned >= req.amount;
@@ -337,8 +320,7 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                                                     return (
                                                         <div
                                                             key={req.material}
-                                                            // 🟢 เปลี่ยนจาก text-white เป็น text-emerald-400 เมื่อแร่พอ
-                                                            className={`flex items-center gap-1 text-xs font-bold ${isEnough ? 'text-emerald-400' : 'text-red-500'}`}
+                                                            className={`flex items-center gap-1 text-xs font-bold font-mono ${isEnough ? 'text-emerald-400' : 'text-rose-500'}`}
                                                         >
                                                             <span>{req.material.replace('_', ' ').toUpperCase()}</span>
                                                             <span>({owned}/{req.amount})</span>
@@ -352,18 +334,18 @@ export const CombineSection = ({ onClose }: CombineSectionProps) => {
                             </div>
                         )}
 
-                        {error && <div className="bg-red-900/50 text-red-200 text-xs py-1 px-2 rounded mb-2 text-center">{error}</div>}
+                        {error && <div className="bg-rose-950/80 border border-rose-800/60 text-rose-200 text-xs py-1.5 px-3 rounded-xl mb-2 text-center font-medium shadow-sm">{error}</div>}
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             <button onClick={handleCombine} disabled={selectedUids.length < 10 || isCombining}
-                                className={`flex-1 py-2 rounded text-xs font-bold ${selectedUids.length === 10 ? 'bg-yellow-600' : 'bg-slate-700'}`}>
+                                className={`flex-1 py-3 rounded-xl text-xs font-extrabold transition cursor-pointer shadow-md ${selectedUids.length === 10 ? 'bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-stone-950 border border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-stone-900 text-amber-500/50 border border-amber-950 cursor-not-allowed'}`}>
                                 {isCombining ? 'COMBINING...' : `COMBINE (${selectedUids.length}/10)`}
                             </button>
-                            <button onClick={onClose} className="px-4 py-2 bg-slate-800 rounded text-xs font-bold text-white">CANCEL</button>
+                            <button onClick={onClose} className="px-5 py-3 bg-stone-900 hover:bg-stone-800 active:bg-stone-950 rounded-xl text-xs font-bold text-amber-200 border border-amber-950 transition cursor-pointer shadow-sm">CANCEL</button>
                         </div>
                     </>
                 )}
             </div>
         </div>
     );
-}
+};

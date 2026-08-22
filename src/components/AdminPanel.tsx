@@ -30,7 +30,7 @@ export const AdminPanel = () => {
     };
 
     return (
-        <div className={`fixed bottom-5 left-4 z-50 bg-slate-900/95 border border-amber-500/80 rounded-lg p-2.5 shadow-lg max-w-[220px] w-full backdrop-blur transition-all duration-300 ${isMinimized ? 'opacity-70' : ''}`}>
+        <div className={`fixed bottom-5 left-4 z-50 bg-stone-900/95 border border-amber-500/80 rounded-lg p-2.5 shadow-lg max-w-[220px] w-full backdrop-blur transition-all duration-300 ${isMinimized ? 'opacity-70' : ''}`}>
             <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider cursor-pointer" onClick={() => setIsMinimized(!isMinimized)}>
                     {isMinimized ? '🛠️ Admin (Show)' : '🛠️ Admin Panel'}
@@ -50,7 +50,7 @@ export const AdminPanel = () => {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Type announcement..."
-                        className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white text-[10px] focus:outline-none focus:border-amber-500"
+                        className="bg-stone-950 border border-stone-700 rounded px-2 py-1 text-white text-[10px] focus:outline-none focus:border-amber-500"
                     />
                     <button
                         type="submit"

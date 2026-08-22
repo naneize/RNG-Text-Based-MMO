@@ -39,7 +39,7 @@ export const itemLibrary: ItemTemplate[] = [
 
 
     // --- Shields (10) ---
-    { id: 'steel_shield', name: 'Steel Shield', slot: 'shield', icon: '/Icons/Equipments/steel_shield.svg', type: 'equipment' },
+    { id: 'steel_shield', name: 'Steel Shield', slot: 'shield', icon: '/Icons/Equipments/steel_shield.png', type: 'equipment' },
     { id: 'buckler_shield', name: 'Buckler Shield', slot: 'shield', icon: '/Icons/Equipments/buckler_shield.svg', type: 'equipment' },
     { id: 'tower_shield', name: 'Tower Shield', slot: 'shield', icon: '/Icons/Equipments/tower_shield.svg', type: 'equipment' },
     { id: 'wooden_shield', name: 'Wooden Shield', slot: 'shield', icon: '/Icons/Equipments/wooden_shield.svg', type: 'equipment' },
@@ -60,7 +60,7 @@ export const itemLibrary: ItemTemplate[] = [
     { id: 'winged_helm', name: 'Winged Helm', slot: 'helm', icon: '/Icons/Equipments/winged_helm.svg', type: 'equipment' },
     { id: 'royal_crown', name: 'Royal Crown', slot: 'helm', icon: '/Icons/Equipments/royal_crown.svg', type: 'equipment' },
     { id: 'plate_helm', name: 'Plate Helm', slot: 'helm', icon: '/Icons/Equipments/plate_helm.svg', type: 'equipment' },
-    { id: 'beast_mask', name: 'Beast Mask', slot: 'helm', icon: '/Icons/Equipments/beast_mask.svg', type: 'equipment' },
+    { id: 'beast_mask', name: 'Beast Mask', slot: 'helm', icon: '/Icons/Equipments/beast_mask.png', type: 'equipment' },
 
     // --- Armors (10) ---
     { id: 'plate_armor', name: 'Plate Armor', slot: 'armor', icon: '/Icons/Equipments/plate_armor.svg', type: 'equipment' },

@@ -36,11 +36,13 @@ export const Sidebar = () => {
 
     return (
         /* 
-          1. เปลี่ยนจาก h-screen เป็น h-full และใช้ sticky top-0 เพื่อให้เส้นกรอบยาวเต็มความสูงของหน้าจอเสมอ 
-          2. เพิ่ม overflow-y-auto ให้สามารถเลื่อนดูเนื้อหาใน sidebar ได้หากหน้าจอเล็กเกินไป
+         1. เปลี่ยนจาก h-screen เป็น h-full และใช้ sticky top-0 เพื่อให้เส้นกรอบยาวเต็มความสูงของหน้าจอเสมอ 
+         2. เพิ่ม overflow-y-auto ให้สามารถเลื่อนดูเนื้อหาใน sidebar ได้หากหน้าจอเล็กเกินไป
         */
-        <div className="w-64 h-screen sticky top-0 bg-slate-950 border-r border-slate-800 p-4 flex flex-col gap-2 overflow-y-auto">
-            <h1 className="text-xl font-bold text-white mb-6 shrink-0">RNG-Text-Based MMO</h1>
+        <div className="w-64 h-screen sticky top-0 bg-stone-950 border-r border-amber-900/30 p-4 flex flex-col gap-2 overflow-y-auto shadow-[5px_0_20px_rgba(0,0,0,0.5)]">
+            <h1 className="text-xl font-bold text-amber-100 tracking-wider mb-6 shrink-0 drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">
+                RNG-Text-Based MMO
+            </h1>
 
             {/* ส่วนเมนูหลัก */}
             <div className="flex flex-col gap-2 shrink-0">
@@ -48,10 +50,10 @@ export const Sidebar = () => {
                     <button
                         key={item.id}
                         onClick={() => setCurrentPage(item.id)}
-                        className={`p-3 rounded-lg text-left transition flex items-center gap-3 ${currentPage === item.id
-                            ? 'bg-emerald-900 text-white'
-                            : 'text-slate-400 hover:bg-slate-900'
-                            }`}
+                        className={`p-3 rounded-lg text-left transition flex items-center gap-3 cursor-pointer text-sm font-semibold tracking-wide ${currentPage === item.id
+                            ? 'bg-gradient-to-r from-rose-950 to-red-950 text-amber-200 border border-amber-500/50 shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                            : 'text-amber-100/60 hover:bg-stone-900 hover:text-amber-100 border border-transparent'
+                            } font-display`}
                     >
                         {item.icon && <span className="text-lg">{item.icon}</span>}
                         {item.label}
@@ -60,7 +62,7 @@ export const Sidebar = () => {
             </div>
 
             {/* ส่วนล่างของ Sidebar */}
-            <div className="mt-auto pt-4 border-t border-slate-800 space-y-3 shrink-0">
+            <div className="mt-auto pt-4 border-t border-amber-900/30 space-y-3 shrink-0">
                 {hasActiveBattle && (
                     <div className="relative w-full">
                         <BattleWidget isSidebarMode={true} />
@@ -68,7 +70,7 @@ export const Sidebar = () => {
                 )}
 
                 {(userProfile || user) && (
-                    <p className="text-emerald-400 text-xs px-1 truncate font-medium">
+                    <p className="text-amber-400 text-xs px-1 truncate font-medium drop-shadow-sm">
                         Account : {userProfile?.username || user?.email || user?.displayName || 'ผู้เล่น'}
                     </p>
                 )}
@@ -77,20 +79,20 @@ export const Sidebar = () => {
                     <button
                         node-type="logout"
                         onClick={handleLogout}
-                        className="w-full p-2.5 rounded-lg text-left text-red-400 hover:bg-red-950/40 transition cursor-pointer text-sm font-medium"
+                        className="w-full p-2.5 rounded-lg text-left text-red-400 hover:bg-red-950/50 hover:text-red-300 transition cursor-pointer text-sm font-medium border border-transparent hover:border-red-900/40"
                     >
                         Logout
                     </button>
                 )}
 
-                <div className="pt-2 border-t border-slate-900 text-center flex flex-col gap-1">
-                    <p className="text-[10px] text-slate-400 leading-tight">
+                <div className="pt-2 border-t border-amber-900/20 text-center flex flex-col gap-1">
+                    <p className="text-[10px] text-amber-500/70 leading-tight">
                         By playing, you agree to our{' '}
-                        <span className="text-emerald-400 underline cursor-pointer">Terms</span> &{' '}
-                        <span className="text-emerald-400 underline cursor-pointer">Privacy</span>.
+                        <span className="text-amber-400 underline cursor-pointer">Terms</span> &{' '}
+                        <span className="text-amber-400 underline cursor-pointer">Privacy</span>.
                     </p>
-                    <p className="text-[9px] text-slate-500">
-                        Icons by <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 underline">Game-Icons.net</a>
+                    <p className="text-[9px] text-amber-600/60">
+                        Icons by <a href="https://game-icons.net/" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 underline">Game-Icons.net</a>
                     </p>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import type { Player, Stats } from '../types/game';
 import { calculateSynergyStats, SYNERGY_CONFIG } from './synergy';
 import type { Boss } from '../types/game';
 import { finalizeStats, STAT_CAPS } from './statCalculator';
+import { getActiveSetBonuses } from '../data/setBonuses';
 
 
 export interface StatSource {
@@ -40,6 +41,17 @@ export const getTotalStatsWithBreakdown = (player: Player): { finalStats: Stats;
                 addSource(statKey, `${item.name} (${slot})`, itemVal);
             });
         }
+    });
+
+    // 1.5 Set Bonus — บวกเข้า rawTotal ก่อน synergy เพื่อให้ทำงานเหมือน stat จากไอเทมทุกประการ
+    getActiveSetBonuses(player.equippedItems).forEach(({ set, activeTiers }) => {
+        activeTiers.forEach((tier) => {
+            Object.entries(tier.stats).forEach(([key, val]) => {
+                const statKey = key as keyof Stats;
+                rawTotal[statKey] = (rawTotal[statKey] || 0) + (val as number);
+                addSource(key, `${set.name} (${tier.requiredCount}pc)`, val as number);
+            });
+        });
     });
 
     // 2. คำนวณ Synergy
@@ -179,6 +191,16 @@ export const getTotalStats = (player: Player): Stats => {
         }
     });
 
+    // 1.5 Set Bonus (ตัวเดียวกับใน getTotalStatsWithBreakdown — ก่อน synergy เพื่อ behavior สอดคล้องกัน)
+    getActiveSetBonuses(player.equippedItems).forEach(({ activeTiers }) => {
+        activeTiers.forEach((tier) => {
+            Object.entries(tier.stats).forEach(([key, val]) => {
+                const statKey = key as keyof Stats;
+                rawTotal[statKey] = (rawTotal[statKey] || 0) + (val as number);
+            });
+        });
+    });
+
     // 2. คำนวณ Synergy
     const equippedSkill = player.equippedItems.skill1 || player.equippedItems.skill2 || undefined;
     const synergyStats = calculateSynergyStats(rawTotal, equippedSkill);
@@ -262,7 +284,8 @@ export const getEffectiveStatsInfo = () => [
     { label: 'HIT', bonus: `+${STAT_MULTIPLIERS.lukToHit} HIT`, stat: 'LUK' },
     { label: 'FLEE', bonus: `+${STAT_MULTIPLIERS.agiToFlee} FLEE`, stat: 'AGI' },
     { label: 'FLEE', bonus: `+${STAT_MULTIPLIERS.lukToFlee} FLEE`, stat: 'LUK' },
-    { label: 'RES', bonus: `+${STAT_MULTIPLIERS.intToRes} RES   (${RES_WEIGHT * 100}% as effective as DEF)`, stat: 'INT' }, { label: 'M.RES', bonus: `+${STAT_MULTIPLIERS.vitToMRes} M.RES   (Crit Res Max 40%)`, stat: 'VIT' },
+    { label: 'RES', bonus: `+${STAT_MULTIPLIERS.intToRes} RES   (${RES_WEIGHT * 100}% as effective as DEF)`, stat: 'INT' },
+    { label: 'M.RES', bonus: `+${STAT_MULTIPLIERS.vitToMRes} M.RES   (Crit Res Max 40%)`, stat: 'VIT' },
     { label: 'SKILL PWR', bonus: `+${STAT_MULTIPLIERS.intToSkillPwr} PWR`, stat: 'INT' },
 ];
 

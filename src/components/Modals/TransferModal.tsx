@@ -200,8 +200,9 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
 
     return (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-60 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border border-violet-700 p-6 rounded-2xl w-full max-w-3xl" onClick={e => e.stopPropagation()}>                {/* Header ที่โชว์ชื่อ */}
-                <h2 className="text-white font-bold text-lg mb-6 text-center uppercase tracking-wider">
+            <div className="bg-stone-950 border-2 border-amber-900/60 p-6 rounded-2xl w-full max-w-3xl shadow-[0_0_25px_rgba(0,0,0,0.8)] relative" onClick={e => e.stopPropagation()}>
+                {/* Header ที่โชว์ชื่อ */}
+                <h2 className="text-amber-400 font-bold text-lg mb-6 text-center uppercase tracking-widest drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">
                     {getHeaderText()}
                 </h2>
 
@@ -210,8 +211,9 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                     <div className="grid grid-cols-2 gap-2">
                         {availableStatsA.map(([stat, val]) => (
                             <button key={stat} onClick={() => { setSelectedStatA(stat); setStep('SELECT_TARGET_B'); }}
-                                className="p-3 bg-slate-800 hover:bg-violet-900 border border-slate-700 rounded-lg flex justify-between text-white font-bold transition-all">
-                                <span>{stat.toUpperCase()}</span> <span>+{val}</span>
+                                className="p-3 bg-stone-900 hover:bg-amber-950/60 border border-amber-900/40 hover:border-amber-500/60 rounded-lg flex justify-between text-stone-200 font-bold transition-all group">
+                                <span className="group-hover:text-amber-400">{stat.toUpperCase()}</span>
+                                <span className="text-amber-500">+{val}</span>
                             </button>
                         ))}
                     </div>
@@ -223,19 +225,19 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                         {/* 🏷️ Quick Filter ปุ่มคลิกเลือก Stat ไวๆ + Dropdown */}
                         <div className="flex flex-col gap-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-400 font-medium">Filter by Stat:</span>
-                                <span className="text-[12px] text-slate-400 font-medium">
+                                <span className="text-xs text-amber-500/70 font-medium">Filter by Stat:</span>
+                                <span className="text-[12px] text-amber-400/80 font-medium">
                                     {statSearchFilter === 'ALL' ? 'Showing All Stats' : `Filtered: ${statSearchFilter.toUpperCase()}`}
                                 </span>
                             </div>
 
                             {/* แถบปุ่ม Quick Filter กดเลือก Stat ยอดฮิตได้ทันที */}
-                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 bg-slate-950/60 rounded-lg border border-slate-800">
+                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 bg-black/60 rounded-lg border border-amber-900/30">
                                 <button
                                     onClick={() => setStatSearchFilter('ALL')}
                                     className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${statSearchFilter === 'ALL'
-                                        ? 'bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.4)]'
-                                        : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                        ? 'bg-amber-600 text-stone-950 font-extrabold shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                        : 'bg-stone-900 text-stone-400 hover:bg-stone-800 hover:text-amber-300'
                                         }`}
                                 >
                                     ALL
@@ -245,8 +247,8 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                         key={stat}
                                         onClick={() => setStatSearchFilter(stat)}
                                         className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition-all ${statSearchFilter === stat
-                                            ? 'bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.4)]'
-                                            : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            ? 'bg-amber-600 text-stone-950 font-extrabold shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                            : 'bg-stone-900 text-stone-400 hover:bg-stone-800 hover:text-amber-300'
                                             }`}
                                     >
                                         {stat}
@@ -258,7 +260,7 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                         {/* รายการไอเทมเป้าหมายที่กรองตาม Stat แล้ว */}
                         <div className="grid grid-cols-1 gap-3 max-h-72 overflow-y-auto pr-2 mt-2">
                             {filteredTargets.length === 0 ? (
-                                <div className="text-center py-8 text-slate-500 text-xs italic">
+                                <div className="text-center py-8 text-stone-500 text-xs italic">
                                     No items found with this stat.
                                 </div>
                             ) : (
@@ -266,14 +268,14 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                     <button
                                         key={item.uid}
                                         onClick={() => { setTargetItemB(item); setStep('SELECT_STAT_B'); setSelectedStatB(null); }}
-                                        className={`p-4 rounded-xl border-2 flex items-center gap-4 bg-slate-800 hover:bg-slate-750 transition-all group ${getRarityColor(item.rarity)}`}
+                                        className={`p-4 rounded-xl border-2 flex items-center gap-4 bg-stone-900/90 hover:bg-stone-900 transition-all group border-amber-900/40 hover:border-amber-500/60 ${getRarityColor(item.rarity)}`}
                                     >
-                                        <div className="w-12 h-12 flex-shrink-0 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700">
+                                        <div className="w-12 h-12 flex-shrink-0 bg-black rounded-lg flex items-center justify-center border border-amber-900/40">
                                             <img src={item.icon} className="w-8 h-8 object-contain" />
                                         </div>
 
                                         <div className="text-left flex-1">
-                                            <div className="font-bold text-white mb-1 group-hover:text-emerald-400 transition-colors">
+                                            <div className="font-bold text-stone-100 mb-1 group-hover:text-amber-400 transition-colors">
                                                 {item.name}
                                             </div>
 
@@ -281,15 +283,15 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                                 {Object.entries(item.stats)
                                                     .filter(([_, v]) => v > 0)
                                                     .map(([stat, val]) => (
-                                                        <span key={stat} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${stat === statSearchFilter ? 'bg-violet-950 text-violet-300 border-violet-500' : 'bg-slate-950/50 text-slate-400 border-slate-700/50'}`}>
-                                                            {stat}: <span className="text-white">{val}</span>
+                                                        <span key={stat} className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${stat === statSearchFilter ? 'bg-amber-950/80 text-amber-300 border-amber-500/60 shadow-[0_0_5px_rgba(245,158,11,0.2)]' : 'bg-black/50 text-stone-400 border-stone-800'}`}>
+                                                            {stat}: <span className="text-amber-200">{val}</span>
                                                         </span>
                                                     ))}
                                             </div>
                                         </div>
 
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="text-emerald-500 font-bold text-lg">→</span>
+                                            <span className="text-amber-400 font-bold text-lg">→</span>
                                         </div>
                                     </button>
                                 ))
@@ -307,21 +309,20 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                         {/* 📌 คอลัมน์ซ้าย: Success Rate, Materials & Warning */}
                         <div className="space-y-3 md:col-span-2">
                             {/* ส่วนแสดงค่าสถานะ (Success Rate & Materials Cost List) */}
-                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 space-y-2 text-xs">
+                            <div className="bg-black p-3 rounded-lg border border-amber-900/40 space-y-2 text-xs">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-medium">Success Rate :</span>
+                                    <span className="text-stone-400 font-medium">Success Rate :</span>
                                     <span className={`font-bold text-sm tracking-wide ${getSuccessRateColor(actualSuccessRate)}`}>
                                         {actualSuccessRate}%
                                     </span>
                                 </div>
 
                                 <div>
-                                    <span className="text-slate-400 block mb-1 font-medium">
-                                        Required Materials {(protectA || protectB) && <span className="text-sky-400">(Includes protection cost)</span>} :
+                                    <span className="text-stone-400 block mb-1 font-medium">
+                                        Required Materials {(protectA || protectB) && <span className="text-amber-400/80">(Includes protection cost)</span>} :
                                     </span>
                                     <div className="grid grid-cols-1 gap-1">
                                         {(() => {
-                                            // ✅ รวม transfer cost + protection cost ของทั้ง 2 ฝั่งเป็น map เดียว (บวกจำนวนถ้า id ซ้ำกัน)
                                             const combined = new Map<string, number>();
                                             (activeMaterialsConfig?.materials || []).forEach(m => {
                                                 combined.set(m.id, (combined.get(m.id) || 0) + m.amount);
@@ -336,14 +337,13 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                             return Array.from(combined.entries()).map(([id, amount]) => {
                                                 const currentAmount = materials[id] || 0;
                                                 const isEnoughMat = currentAmount >= amount;
-                                                // เช็คว่า material นี้มาจาก protection ล้วนๆ (ไม่ได้อยู่ใน transfer cost เดิม) เพื่อ badge แยกให้เห็นชัด
                                                 const isFromProtectionOnly = !(activeMaterialsConfig?.materials || []).some(m => m.id === id);
 
                                                 return (
-                                                    <div key={id} className="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800/50">
-                                                        <span className="text-slate-300 uppercase text-[11px] font-mono tracking-wider flex items-center gap-1">
+                                                    <div key={id} className="flex justify-between items-center bg-stone-900/80 px-2.5 py-1.5 rounded border border-amber-900/30">
+                                                        <span className="text-stone-300 uppercase text-[11px] font-mono tracking-wider flex items-center gap-1">
                                                             {id.replace('_', ' ')}
-                                                            {isFromProtectionOnly && <span className="text-sky-400 text-[9px]"></span>}
+                                                            {isFromProtectionOnly && <span className="text-amber-400 text-[9px]"></span>}
                                                         </span>
                                                         <span className={`font-bold font-mono text-[11px] ${isEnoughMat ? 'text-emerald-400' : 'text-red-500'}`}>
                                                             {currentAmount} / {amount}
@@ -357,71 +357,71 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                             </div>
 
                             {/* ✅ กล่อง Protection ใหม่ */}
-                            <div className="bg-slate-800/60 p-3 rounded-lg border border-sky-700/40 space-y-2">
-                                <div className="text-xs font-semibold text-sky-300 mb-1">Protection (Optional):</div>
+                            <div className="bg-stone-900/60 p-3 rounded-lg border border-amber-700/40 space-y-2">
+                                <div className="text-xs font-semibold text-amber-300 mb-1">Protection (Optional):</div>
 
                                 <label className="flex items-start justify-between text-xs cursor-pointer gap-2">
-                                    <span className="text-slate-300 flex-1">
+                                    <span className="text-stone-300 flex-1">
                                         Protect {itemA.name}
-                                        <span className="block text-slate-500 text-[10px] mt-0.5">
+                                        <span className="block text-stone-500 text-[10px] mt-0.5">
                                             {protectionCostA.length > 0
                                                 ? protectionCostA.map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')
                                                 : (PROTECTION_COSTS[itemA.rarity.toLowerCase()] || []).map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')}
                                         </span>
                                     </span>
-                                    <input type="checkbox" checked={protectA} onChange={(e) => setProtectA(e.target.checked)} className="mt-1" />
+                                    <input type="checkbox" checked={protectA} onChange={(e) => setProtectA(e.target.checked)} className="mt-1 accent-amber-500" />
                                 </label>
 
                                 <label className="flex items-start justify-between text-xs cursor-pointer gap-2">
-                                    <span className="text-slate-300 flex-1">
+                                    <span className="text-stone-300 flex-1">
                                         Protect {targetItemB.name}
-                                        <span className="block text-slate-500 text-[10px] mt-0.5">
+                                        <span className="block text-stone-500 text-[10px] mt-0.5">
                                             {protectionCostB.length > 0
                                                 ? protectionCostB.map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')
                                                 : (PROTECTION_COSTS[targetItemB.rarity.toLowerCase()] || []).map(m => `${m.id.replace('_', ' ')} x${m.amount}`).join(', ')}
                                         </span>
                                     </span>
-                                    <input type="checkbox" checked={protectB} onChange={(e) => setProtectB(e.target.checked)} className="mt-1" />
+                                    <input type="checkbox" checked={protectB} onChange={(e) => setProtectB(e.target.checked)} className="mt-1 accent-amber-500" />
                                 </label>
                             </div>
 
-                            {/* กล่อง Warning — ✅ แก้ให้ตอบสนองตาม protectA/protectB */}
-                            <div className="bg-red-950/20 p-3 rounded-lg border border-red-500/30 flex items-start gap-2.5 shadow-lg">
+                            {/* กล่อง Warning */}
+                            <div className="bg-amber-950/20 p-3 rounded-lg border border-amber-600/30 flex items-start gap-2.5 shadow-lg">
                                 <div className="text-amber-500 text-base flex-shrink-0 mt-0.5">⚠️</div>
-                                <div className="text-[11px] text-slate-300 leading-relaxed flex-1">
-                                    <strong className="text-red-400 uppercase tracking-wide mr-1">
+                                <div className="text-[11px] text-stone-300 leading-relaxed flex-1">
+                                    <strong className="text-amber-400 uppercase tracking-wide mr-1">
                                         Critical Warning:
                                     </strong>
                                     If the transfer <span className="text-red-400 font-bold underline">fails</span>,{" "}
                                     {protectA && protectB ? (
-                                        <span className="text-emerald-400 font-bold">
+                                        <span className="text-amber-300 font-bold">
                                             Both stats have been protected. No stats will be lost despite the failed transfer.
                                         </span>
                                     ) : (
                                         <>
                                             {!protectA && (
                                                 <>
-                                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                                    <strong className="text-white bg-amber-950/80 px-1 py-0.5 rounded border border-amber-700/50 font-mono text-[10px]">
                                                         {selectedStatA ? selectedStatA.toUpperCase() : 'STAT A'}
                                                     </strong>{" "}
                                                     will be <strong className="text-red-400 font-bold uppercase">lost permanently</strong>.{" "}
                                                 </>
                                             )}
                                             {protectA && (
-                                                <span className="text-emerald-400 font-semibold">
+                                                <span className="text-amber-300 font-semibold">
                                                     {selectedStatA?.toUpperCase()} is protected.{" "}
                                                 </span>
                                             )}
                                             {!protectB && (
                                                 <>
-                                                    <strong className="text-white bg-red-900/50 px-1 py-0.5 rounded border border-red-700/50 font-mono text-[10px]">
+                                                    <strong className="text-white bg-amber-950/80 px-1 py-0.5 rounded border border-amber-700/50 font-mono text-[10px]">
                                                         {selectedStatB ? selectedStatB.toUpperCase() : 'SELECTED STAT'}
                                                     </strong>{" "}
                                                     will be <strong className="text-red-400 font-bold uppercase">lost permanently</strong>.
                                                 </>
                                             )}
                                             {protectB && (
-                                                <span className="text-emerald-400 font-semibold">
+                                                <span className="text-amber-300 font-semibold">
                                                     {selectedStatB?.toUpperCase()} is protected.
                                                 </span>
                                             )}
@@ -429,22 +429,20 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                     )}
                                 </div>
                             </div>
-
-
                         </div>
 
-                        {/* 📌 คอลัมน์ขวา: รายการ Stat ปลายทาง (จัดเรียงเป็น 2 คอลัมน์ย่อยด้านใน) */}
-                        <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-700 flex flex-col h-full md:col-span-3">                            <span className="text-xs text-slate-400 font-medium mb-2 block">Select Stat to Overwrite :</span>
+                        {/* 📌 คอลัมน์ขวา: รายการ Stat ปลายทาง */}
+                        <div className="bg-black/50 p-3 rounded-lg border border-amber-900/40 flex flex-col h-full md:col-span-3">                           <span className="text-xs text-amber-500/70 font-medium mb-2 block">Select Stat to Overwrite :</span>
                             <div className="grid grid-cols-3 gap-2 content-start">
                                 {Object.entries(targetItemB.stats).filter(([_, v]) => v > 0).map(([stat, val]) => (
                                     <button key={stat}
                                         onClick={() => setSelectedStatB(stat)}
-                                        className={`p-2.5 border rounded-lg text-white font-bold flex justify-between items-center text-xs transition-all ${selectedStatB === stat
-                                            ? 'bg-emerald-600 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
-                                            : 'bg-slate-800 border-slate-700 hover:bg-slate-700'
+                                        className={`p-2.5 border rounded-lg text-stone-200 font-bold flex justify-between items-center text-xs transition-all ${selectedStatB === stat
+                                            ? 'bg-amber-600 border-amber-400 text-stone-950 font-extrabold shadow-[0_0_10px_rgba(245,158,11,0.4)]'
+                                            : 'bg-stone-900 border-amber-900/40 hover:bg-stone-800 hover:border-amber-700'
                                             }`}>
                                         <span className="truncate">{stat.toUpperCase()}</span>
-                                        <span className="text-slate-300 ml-1">({val})</span>
+                                        <span className="text-amber-400/80 ml-1">({val})</span>
                                     </button>
                                 ))}
                             </div>
@@ -457,18 +455,18 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                 <button
                     onClick={handleBottomAction}
                     disabled={(step === 'SELECT_STAT_B' && (!selectedStatB || !hasEnoughWithProtection)) || isProcessing}
-                    className={`w-full mt-6 py-3 rounded-lg font-bold transition-all relative overflow-hidden ${isProcessing
-                        ? 'bg-slate-800 text-slate-400 cursor-wait'
+                    className={`w-full mt-6 py-3 rounded-lg font-bold transition-all relative overflow-hidden tracking-wider uppercase border ${isProcessing
+                        ? 'bg-stone-900 text-stone-500 border-stone-800 cursor-wait'
                         : (step === 'SELECT_STAT_B' && selectedStatB
-                            ? (hasEnoughWithProtection ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-900 text-red-300 cursor-not-allowed')
-                            : 'bg-slate-700 hover:bg-slate-600 text-slate-400'
+                            ? (hasEnoughWithProtection ? 'bg-amber-600 hover:bg-amber-500 shadow-lg shadow-amber-500/25 hover:shadow-amber-400/50 text-stone-950 font-extrabold border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-red-950 text-red-400 border-red-800 cursor-not-allowed')
+                            : 'bg-stone-900 hover:bg-stone-800 text-stone-400 border-amber-900/40'
                         )
                         }`}
                 >
                     {isProcessing ? (
                         <>
                             <div
-                                className="absolute left-0 top-0 h-full bg-emerald-500/30 transition-all duration-75"
+                                className="absolute left-0 top-0 h-full bg-amber-500/30 transition-all duration-75"
                                 style={{ width: `${progress}%` }}
                             />
                             <span className="relative z-10 animate-pulse">PROCESSING {progress}%...</span>
@@ -485,29 +483,29 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
             </div>
 
             {resultModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000] p-4">
-                    <div className={`bg-slate-800 border-2 p-6 rounded-xl w-full max-w-sm shadow-2xl ${resultModal.isSuccess ? 'border-emerald-500' : 'border-red-500'
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4">
+                    <div className={`bg-stone-950 border-2 p-6 rounded-xl w-full max-w-sm shadow-[0_0_30px_rgba(0,0,0,0.9)] ${resultModal.isSuccess ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.2)]'
                         }`}>
                         <h2 className={`text-xl font-bold mb-4 ${resultModal.isSuccess ? 'text-emerald-400' : 'text-red-400'
                             }`}>
                             {resultModal.isSuccess ? 'TRANSFER SUCCESS' : 'TRANSFER FAILED'}
                         </h2>
 
-                        <div className="text-slate-300 space-y-3 mb-6">
+                        <div className="text-stone-300 space-y-3 mb-6">
                             <p className="font-semibold text-base">{resultModal.message}</p>
 
-                            {/* ฝั่ง Item A — ✅ แก้ให้เช็ค protectedA */}
-                            <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 space-y-1">
-                                <div className="text-xs text-slate-400 mb-1 truncate">{resultModal.itemAName}</div>
+                            {/* ฝั่ง Item A */}
+                            <div className="bg-black p-3 rounded-lg border border-amber-900/40 space-y-1">
+                                <div className="text-xs text-stone-400 mb-1 truncate">{resultModal.itemAName}</div>
                                 {!resultModal.isSuccess && resultModal.protectedA ? (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="uppercase font-bold text-sky-400">{resultModal.removedStatA} PROTECTED</span>
-                                        <span className="text-sky-400">{resultModal.removedValA}</span>
+                                        <span className="uppercase font-bold text-amber-400">{resultModal.removedStatA} PROTECTED</span>
+                                        <span className="text-amber-400">{resultModal.removedValA}</span>
                                     </div>
                                 ) : (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="uppercase font-bold text-red-400">- {resultModal.removedStatA}</span>
-                                        <span className="text-slate-500 line-through">{resultModal.removedValA}</span>
+                                        <span className="text-stone-500 line-through">{resultModal.removedValA}</span>
                                     </div>
                                 )}
                                 {resultModal.isSuccess && (
@@ -518,18 +516,18 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                 )}
                             </div>
 
-                            {/* ฝั่ง Item B — ✅ แก้ให้เช็ค protectedB */}
-                            <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 space-y-1">
-                                <div className="text-xs text-slate-400 mb-1 truncate">{resultModal.itemBName}</div>
+                            {/* ฝั่ง Item B */}
+                            <div className="bg-black p-3 rounded-lg border border-amber-900/40 space-y-1">
+                                <div className="text-xs text-stone-400 mb-1 truncate">{resultModal.itemBName}</div>
                                 {!resultModal.isSuccess && resultModal.protectedB ? (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="uppercase font-bold text-sky-400">{resultModal.removedStatB} PROTECTED</span>
-                                        <span className="text-sky-400">{resultModal.removedValB}</span>
+                                        <span className="uppercase font-bold text-amber-400">{resultModal.removedStatB} PROTECTED</span>
+                                        <span className="text-amber-400">{resultModal.removedValB}</span>
                                     </div>
                                 ) : (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="uppercase font-bold text-red-400">- {resultModal.removedStatB}</span>
-                                        <span className="text-slate-500 line-through">{resultModal.removedValB}</span>
+                                        <span className="text-stone-500 line-through">{resultModal.removedValB}</span>
                                     </div>
                                 )}
                                 {resultModal.isSuccess && (
@@ -546,10 +544,10 @@ export const TransferModal = ({ itemA, inventory, onClose, getRarityColor }: Tra
                                 setResultModal(null);
                                 if (resultModal.isSuccess) onClose();
                             }}
-                            className={`w-full py-2 rounded-lg font-bold ${resultModal.isSuccess ? 'bg-emerald-600' : 'bg-red-800'
+                            className={`w-full py-2.5 rounded-lg font-bold uppercase tracking-wider ${resultModal.isSuccess ? 'bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-extrabold shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-red-900 hover:bg-red-800 text-white'
                                 }`}
                         >
-                            {resultModal.isSuccess ? 'GREAT!' : 'I UNDERSTAND'}
+                            {resultModal.isSuccess ? 'GREAT!' : 'OK'}
                         </button>
                     </div>
                 </div>

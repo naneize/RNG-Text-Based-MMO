@@ -94,6 +94,10 @@ export interface Item extends ItemTemplate {
     skillCondition?: SkillCondition;
     requiredWeaponType?: WeaponType;
     weaponAbilityId?: string;
+    traitId?: string;
+
+    // ล็อกกัน salvage โดยไม่ตั้งใจ (ผู้เล่นกดไอคอนกุญแจบนการ์ดไอเทม)
+    locked?: boolean;
 
     elementBonus?: {
         type: 'Fire' | 'Water' | 'Earth' | 'Wind' | 'Dark' | 'Holy' | 'Neutral';
@@ -103,6 +107,26 @@ export interface Item extends ItemTemplate {
         type: 'DemiHuman' | 'Plant' | 'Brute' | 'Undead' | 'Demon' | 'Angel' | 'Dragon';
         value: number
     };
+}
+
+// จังหวะการทำงานของ Trait (ใช้งานตอนสู้อัตโนมัติ)
+export type TraitTriggerType =
+    | 'on_attack'        // ตอนโจมตี
+    | 'on_damage_dealt'  // ตอนทำดาเมจสำเร็จ
+    | 'on_take_damage'   // ตอนโดนโจมตี / รับดาเมจ
+    | 'on_dodge'         // ตอนหลบการโจมตีได้
+    | 'on_turn_start';   // ตอนเริ่มเทิร์น
+
+// โครงสร้างของ Trait แต่ละอัน
+export interface EquipmentTrait {
+    id: string;
+    name: string;
+    allowedSlots: string[]; // ช่องสวมใส่ที่ใส่ได้ เช่น ['armor', 'shield']
+    trigger: TraitTriggerType;
+    rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
+    description: string;
+    lore?: string;
+    effect: any; // ฟังก์ชันเอฟเฟกต์
 }
 
 export const MAX_INVENTORY_SLOTS = 100;

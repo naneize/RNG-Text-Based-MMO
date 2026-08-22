@@ -35,7 +35,9 @@ export function getBaseStatRanges(
         r.hit = withVariation(calcBase(5, rarityMult, itemLevel, 0.5));
     } else if (slot === 'helm') {
         r.def = withVariation(calcBase(10, rarityMult, itemLevel, 1.5));
-        r.maxHp = withVariation(calcBase(80, rarityMult, itemLevel, 10));
+        // ✅ scale 5 ให้ตรงกับ itemGenerator (helm maxHp) — เดิมใส่ 10 ทำให้ range โชว์และ
+        // reroll สุ่มเป็น 2 เท่าของค่าที่ไอเทมเกิดจริง
+        r.maxHp = withVariation(calcBase(80, rarityMult, itemLevel, 5));
         r.hit = withVariation(calcBase(7, rarityMult, itemLevel, 0.5));
     } else if (['armor', 'shield'].includes(slot)) {
         r.def = withVariation(calcBase(15, rarityMult, itemLevel, 1.5));

@@ -22,7 +22,7 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
     const getRarityColor = (rarity?: string) => {
         switch (rarity?.toLowerCase()) {
             case 'common':
-                return 'text-slate-300';
+                return 'text-stone-300';
             case 'uncommon':
                 return 'text-emerald-400';
             case 'rare':
@@ -32,18 +32,18 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
             case 'legendary':
                 return 'text-amber-400';
             default:
-                return 'text-slate-300';
+                return 'text-stone-300';
         }
     };
 
     // Helper function to map rarity to dynamic Tailwind border & background classes for frames/boxes
     const getRarityBoxStyle = (rarity?: string, isSelected?: boolean) => {
         if (isSelected) {
-            return 'border-emerald-500 bg-emerald-900/30';
+            return 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-500/50 shadow-[0_0_10px_rgba(217,119,6,0.3)]';
         }
         switch (rarity?.toLowerCase()) {
             case 'common':
-                return 'border-slate-600 bg-slate-800/60 hover:bg-slate-700';
+                return 'border-stone-600 bg-stone-800/60 hover:bg-stone-700';
             case 'uncommon':
                 return 'border-emerald-600/60 bg-emerald-950/20 hover:bg-emerald-900/30';
             case 'rare':
@@ -53,7 +53,7 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
             case 'legendary':
                 return 'border-amber-500/80 bg-amber-950/20 hover:bg-amber-900/30';
             default:
-                return 'border-slate-700 bg-slate-800 hover:bg-slate-700';
+                return 'border-stone-700 bg-stone-800 hover:bg-stone-700';
         }
     };
 
@@ -86,14 +86,14 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
     let currentIndex = 0;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
-                <h2 className="text-lg font-bold text-white mb-4">List Item for Sale</h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-serif" onClick={onClose}>
+            <div className="bg-stone-900 border border-amber-900/50 rounded-2xl p-6 w-full max-w-2xl shadow-[0_0_25px_rgba(0,0,0,0.8)]" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-lg font-bold text-amber-100 mb-4 border-b border-amber-950 pb-2">List Item for Sale</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     {/* Left Column: Select item from inventory */}
-                    <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-3 max-h-72 overflow-y-auto">
-                        <div className="text-xs font-bold text-slate-400 mb-2">Select Item from Inventory</div>
+                    <div className="bg-stone-950/60 border border-amber-950 rounded-xl p-3 max-h-72 overflow-y-auto scrollbar-thin">
+                        <div className="text-xs font-bold text-amber-500/70 mb-2">Select Item from Inventory</div>
                         <div className="grid grid-cols-2 gap-2">
                             {sellableItems.map((item) => (
                                 <button
@@ -101,35 +101,35 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                                     onClick={() => setSelectedUid(item.uid)}
                                     className={`p-2 rounded-lg border text-center transition cursor-pointer flex flex-col items-center justify-center ${getRarityBoxStyle(item.rarity, selectedUid === item.uid)}`}
                                 >
-                                    {item.icon && <img src={item.icon} className="w-8 h-8 mb-1 object-contain" alt={item.name} />}
-                                    <div className="text-[10px] text-slate-300 truncate w-full">{item.name}</div>
+                                    {item.icon && <img src={item.icon} className="w-8 h-8 mb-1 object-contain drop-shadow" alt={item.name} />}
+                                    <div className="text-[10px] text-amber-200 truncate w-full">{item.name}</div>
                                 </button>
                             ))}
                             {sellableItems.length === 0 && (
-                                <div className="col-span-2 text-center text-slate-500 text-xs py-8">No sellable items found</div>
+                                <div className="col-span-2 text-center text-amber-600/60 text-xs py-8 italic">No sellable items found</div>
                             )}
                         </div>
                     </div>
 
                     {/* Right Column: Item stats details */}
-                    <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                    <div className="bg-stone-950/60 border border-amber-950 rounded-xl p-4 flex flex-col justify-between">
                         <div>
-                            <div className="text-xs font-bold text-slate-400 mb-2">Item Details</div>
+                            <div className="text-xs font-bold text-amber-500/70 mb-2">Item Details</div>
                             {selectedItem ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3">
                                         {selectedItem.icon && (
                                             <img
                                                 src={selectedItem.icon}
-                                                className={`w-12 h-12 object-contain bg-slate-800 rounded-lg p-1 border ${getRarityBoxStyle(selectedItem.rarity).split(' ')[0]}`}
+                                                className={`w-12 h-12 object-contain bg-stone-900 rounded-lg p-1 border ${getRarityBoxStyle(selectedItem.rarity).split(' ')[0]}`}
                                                 alt={selectedItem.name}
                                             />
                                         )}
                                         <div>
-                                            <div className="text-sm font-bold text-white">{selectedItem.name}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase">{selectedItem.slot} · Lv.{selectedItem.itemLevel ?? 1}</div>
+                                            <div className="text-sm font-bold text-amber-100">{selectedItem.name}</div>
+                                            <div className="text-[10px] text-amber-500/70 uppercase">{selectedItem.slot} · Lv.{selectedItem.itemLevel ?? 1}</div>
                                             <div className="text-[10px] font-semibold capitalize">
-                                                <span className="text-slate-400">Rarity: </span>
+                                                <span className="text-amber-600">Rarity: </span>
                                                 <span className={getRarityColor(selectedItem.rarity)}>{selectedItem.rarity}</span>
                                             </div>
                                         </div>
@@ -137,7 +137,8 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
 
                                     {/* ส่วนแสดง Stats และ Skill Condition พร้อมขีดคั่นแต่ละบรรทัด */}
                                     {totalRows > 0 && (
-                                        <div className="mt-3 bg-slate-950/40 rounded-lg p-2 text-[10px] space-y-1 border border-slate-800/50">
+                                        <div className="mt-3 bg-stone-900/60 rounded-lg p-2 text-[10px] space-y-1 border border-amber-950">
+
                                             {/* แสดง Stats ปกติ */}
                                             {validStats.map(([key, val]) => {
                                                 currentIndex++;
@@ -145,10 +146,13 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                                                 return (
                                                     <div
                                                         key={key}
-                                                        className={`flex justify-between text-slate-300 pb-1 ${isNotLast ? 'border-b border-slate-800/60' : ''}`}
+                                                        className={`flex justify-between pb-1 ${isNotLast ? 'border-b border-amber-950' : ''}`}
                                                     >
-                                                        <span className="uppercase text-slate-400">{key}:</span>
-                                                        <span className="font-bold text-emerald-400">+{val}</span>
+                                                        {/* เปลี่ยนชื่อ Stat เป็นโทนสีทองอำพัน */}
+                                                        <span className="uppercase text-amber-200 font-medium">{key}:</span>
+
+                                                        {/* เปลี่ยนตัวเลข Stat เป็นสีทองสว่าง หรือสีที่คุณต้องการ */}
+                                                        <span className="font-bold text-amber-300">+{val}</span>
                                                     </div>
                                                 );
                                             })}
@@ -160,9 +164,9 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                                                 return (
                                                     <div
                                                         key={key}
-                                                        className={`flex justify-between text-slate-300 pb-1 ${isNotLast ? 'border-b border-slate-800/60' : ''}`}
+                                                        className={`flex justify-between text-amber-200/80 pb-1 ${isNotLast ? 'border-b border-amber-950' : ''}`}
                                                     >
-                                                        <span className="uppercase text-slate-400">{key}:</span>
+                                                        <span className="uppercase text-amber-600">{key}:</span>
                                                         <span className="font-semibold text-cyan-400">
                                                             {typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}
                                                         </span>
@@ -173,11 +177,11 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center text-slate-600 text-xs py-16">No item selected</div>
+                                <div className="text-center text-amber-600/50 text-xs py-16 italic">No item selected</div>
                             )}
                         </div>
                         {selectedItem && (
-                            <div className="text-[10px] text-slate-500 text-right mt-2">UID: {selectedItem.uid}</div>
+                            <div className="text-[10px] text-amber-600/60 text-right mt-2">UID: {selectedItem.uid}</div>
                         )}
                     </div>
                 </div>
@@ -185,24 +189,26 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                 {/* Price and Currency Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                     <div className="md:col-span-2">
-                        <label className="text-xs text-slate-400 uppercase font-bold">
+                        <label className="text-xs text-amber-500/80 uppercase font-bold">
                             Price
                         </label>
                         <input
-                            type="number"
-                            min={1}
+                            type="text"
                             value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white mt-1 text-sm"
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, ''); // กรองให้พิมพ์ได้เฉพาะตัวเลข
+                                setPrice(val);
+                            }}
+                            className="w-full bg-stone-950 border border-amber-900/50 rounded-lg p-2 text-amber-100 mt-1 text-sm focus:outline-none focus:border-amber-500"
                             placeholder="e.g. 100"
                         />
                     </div>
                     <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold">Requested Currency</label>
+                        <label className="text-xs text-amber-500/80 uppercase font-bold">Requested Currency</label>
                         <select
                             value={currencyType}
                             onChange={(e) => setCurrencyType(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white mt-1 text-sm cursor-pointer"
+                            className="w-full bg-stone-950 border border-amber-900/50 rounded-lg p-2 text-amber-100 mt-1 text-sm cursor-pointer focus:outline-none focus:border-amber-500"
                         >
                             {materialLibrary.map((mat) => (
                                 <option key={mat.id} value={mat.id}>
@@ -213,16 +219,16 @@ export const SellItemModal = ({ inventory, onSell, onClose }: Props) => {
                     </div>
                 </div>
 
-                {feedback && <div className="text-xs text-amber-400 mb-3">{feedback}</div>}
+                {feedback && <div className="text-xs text-amber-400 mb-3 bg-amber-950/40 p-2 rounded border border-amber-900/40">{feedback}</div>}
 
                 <div className="flex gap-2">
-                    <button onClick={onClose} className="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-white text-sm cursor-pointer">
+                    <button onClick={onClose} className="flex-1 bg-stone-800 hover:bg-stone-700 border border-amber-900/40 py-2 rounded-lg text-amber-200 text-sm cursor-pointer transition">
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !selectedUid}
-                        className="flex-1 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 py-2 rounded-lg text-white text-sm font-bold cursor-pointer"
+                        className="flex-1 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 disabled:opacity-50 py-2 rounded-lg text-amber-50 text-sm font-bold cursor-pointer transition border border-amber-600/50 shadow-[0_0_10px_rgba(217,119,6,0.3)]"
                     >
                         {isSubmitting ? 'Listing...' : 'List Item'}
                     </button>

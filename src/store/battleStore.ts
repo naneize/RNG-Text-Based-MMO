@@ -1,7 +1,7 @@
 // store/battleStore.ts
 import { create } from 'zustand';
 import { calculateDamage, getEquippedBonus, getEffectiveStats } from '../utils/combat';
-import { resolveWeaponAbility } from '../data/weaponAbilities';
+import { resolveEquipmentTraits, type TraitContext } from '../data/equipmentTraits';
 import { useAchievementStore } from './achievementStore';
 import { useGameStore } from './gameStore';
 import type { Stats, Player, Boss, Item } from '../types/game';
@@ -9,7 +9,7 @@ import { WEAKNESS_BONUS_RATE } from '../types/game';
 
 
 interface ActiveBuff {
-    type: 'ignoreDef' | 'critBoost' | 'stunBoss';
+    type: 'ignoreDef' | 'critBoost' | 'stunBoss' | 'damageMitigation' | 'atkBoost' | 'regen';
     remainingRounds: number;
     value: number;
     name?: string;
@@ -206,21 +206,44 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
     let abilityLogText = '';
     let newPlayerHp = state.playerHp;
 
+    // 0. Trigger on_turn_start traits (เช่น Regen HP จาก Cloak/Helm/Ring)
+    const turnStartContext: TraitContext = {
+        attacker: finalStatsSnapshot,
+        defender: bossEffectiveStats,
+        baseDamage: 0,
+        playerHp: newPlayerHp,
+        playerMaxHp: finalStatsSnapshot.maxHp || 100,
+    };
+    const turnStartTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_turn_start', turnStartContext);
+    if (turnStartTraits.healAmount && turnStartTraits.healAmount > 0) {
+        newPlayerHp = Math.min(finalStatsSnapshot.maxHp || 100, newPlayerHp + turnStartTraits.healAmount);
+    }
+
     if (!playerResult.isMiss) {
         useAchievementStore.getState().checkCondition('DEAL_DAMAGE', { damage: dmgToBoss });
 
-        const attackAbility = resolveWeaponAbility(playerWeapon, 'on_attack', finalStatsSnapshot, bossEffectiveStats, dmgToBoss);
-        const damageAbility = resolveWeaponAbility(playerWeapon, 'on_damage', finalStatsSnapshot, bossEffectiveStats, dmgToBoss);
+        const attackContext: TraitContext = {
+            attacker: finalStatsSnapshot,
+            defender: bossEffectiveStats,
+            baseDamage: dmgToBoss,
+            playerHp: newPlayerHp,
+            playerMaxHp: finalStatsSnapshot.maxHp || 100,
+            isCrit: playerResult.isCrit,
+            isMiss: playerResult.isMiss,
+        };
 
-        dmgToBoss += attackAbility.extraDamage + damageAbility.extraDamage;
+        const attackTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_attack', attackContext);
+        const damageTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_damage_dealt', attackContext);
 
-        const healAmount = (attackAbility.healAmount || 0) + (damageAbility.healAmount || 0);
+        dmgToBoss += (attackTraits.extraDamage || 0) + (damageTraits.extraDamage || 0);
+
+        const healAmount = (attackTraits.healAmount || 0) + (damageTraits.healAmount || 0);
         if (healAmount > 0) {
-            newPlayerHp = Math.min(finalStatsSnapshot.maxHp || 1, state.playerHp + healAmount);
+            newPlayerHp = Math.min(finalStatsSnapshot.maxHp || 1, newPlayerHp + healAmount);
         }
-        abilityLogText = [attackAbility.log, damageAbility.log].filter(Boolean).join(' ');
+        abilityLogText = [turnStartTraits.log, attackTraits.log, damageTraits.log].filter(Boolean).join(' ');
 
-        const newBuff = attackAbility.buff || damageAbility.buff;
+        const newBuff = attackTraits.buff || damageTraits.buff;
         if (newBuff) {
             const existingIndex = activeBuffs.findIndex(b => b.type === newBuff.type);
             const buffData: ActiveBuff = {
@@ -233,6 +256,8 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
             if (existingIndex >= 0) activeBuffs[existingIndex] = buffData;
             else activeBuffs.push(buffData);
         }
+    } else if (turnStartTraits.log) {
+        abilityLogText = turnStartTraits.log;
     }
 
     const nextBossHp = Math.max(0, state.bossHp - dmgToBoss);
@@ -282,10 +307,73 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
         const bossResult = stunBuff
             ? { damage: 0, isMiss: true, isCrit: false, isSkillActive: false }
             : calculateDamage(bossEffectiveStats, finalStatsSnapshot);
-        const dmgToPlayer = bossResult.isMiss ? 0 : bossResult.damage;
+        const baseDmgToPlayer = bossResult.isMiss ? 0 : bossResult.damage;
 
+        let actualDmgToPlayer = baseDmgToPlayer;
+        let traitDefendLog = '';
+        let reflectDmgToBoss = 0;
         const currentState = get();
-        const finalPlayerHp = dmgToPlayer > 0 ? Math.max(0, currentState.playerHp - dmgToPlayer) : currentState.playerHp;
+        let finalPlayerHp = currentState.playerHp;
+
+        const defendContext: TraitContext = {
+            attacker: bossEffectiveStats,
+            defender: finalStatsSnapshot,
+            baseDamage: baseDmgToPlayer,
+            playerHp: finalPlayerHp,
+            playerMaxHp: finalStatsSnapshot.maxHp || 100,
+            isCrit: bossResult.isCrit,
+            isMiss: bossResult.isMiss,
+        };
+
+        if (bossResult.isMiss) {
+            // หลบการโจมตีได้ (on_dodge จาก Boots: Counter Attack / Crit Buff)
+            const dodgeTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_dodge', defendContext);
+            if (dodgeTraits.extraDamage && dodgeTraits.extraDamage > 0) {
+                reflectDmgToBoss += dodgeTraits.extraDamage;
+            }
+            if (dodgeTraits.buff) {
+                const existingIndex = activeBuffs.findIndex(b => b.type === dodgeTraits.buff!.type);
+                const buffData: ActiveBuff = {
+                    type: dodgeTraits.buff.type,
+                    name: dodgeTraits.buff.name,
+                    remainingRounds: dodgeTraits.buff.duration,
+                    value: dodgeTraits.buff.value,
+                    isNew: true
+                };
+                if (existingIndex >= 0) activeBuffs[existingIndex] = buffData;
+                else activeBuffs.push(buffData);
+            }
+            if (dodgeTraits.log) traitDefendLog += ` ${dodgeTraits.log}`;
+        } else if (baseDmgToPlayer > 0) {
+            // โดนโจมตี (on_take_damage จาก Armor/Shield: Damage Reduction, Thorns, Emergency Shield)
+            const takeDmgTraits = resolveEquipmentTraits(equippedItemsSnapshot, 'on_take_damage', defendContext);
+
+            if (takeDmgTraits.damageReductionPercent && takeDmgTraits.damageReductionPercent > 0) {
+                const reduction = Math.floor(actualDmgToPlayer * (takeDmgTraits.damageReductionPercent / 100));
+                actualDmgToPlayer = Math.max(1, actualDmgToPlayer - reduction);
+            }
+            if (takeDmgTraits.damageReductionFlat && takeDmgTraits.damageReductionFlat > 0) {
+                actualDmgToPlayer = Math.max(1, actualDmgToPlayer - takeDmgTraits.damageReductionFlat);
+            }
+
+            if (takeDmgTraits.reflectDamage && takeDmgTraits.reflectDamage > 0) {
+                reflectDmgToBoss += takeDmgTraits.reflectDamage;
+            }
+
+            finalPlayerHp = Math.max(0, finalPlayerHp - actualDmgToPlayer);
+
+            if (takeDmgTraits.healAmount && takeDmgTraits.healAmount > 0) {
+                finalPlayerHp = Math.min(finalStatsSnapshot.maxHp || 100, finalPlayerHp + takeDmgTraits.healAmount);
+            }
+
+            if (takeDmgTraits.log) traitDefendLog += ` ${takeDmgTraits.log}`;
+        }
+
+        // หักเลือดบอสถ้ามีดาเมจสะท้อน/สวนกลับ
+        let currentBossHp = currentState.bossHp;
+        if (reflectDmgToBoss > 0) {
+            currentBossHp = Math.max(0, currentBossHp - reflectDmgToBoss);
+        }
 
         const maxHpValue = finalStatsSnapshot.maxHp || 1;
         const hpPercent = (finalPlayerHp / maxHpValue) * 100;
@@ -295,7 +383,7 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
         );
 
         const bonusTextParts: string[] = [];
-        if (itemElementPercent > 0) bonusTextParts.push(`Elem+${Math.round(itemElementPercent * 100)}%`); // ✅ ใช้ itemElementPercent ตรงๆ (เฉพาะจาก equipment) แทน totalElementPercent ที่โดนบวกสกิลไปแล้ว
+        if (itemElementPercent > 0) bonusTextParts.push(`Elem+${Math.round(itemElementPercent * 100)}%`);
         const baseRacePercent = bonuses.racePercent / 100;
         if (baseRacePercent > 0) bonusTextParts.push(`Race+${Math.round(baseRacePercent * 100)}%`);
         if (weaponWeaknessPercent > 0) bonusTextParts.push(`Weakness+${WEAKNESS_BONUS_RATE * 100}%`);
@@ -304,11 +392,9 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
             if (finalSkillRaceBonus > 0) bonusTextParts.push(`SkillRace+${Math.round(finalSkillRaceBonus * 100)}%`);
         }
 
-        // แสดงผล Active Buff ต่างๆ ใน Log (ข้ามบัฟที่เป็น isNew ในเทิร์นนี้)
         activeBuffs.forEach(buff => {
             if (buff.type !== 'stunBoss' && buff.remainingRounds > 0 && !buff.isNew) {
                 const buffName = buff.name || buff.type;
-                // จัดรูปแบบให้แยกส่วนข้อความหรือระบุชัดเจน
                 bonusTextParts.push(`[${buffName} Active! (${buff.remainingRounds} turns left)]`);
             }
         });
@@ -326,15 +412,16 @@ function runBattleTick(get: () => BattleState, set: (partial: Partial<BattleStat
         const bossLog: BattleLogEntry = stunBuff
             ? { text: `${selectedBoss.name} is stunned and cannot attack!`, type: 'boss', isStun: true }
             : bossResult.isMiss
-                ? { text: `${selectedBoss.name} missed its attack!`, type: 'boss', isMiss: true }
+                ? { text: `${selectedBoss.name} missed its attack!${traitDefendLog}`, type: 'boss', isMiss: true }
                 : {
-                    text: `${selectedBoss.name} dealt ${dmgToPlayer} damage to you ${bossResult.isCrit ? '(CRIT!)' : ''}`,
+                    text: `${selectedBoss.name} dealt ${actualDmgToPlayer} damage to you ${bossResult.isCrit ? '(CRIT!)' : ''}${traitDefendLog}`,
                     type: 'boss',
                     isCrit: bossResult.isCrit
                 };
 
         set({
             playerHp: finalPlayerHp,
+            bossHp: currentBossHp,
             battleLog: [bossLog, playerLog, ...get().battleLog].slice(0, 10),
         });
 

@@ -47,7 +47,7 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
     }, []);
 
     return (
-        <div className="relative flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-6 overflow-hidden select-none">
+        <div className="relative flex flex-col items-center justify-center min-h-screen bg-stone-950 text-white p-6 overflow-hidden select-none">
 
             {/* 🖼️ Live Video Background */}
             <div className="absolute inset-0 z-0 opacity-100">
@@ -55,7 +55,21 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
                     <source src="/Icons/Backgrounds/202608131618.webm" type="video/webm" />
                 </video>
                 {/* เกลี่ยแสงขอบมืดให้ตัวหนังสือเด่นขึ้น โดยอมโทนแดงเข้มนิดๆ ด้านล่าง */}
-                <div className="absolute inset-0 bg-radial from-transparent via-slate-950/40 to-black/80" />
+                <div className="absolute inset-0 bg-radial from-transparent via-stone-950/40 to-black/80" />
+            </div>
+
+            {/* 👑 Game Title — โมเมนต์แรกของเกม: ตัวสลักหินทอง + แสงเรือง */}
+            <div className="relative z-10 flex flex-col items-center mb-8 text-center select-none">
+                <h1 className="font-display font-black text-6xl md:text-7xl leading-none tracking-wide text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_0_25px_rgba(245,158,11,0.45)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                    RNG
+                </h1>
+                <div className="flex items-center gap-3 mt-3">
+                    <span className="h-px w-12 md:w-20 bg-gradient-to-r from-transparent to-amber-600/70" />
+                    <p className="font-display text-[11px] md:text-xs font-bold tracking-[0.45em] text-amber-300/80 uppercase pl-[0.45em]">
+                        Text-Based MMO
+                    </p>
+                    <span className="h-px w-12 md:w-20 bg-gradient-to-l from-transparent to-amber-600/70" />
+                </div>
             </div>
 
             {/* ⏳ กล่อง Loading Center (ปรับขอบและเงาให้เข้ากับธีมไฟนรก/วิหารโบราณ) */}
@@ -79,7 +93,7 @@ export const LoadingScreen = ({ onFinished }: LoadingScreenProps) => {
                 </div>
 
                 {/* เปอร์เซ็นต์ */}
-                <div className="flex justify-between w-full mt-2 text-xs font-mono text-slate-300">
+                <div className="flex justify-between w-full mt-2 text-xs font-mono text-stone-300">
                     <span className="text-amber-200/50">Entering Realm...</span>
                     <span className="text-amber-400 font-bold">{progress}%</span>
                 </div>

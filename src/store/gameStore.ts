@@ -98,6 +98,8 @@ interface GameState {
     isProcessingReward: boolean; // เพิ่มตัวนี้
     setProcessingReward: (status: boolean) => void;
     salvageItem: (uid: string) => { success: boolean; materialsGained: { id: string; amount: number }[]; message: string };
+    // ล็อก/ปลดล็อกไอเทมในกระเป๋า (กัน salvage โดยไม่ตั้งใจ)
+    toggleItemLock: (uid: string) => void;
     salvageAllByRarity: (rarityToSalvage: string) => {
         success: boolean;
         totalSalvaged: number;
@@ -152,6 +154,32 @@ const getUpdatedCollection = (currentCollection: CollectionRecord[], item: Item)
         });
     }
     return [...currentCollection, { itemId: item.id, isUnlocked: true, bestStats: itemStats, foundCount: 1 }];
+};
+
+// 🖼️ ซิงค์ icon ของไอเทมเก่าให้ตรงกับ itemLibrary ปัจจุบัน
+// ไอเทมที่ gen ไว้แล้ว persist path icon ฝังในตัวเอง ถ้าเปลี่ยน/ย้ายไฟล์ icon ใน library
+// ไอเทมเก่าในเซฟจะชี้ไฟล์ที่ไม่มีแล้ว (เช่น .svg -> .png) จึงต้องมาเทียบ id แล้วอัปเดตตอนโหลดเซฟ
+const syncItemIconsWithLibrary = (player: Player): Player => {
+    // ตัวหลักรับ Item เต็ม (inventory เก็บ Item เพียว ๆ) — คืน Item เพียว ๆ เสมอ
+    const syncItem = (item: Item): Item => {
+        const template = itemLibrary.find((t) => t.id === item.id);
+        if (template && item.icon !== template.icon) {
+            return { ...item, icon: template.icon };
+        }
+        return item;
+    };
+
+    return {
+        ...player,
+        inventory: player.inventory.map(syncItem),
+        // equippedItems มีค่า null ได้ (ช่องที่ยังไม่สวม) — sync เฉพาะช่องที่มีของ
+        equippedItems: Object.fromEntries(
+            Object.entries(player.equippedItems).map(([slot, item]) => [
+                slot,
+                item ? syncItem(item) : item,
+            ])
+        ) as Player['equippedItems'],
+    };
 };
 
 export const useGameStore = create<GameState>()(
@@ -281,7 +309,8 @@ export const useGameStore = create<GameState>()(
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         set({
-                            player: data.player || get().player,
+                            // 🖼️ ผ่าน sync icon ก่อน set เสมอ กันไอเทมเก่าชี้ path icon ที่ถูกเปลี่ยนไปแล้ว
+                            player: data.player ? syncItemIconsWithLibrary(data.player) : get().player,
                             collectionData: data.collectionData || [],
                             totalOpens: data.totalOpens || 0,
                             epicPity: data.epicPity || 0,
@@ -532,6 +561,11 @@ export const useGameStore = create<GameState>()(
                     return { success: false, materialsGained: [], message: "Item not found in inventory!" };
                 }
 
+                // 🛡️ ไอเทมที่ผู้เล่นล็อกไว้ห้าม salvage เด็ดขาด
+                if (itemToSalvage.locked) {
+                    return { success: false, materialsGained: [], message: "Item is locked! Unlock it first to salvage." };
+                }
+
                 let materialsGained: { id: string; amount: number }[] = [];
                 const rarity = itemToSalvage.rarity?.toLowerCase() || 'common';
 
@@ -581,7 +615,8 @@ export const useGameStore = create<GameState>()(
 
                 const itemsToSalvage = state.player.inventory.filter(item => {
                     const itemRarity = (item.rarity || 'common').toLowerCase();
-                    return itemRarity === targetRarity && !equippedUids.has(item.uid);
+                    // 🛡️ ข้ามไอเทมที่ล็อกไว้เสมอ (ชั้นเก็บ + salvageItem กันซ้ำสองชั้น)
+                    return itemRarity === targetRarity && !equippedUids.has(item.uid) && !item.locked;
                 });
 
                 if (itemsToSalvage.length === 0) {
@@ -644,6 +679,18 @@ export const useGameStore = create<GameState>()(
                 };
 
 
+            },
+
+            toggleItemLock: (uid: string) => {
+                set((state) => ({
+                    player: {
+                        ...state.player,
+                        inventory: state.player.inventory.map((item) =>
+                            item.uid === uid ? { ...item, locked: !item.locked } : item
+                        )
+                    }
+                }));
+                get().saveUserData();
             },
 
             removeItem: (uid: string) => set((state) => {
@@ -964,6 +1011,14 @@ export const useGameStore = create<GameState>()(
             name: 'game-storage',
             // เพิ่มส่วนนี้เพื่อบอกว่าเราต้องการเก็บ State ทั้งหมด หรือบางส่วน
             partialize: (state) => state,
+            // 🖼️ เซฟ local (guest) ก็เจอปัญหา path icon เก่าเหมือนกัน — sync ตอน rehydrate
+            onRehydrateStorage: () => (state) => {
+                if (!state?.player) return;
+                const synced = syncItemIconsWithLibrary(state.player);
+                if (synced !== state.player) {
+                    useGameStore.setState({ player: synced });
+                }
+            },
         }
     )
 );

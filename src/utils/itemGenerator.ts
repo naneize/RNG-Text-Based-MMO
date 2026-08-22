@@ -2,7 +2,7 @@ import type { Item, Stats, WeaponType } from '../types/game';
 import { itemLibrary } from '../data/itemLibrary';
 import { SKILL_POOL } from '../data/skills';
 import { rollWithVariation } from './statVariation';
-import { getRandomWeaponAbility } from '../data/weaponAbilities';
+import { getRandomTraitForSlot } from '../data/equipmentTraits';
 
 
 export const rarityConfig = [
@@ -251,8 +251,10 @@ export const generateRandomSkillSpecific = (
 };
 
 
-export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1): Item => {
-    const roll = Math.random();
+export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1, forcedItemId?: string): Item => {
+    // ถ้า force ไอเทมเป็นชิ้นเฉพาะ (เควส/รางวัล tower) ต้องได้ชิ้นนั้นแน่นอน
+    // ห้ามตกไปโดน branch สุ่มสกิล/แร่ด้านล่าง (เดิมมีโอกาสหลุด 25%)
+    const roll = forcedItemId ? 1 : Math.random();
 
     if (roll < 0.1) return generateRandomSkill();
 
@@ -273,7 +275,11 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     }
 
     const equipments = itemLibrary.filter(i => i.type === 'equipment');
-    const template = equipments[Math.floor(Math.random() * equipments.length)];
+    let template = equipments[Math.floor(Math.random() * equipments.length)];
+    if (forcedItemId) {
+        const found = itemLibrary.find(i => i.id === forcedItemId);
+        if (found) template = found;
+    }
     const config = getRandomRarity(forcedRarity);
     const baseMult = config.mult;
 
@@ -304,7 +310,26 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
     // นำมาปรับใช้กับทุก Slot
+    let traitId: string | undefined;
     let weaponAbilityId: string | undefined;
+
+    const TRAIT_CHANCE_BY_RARITY: Record<string, number> = {
+        Common: 0.15,
+        Rare: 0.40,
+        Epic: 0.65,
+        Legendary: 1.0,
+    };
+
+    const traitChance = TRAIT_CHANCE_BY_RARITY[config.name] ?? 0.25;
+    if (Math.random() < traitChance) {
+        const trait = getRandomTraitForSlot(template.slot, config.name);
+        if (trait) {
+            traitId = trait.id;
+            if (template.slot === 'weapon') {
+                weaponAbilityId = trait.id;
+            }
+        }
+    }
 
     if (template.slot === 'weapon') {
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
@@ -321,23 +346,6 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
             stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
             baseStatsSet.add('str');
         }
-
-        // 🟢 เปลี่ยนจาก Record<Item['rarity'], number> เป็น Record<string, number>
-        const ABILITY_CHANCE_BY_RARITY: Record<string, number> = {
-            Common: 0.15,
-            Rare: 0.40,
-            Epic: 0.65,
-            Legendary: 1.0,
-        };
-
-        // ตอนนี้ใช้ config.name ได้โดยไม่ต้อง Cast Type แล้ว
-        const traitChance = ABILITY_CHANCE_BY_RARITY[config.name] ?? 0.25;
-
-        if (Math.random() < traitChance) {
-            const ability = getRandomWeaponAbility(config.name);
-            weaponAbilityId = ability?.id;
-        }
-
     } else if (['necklace', 'ring'].includes(template.slot)) {
         stats.atk = getStatWithVariation(8, baseMult, itemLevel, 1);
         stats.hit = getStatWithVariation(5, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
@@ -529,6 +537,7 @@ export const generateRandomItem = (forcedRarity?: string, itemLevel: number = 1)
         itemLevel,
         elementBonus: elementBonus as { type: "Fire" | "Water" | "Earth" | "Wind" | "Dark" | "Holy" | "Neutral"; value: number; } | undefined,
         raceBonus: raceBonus as { type: "DemiHuman" | "Plant" | "Brute" | "Undead" | "Demon" | "Angel" | "Dragon"; value: number; } | undefined,
+        traitId,
         weaponAbilityId,
         type: 'equipment'
     };
@@ -559,7 +568,26 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
     const twoHandedTypes: WeaponType[] = ['two-hand sword', 'spear', 'axe', 'fist', 'hammer'];
     const rangedTypes: WeaponType[] = ['bow', 'crossbow', 'sling', 'throwing'];
 
+    let traitId: string | undefined;
     let weaponAbilityId: string | undefined;
+
+    const TRAIT_CHANCE_BY_RARITY: Record<string, number> = {
+        Common: 0.15,
+        Rare: 0.40,
+        Epic: 0.65,
+        Legendary: 1.0,
+    };
+
+    const traitChance = TRAIT_CHANCE_BY_RARITY[config.name] ?? 0.25;
+    if (Math.random() < traitChance) {
+        const trait = getRandomTraitForSlot(template.slot, config.name);
+        if (trait) {
+            traitId = trait.id;
+            if (template.slot === 'weapon') {
+                weaponAbilityId = trait.id;
+            }
+        }
+    }
 
     if (template.slot === 'weapon') {
         const isTwoHanded = template.weaponType ? twoHandedTypes.includes(template.weaponType) : false;
@@ -576,23 +604,6 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
             stats.str = getStatWithVariation(3, baseMult, itemLevel, 1);
             baseStatsSet.add('str');
         }
-
-        // 🟢 เปลี่ยนจาก Record<Item['rarity'], number> เป็น Record<string, number>
-        const ABILITY_CHANCE_BY_RARITY: Record<string, number> = {
-            Common: 0.15,
-            Rare: 0.40,
-            Epic: 0.65,
-            Legendary: 1.0,
-        };
-
-        // ตอนนี้ใช้ config.name ได้โดยไม่ต้อง Cast Type แล้ว
-        const traitChance = ABILITY_CHANCE_BY_RARITY[config.name] ?? 0.25;
-
-        if (Math.random() < traitChance) {
-            const ability = getRandomWeaponAbility(config.name);
-            weaponAbilityId = ability?.id;
-        }
-
     } else if (['necklace', 'ring'].includes(template.slot)) {
         stats.atk = getStatWithVariation(8, baseMult, itemLevel, 1);
         stats.hit = getStatWithVariation(5, baseMult, itemLevel, 0.5); // level ไม่ scale hit ของ necklace/ring เดิม แต่ยังสุ่มดวงได้
@@ -758,6 +769,7 @@ export const generateRandomItemSpecific = (template: any, forcedRarity?: string,
         itemLevel,
         elementBonus: elementBonus as { type: "Fire" | "Water" | "Earth" | "Wind" | "Dark" | "Holy" | "Neutral"; value: number; } | undefined,
         raceBonus: raceBonus as { type: "DemiHuman" | "Plant" | "Brute" | "Undead" | "Demon" | "Angel" | "Dragon"; value: number; } | undefined,
+        traitId,
         weaponAbilityId,
         type: 'equipment'
     };
