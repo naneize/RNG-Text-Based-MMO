@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useBattleStore } from '../store/battleStore';
 import { useGameStore } from '../store/gameStore';
 import { RewardModal } from '../components/Modals/RewardModal';
+import { classifyLogToken } from '../utils/battleLogStyles';
 
 
 export const BattleScreen = () => {
@@ -337,159 +338,13 @@ export const BattleScreen = () => {
                                         <div key={i} className={`p-1.5 rounded leading-relaxed ${baseStyle} ${defaultTextColor}`}>
                                             {parts.map((part, index) => {
                                                 if (!part) return null;
-
-                                                if (part.includes('Weakness')) {
-                                                    return (
-                                                        <span key={index} className="text-emerald-400 font-bold">
-                                                            {part.split('(')[0]}
-                                                            <span className="text-amber-200 font-bold mx-0.5">
-                                                                ({part.split('(')[1]}
-                                                            </span>
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 1. ข้อความในวงเล็บเหลี่ยม [...] เช่น ชื่อสกิล, Trait Tag หรือ บัฟ Active
-                                                if (part.startsWith('[') && part.endsWith(']')) {
-                                                    return (
-                                                        <span key={index} className="text-purple-300 font-bold drop-shadow-[0_0_6px_rgba(192,132,252,0.5)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 2. สถานะ CRIT!
-                                                if (part === '(CRIT!)') {
-                                                    return (
-                                                        <span key={index} className="text-amber-400 font-extrabold drop-shadow-[0_0_8px_rgba(251,191,36,0.5)] mx-1">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 3. Thorns Reflect (หนามสะท้อนดาเมจ)
-                                                if (part.includes('Thorns reflected')) {
-                                                    return (
-                                                        <span key={index} className="text-orange-400 font-bold drop-shadow-[0_0_6px_rgba(251,146,60,0.4)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 4. Damage Absorbed / Iron Guard (ลดทอนดาเมจเกราะ)
-                                                if (part.includes('absorbed') || part.includes('Iron guard')) {
-                                                    return (
-                                                        <span key={index} className="text-teal-300 font-bold drop-shadow-[0_0_6px_rgba(94,234,212,0.4)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 5. Dodged & Countered (หลบแล้วสวนกลับ)
-                                                if (part.includes('Dodged & Countered')) {
-                                                    return (
-                                                        <span key={index} className="text-cyan-300 font-extrabold drop-shadow-[0_0_6px_rgba(103,232,249,0.5)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 6. Healing, Aegis & Regen (ฮีลฉุกเฉิน / ฟื้นฟูเลือด / Lifesteal)
-                                                if (part.includes('Emergency Aegis') || part.includes('Rejuvenated') || part.includes('Lifesteal!')) {
-                                                    return (
-                                                        <span key={index} className="text-lime-400 font-bold drop-shadow-[0_0_6px_rgba(163,230,53,0.4)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 7. Berserk Rage & Gambler's Jackpot
-                                                if (part.includes('Berserk rage') || part.includes("Gambler's Jackpot")) {
-                                                    return (
-                                                        <span key={index} className="text-fuchsia-400 font-extrabold drop-shadow-[0_0_6px_rgba(232,121,249,0.5)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 8. Armor Pierce & Armor Ignored
-                                                if (part.includes('Pierced') || part.includes('armor ignored')) {
-                                                    return (
-                                                        <span key={index} className="text-rose-400 font-bold drop-shadow-[0_0_6px_rgba(251,113,133,0.4)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 9. Additional Attack (ตีเบิ้ล)
-                                                if (part.includes('Additional attack deals')) {
-                                                    return (
-                                                        <span key={index} className="text-indigo-300 font-bold mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 10. Crit Rate & Wind Dance
-                                                if (part.includes('Crit Rate') || part.includes('Wind dance flow')) {
-                                                    return (
-                                                        <span key={index} className="text-amber-300 font-bold drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 11. สถานะ Stun
-                                                if (part.includes('stunned') || part.includes('Stun')) {
-                                                    return (
-                                                        <span key={index} className="text-yellow-300 font-bold drop-shadow-[0_0_6px_rgba(253,224,71,0.5)] ml-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 12. ชื่อสกิลที่ทำงาน (activated ...)
-                                                if (part.startsWith('activated ')) {
-                                                    return (
-                                                        <span key={index} className="text-cyan-400/90 font-medium mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 13. โบนัสดาเมจจาก Stat (LUK, AGI, ฯลฯ)
-                                                if (part.includes('bonus damage from')) {
-                                                    return (
-                                                        <span key={index} className="text-sky-400/90 font-normal mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 14. โบนัสประเภทต่างๆ ในวงเล็บสรุป (Elem+, Race+, Weakness+, SkillElem+, SkillRace+)
-                                                if (
-                                                    part.startsWith('Elem+') ||
-                                                    part.startsWith('Race+') ||
-                                                    part.startsWith('SkillElem+') ||
-                                                    part.startsWith('SkillRace+')
-                                                ) {
-                                                    return (
-                                                        <span key={index} className="text-orange-300 font-semibold mx-0.5">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                // 15. เน้นตัวเลขดาเมจหลัก
-                                                if (part.endsWith('damage') && !part.includes('bonus') && !part.includes('Thorns') && !part.includes('Countered') && !part.includes('absorbed')) {
-                                                    return (
-                                                        <span key={index} className="text-emerald-400 font-bold">
-                                                            {part}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                return <span key={index}>{part}</span>;
+                                                // ระบบสีรวมศูนย์ที่ utils/battleLogStyles — 5 หมวด semantic แทน if-chain 15 ชั้นเดิม
+                                                const style = classifyLogToken(part);
+                                                return style ? (
+                                                    <span key={index} className={style}>{part}</span>
+                                                ) : (
+                                                    <span key={index}>{part}</span>
+                                                );
                                             })}
                                         </div>
                                     );

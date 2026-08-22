@@ -53,7 +53,7 @@ const createMultiHitTrait = (
             const extraDamage = Math.floor(ctx.baseDamage * (extraDmgPercent / 100));
             return {
                 extraDamage,
-                log: `, activated ${name}! Additional attack deals ${extraDmgPercent}% extra damage!`
+                log: `[${name}] Additional attack deals ${extraDmgPercent}% extra damage!`
             };
         }
         return { extraDamage: 0, log: '' };
@@ -78,7 +78,7 @@ const createVampiricTrait = (
         const healAmount = Math.floor(ctx.baseDamage * (healPercent / 100));
         return {
             healAmount,
-            log: `, activated ${name}! Lifesteal! (${healPercent}% , + ${healAmount} HP)`
+            log: `[${name}] Lifesteal! (${healPercent}%, +${healAmount} HP)`
         };
     }
 });
@@ -102,7 +102,7 @@ const createArmorPierceTrait = (
             return {
                 extraDamage: 0,
                 buff: { type: 'ignoreDef', name, duration: 3, value },
-                log: `, activated ${name}! ${value === 100 ? 'Enemy armor ignored' : `Pierced ${value}% armor`} for 3 rounds!`
+                log: `[${name}] ${value === 100 ? 'Enemy armor ignored' : `Pierced ${value}% armor`} for 3 rounds!`
             };
         }
         return { extraDamage: 0, log: '' };
@@ -129,7 +129,7 @@ const createCritBoostTrait = (
             return {
                 extraDamage: 0,
                 buff: { type: 'critBoost', name, duration: 3, value: critRateBonus },
-                log: `, activated ${name}! Crit Rate +${critRateBonus}% for 3 rounds!`
+                log: `[${name}] Crit Rate +${critRateBonus}% for 3 rounds!`
             };
         }
         return { extraDamage: 0, log: '' };
@@ -155,7 +155,7 @@ const createStunTrait = (
             return {
                 extraDamage: 0,
                 buff: { type: 'stunBoss', name, duration: 1, value: 100 },
-                log: `, activated ${name}! Enemy stunned!`
+                log: `[${name}] Enemy stunned!`
             };
         }
         return { extraDamage: 0, log: '' };
@@ -189,7 +189,7 @@ const createStatScalingTrait = (
 
         return {
             extraDamage,
-            log: `, activated ${name}! +${extraDamage} bonus damage from ${statKey.toUpperCase()}!`
+            log: `[${name}] +${extraDamage} bonus damage from ${statKey.toUpperCase()}!`
         };
     }
 });
